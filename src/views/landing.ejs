@@ -53,18 +53,22 @@
                 <a href="#verifikasi" class="hover:text-purple-300 transition">Verifikasi QR</a>
             </nav>
 
-            <!-- Login / Dashboard CTA -->
+            <!-- Login / Register / Dashboard CTA -->
             <div class="hidden md:flex items-center gap-3">
                 <% if (user) { %>
                     <a href="/dashboard" class="px-5 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-bold text-xs shadow-lg shadow-purple-900/40 transition transform hover:-translate-y-0.5 flex items-center gap-2">
                         <i class="fa-solid fa-gauge"></i> Ke Dashboard (<%= user.username %>)
                     </a>
                 <% } else { %>
-                    <a href="/login" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs shadow-lg shadow-purple-600/40 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <a href="/login" class="px-5 py-2.5 rounded-xl bg-purple-900/80 hover:bg-purple-800 border border-purple-700/60 text-white font-bold text-xs transition flex items-center gap-2">
                         <i class="fa-solid fa-right-to-bracket"></i> Masuk / Login
+                    </a>
+                    <a href="/register" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs shadow-lg shadow-purple-600/40 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Daftar Akun Baru
                     </a>
                 <% } %>
             </div>
+
 
             <!-- Mobile Menu Toggle Button -->
             <button id="mobile-menu-btn" class="md:hidden p-2.5 rounded-xl bg-purple-900/60 text-purple-200 hover:text-white border border-purple-700/50">

@@ -41,17 +41,19 @@ const authRoutes = require('./src/routes/auth');
 const webRoutes = require('./src/routes/web');
 const apiRoutes = require('./src/routes/api');
 
-app.use('/', authRoutes);
-app.use('/', webRoutes);
-app.use('/api/v1', apiRoutes);
-
-// Root Route - Landing Page
+// 1. Root Route - Landing Page Utama
 app.get('/', (req, res) => {
     return res.render('landing', {
         user: req.session.user || null,
         layout: false
     });
 });
+
+// 2. Application Routes Mounting
+app.use('/', authRoutes);
+app.use('/', webRoutes);
+app.use('/api/v1', apiRoutes);
+
 
 
 // 404 Handler

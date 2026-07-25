@@ -50,7 +50,6 @@ function initTables(database) {
         );
     `);
 
-    // Auto-migration for existing SQLite database if columns missing
     try { database.run("ALTER TABLE users ADD COLUMN is_email_verified INTEGER DEFAULT 0;"); } catch(e){}
     try { database.run("ALTER TABLE users ADD COLUMN email_verification_token TEXT;"); } catch(e){}
     try { database.run("ALTER TABLE users ADD COLUMN password_reset_token TEXT;"); } catch(e){}
@@ -173,6 +172,40 @@ function initTables(database) {
         );
     `);
 
+    // 9. Table pengajuan_judul_ta [BARU]
+    database.run(`
+        CREATE TABLE IF NOT EXISTS pengajuan_judul_ta (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid_pengajuan TEXT UNIQUE NOT NULL,
+            mahasiswa_id INTEGER NOT NULL REFERENCES mahasiswa(id) ON DELETE CASCADE,
+            judul_ta TEXT NOT NULL,
+            abstrak_rumusan TEXT NOT NULL,
+            dosen_pembimbing_1_id INTEGER NOT NULL REFERENCES dosen(id),
+            dosen_pembimbing_2_id INTEGER NOT NULL REFERENCES dosen(id),
+            file_proposal_gdrive_id TEXT,
+            file_proposal_url TEXT,
+            status TEXT DEFAULT 'pending_tu' CHECK (
+                status IN (
+                    'pending_tu', 
+                    'pending_sekprodi', 
+                    'pending_kaprodi', 
+                    'diterima', 
+                    'ditolak', 
+                    'revisi'
+                )
+            ),
+            catatan_tu TEXT,
+            catatan_sekprodi TEXT,
+            catatan_kaprodi TEXT,
+            pembimbing_1_status TEXT DEFAULT 'pending' CHECK (pembimbing_1_status IN ('pending', 'bersedia', 'menolak')),
+            pembimbing_2_status TEXT DEFAULT 'pending' CHECK (pembimbing_2_status IN ('pending', 'bersedia', 'menolak')),
+            catatan_pembimbing_1 TEXT,
+            catatan_pembimbing_2 TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
     seedData(database);
     saveDb();
 }
@@ -202,46 +235,36 @@ function seedData(database) {
         }
     }
 
-
-
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");
     const countUser = checkUser.length > 0 ? checkUser[0].values[0][0] : 0;
 
     if (countUser === 0) {
         const passHash = (plain) => bcrypt.hashSync(plain, 10);
 
-        // 1. Admin
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['admin', 'admin@univ.ac.id', passHash('admin123'), 'admin']);
 
-        // 2. Mahasiswa
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['mahasiswa', 'mahasiswa@univ.ac.id', passHash('mhs123'), 'mahasiswa']);
         const mhsUserRes = database.exec("SELECT id FROM users WHERE username = 'mahasiswa'");
         const mhsUserId = mhsUserRes[0].values[0][0];
         database.run("INSERT INTO mahasiswa (user_id, nim, nama_lengkap, angkatan, no_hp, judul_ta) VALUES (?, ?, ?, ?, ?, ?)", [mhsUserId, '21081010001', 'Ahmad Fauzi', 2021, '081234567890', 'Rancang Bangun Sistem E-Surat Berbasis Microservices']);
 
-        // 3. Sekprodi
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['sekprodi', 'sekprodi@univ.ac.id', passHash('sekprodi123'), 'sekretaris_prodi']);
 
-        // 4. Kaprodi
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['kaprodi', 'kaprodi@univ.ac.id', passHash('kaprodi123'), 'kaprodi']);
         const kaprodiUserRes = database.exec("SELECT id FROM users WHERE username = 'kaprodi'");
         const kaprodiUserId = kaprodiUserRes[0].values[0][0];
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [kaprodiUserId, '198501012010121001', 'Dr. Eng. Nama Kaprodi, M.T.', 'Ketua Program Studi']);
 
-        // 5. Staff TU
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['stafftu', 'stafftu@univ.ac.id', passHash('tu123'), 'staff_tu']);
 
-        // 6. Dosen Pembimbing 1
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing1', 'pembimbing1@univ.ac.id', passHash('dosen123'), 'dosen']);
         const p1UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing1'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p1UserRes[0].values[0][0], '197805122005011002', 'Prof. Dr. Ir. Budi Santoso, M.Kom.', 'Guru Besar / Pembimbing Utama']);
 
-        // 7. Dosen Pembimbing 2
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing2', 'pembimbing2@univ.ac.id', passHash('dosen123'), 'dosen']);
         const p2UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing2'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p2UserRes[0].values[0][0], '198203152008042003', 'Siti Rahmawati, S.T., M.T.', 'Lektor Kepala / Pembimbing Pendamping']);
 
-        // 8. Dosen Penguji 1, 2, 3
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji1', 'penguji1@univ.ac.id', passHash('dosen123'), 'dosen']);
         const u1UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji1'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u1UserRes[0].values[0][0], '197509102003121004', 'Dr. Agus Setiawan, M.Sc.', 'Ketua Penguji']);
@@ -254,7 +277,6 @@ function seedData(database) {
         const u3UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji3'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u3UserRes[0].values[0][0], '199002142019032006', 'Eko Prasetyo, M.Comp.', 'Penguji Anggota 2']);
 
-        // Plotting default for demo mhs
         const mhsId = database.exec("SELECT id FROM mahasiswa WHERE nim = '21081010001'")[0].values[0][0];
         const p1Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '197805122005011002'")[0].values[0][0];
         const p2Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '198203152008042003'")[0].values[0][0];
@@ -263,9 +285,6 @@ function seedData(database) {
         const u3Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '199002142019032006'")[0].values[0][0];
 
         database.run("INSERT INTO plotting_tugas_akhir (mahasiswa_id, dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id, sk_dekan_nomor, status_ta) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [mhsId, p1Id, p2Id, u1Id, u2Id, u3Id, 'SK-DEKAN/2026/089', 'bimbingan']);
-    } else {
-        // Ensure seeded accounts have is_email_verified = 1
-        database.run("UPDATE users SET is_email_verified = 1 WHERE is_email_verified IS NULL OR is_email_verified = 0;");
     }
 }
 

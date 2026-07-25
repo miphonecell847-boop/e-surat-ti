@@ -52,6 +52,9 @@
                 </a>
 
                 <% if (user && user.role === 'mahasiswa') { %>
+                    <a href="/mahasiswa/pengajuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-book-bookmark w-5 text-center text-amber-400"></i> Pengajuan Judul TA
+                    </a>
                     <a href="/mahasiswa/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-paper-plane w-5 text-center text-blue-400"></i> Pengajuan Surat
                     </a>
@@ -61,11 +64,17 @@
                     <a href="/dosen/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-inbox w-5 text-center text-emerald-400"></i> Inbox Approval
                     </a>
+                    <a href="/dosen/konfirmasi-bimbingan" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-bell w-5 text-center text-amber-400"></i> Konfirmasi Bimbingan
+                    </a>
                 <% } %>
 
                 <% if (user && user.role === 'sekretaris_prodi') { %>
                     <a href="/sekprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-user-check w-5 text-center text-amber-400"></i> Validasi & Ploting
+                    </a>
+                    <a href="/sekprodi/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-book-bookmark w-5 text-center text-blue-400"></i> Validasi Judul TA
                     </a>
                 <% } %>
 
@@ -73,13 +82,20 @@
                     <a href="/kaprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-signature w-5 text-center text-purple-400"></i> Otorisasi & E-Signature
                     </a>
+                    <a href="/kaprodi/persetujuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-gavel w-5 text-center text-amber-400"></i> Persetujuan Judul TA
+                    </a>
                 <% } %>
 
                 <% if (user && user.role === 'staff_tu') { %>
                     <a href="/tu/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-file-pdf w-5 text-center text-blue-400"></i> Penomoran & Output PDF
                     </a>
+                    <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-file-check w-5 text-center text-emerald-400"></i> Verifikasi Judul TA
+                    </a>
                 <% } %>
+
 
                 <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
                     <i class="fa-solid fa-circle-user w-5 text-center"></i> Profil Saya

@@ -1,0 +1,73 @@
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Verifikasi Kelengkapan Administrasi Judul TA (Staff TU)</h2>
+            <p class="text-xs text-slate-500 mt-1">Periksa kelayakan administrasi mahasiswa sebelum diteruskan ke Sekretaris Prodi.</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+        </a>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold">
+            <%= success %>
+        </div>
+    <% } %>
+
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3">Mahasiswa</th>
+                        <th class="p-3">Judul Usulan TA</th>
+                        <th class="p-3">Usulan Pembimbing</th>
+                        <th class="p-3">Status Saat Ini</th>
+                        <th class="p-3">Aksi Verifikasi TU</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 font-medium">
+                    <% proposals.forEach(p => { %>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3">
+                                <p class="font-bold text-slate-900"><%= p.mhs_nama %></p>
+                                <p class="text-slate-500 font-mono">NIM: <%= p.nim %></p>
+                            </td>
+                            <td class="p-3 font-semibold text-slate-800 max-w-xs"><%= p.judul_ta %></td>
+                            <td class="p-3 text-slate-700 text-[11px]">
+                                <p>P1: <%= p.pembimbing_1_nama %></p>
+                                <p>P2: <%= p.pembimbing_2_nama %></p>
+                            </td>
+                            <td class="p-3">
+                                <% if (p.status === 'pending_tu') { %>
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Pending TU</span>
+                                <% } else { %>
+                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold"><%= p.status.toUpperCase() %></span>
+                                <% } %>
+                            </td>
+                            <td class="p-3">
+                                <% if (p.status === 'pending_tu') { %>
+                                    <form action="/tu/verifikasi-judul" method="POST" class="space-y-2">
+                                        <input type="hidden" name="proposal_id" value="<%= p.id %>">
+                                        <input type="text" name="catatan_tu" placeholder="Catatan TU (opsional)" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+                                        <div class="flex items-center gap-2">
+                                            <button type="submit" name="status_tu" value="setuju" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[10px]">
+                                                <i class="fa-solid fa-check mr-1"></i> Verifikasi Lolos
+                                            </button>
+                                            <button type="submit" name="status_tu" value="tolak" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-[10px]">
+                                                <i class="fa-solid fa-xmark mr-1"></i> Tolak
+                                            </button>
+                                        </div>
+                                    </form>
+                                <% } else { %>
+                                    <span class="text-slate-400 text-[11px] font-semibold">Telah Diverifikasi</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

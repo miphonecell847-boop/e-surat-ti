@@ -10,6 +10,7 @@ const SekprodiController = require('../controllers/SekprodiController');
 const KaprodiController = require('../controllers/KaprodiController');
 const TuController = require('../controllers/TuController');
 const PublicVerifyController = require('../controllers/PublicVerifyController');
+const JudulTaController = require('../controllers/JudulTaController');
 
 // 1. Root / Dashboard Dispatcher by Role
 router.get('/dashboard', isAuthenticated, (req, res) => {
@@ -31,24 +32,44 @@ router.get('/mahasiswa/buat-surat', isAuthenticated, checkRole(['mahasiswa']), M
 router.post('/mahasiswa/buat-surat', isAuthenticated, checkRole(['mahasiswa']), upload.single('file_lampiran'), MahasiswaController.submitSurat);
 router.get('/mahasiswa/surat/:id', isAuthenticated, checkRole(['mahasiswa']), MahasiswaController.detailSurat);
 
+// Mahasiswa: Pengajuan Judul TA
+router.get('/mahasiswa/pengajuan-judul', isAuthenticated, checkRole(['mahasiswa']), JudulTaController.renderMahasiswaJudul);
+router.post('/mahasiswa/pengajuan-judul', isAuthenticated, checkRole(['mahasiswa']), upload.single('file_proposal'), JudulTaController.processSubmitJudul);
+
 // 4. Dosen Pembimbing Routes
 router.get('/dosen/dashboard', isAuthenticated, checkRole(['dosen']), DosenController.dashboard);
 router.get('/dosen/review/:id', isAuthenticated, checkRole(['dosen']), DosenController.renderReview);
 router.post('/dosen/review/:id', isAuthenticated, checkRole(['dosen']), DosenController.processAction);
+
+// Dosen: Konfirmasi Kesediaan Membimbing
+router.get('/dosen/konfirmasi-bimbingan', isAuthenticated, checkRole(['dosen']), JudulTaController.renderDosenKonfirmasi);
+router.post('/dosen/konfirmasi-bimbingan', isAuthenticated, checkRole(['dosen']), JudulTaController.processDosenKonfirmasi);
 
 // 5. Sekprodi Routes
 router.get('/sekprodi/dashboard', isAuthenticated, checkRole(['sekretaris_prodi']), SekprodiController.dashboard);
 router.get('/sekprodi/plotting/:id', isAuthenticated, checkRole(['sekretaris_prodi']), SekprodiController.renderPlotting);
 router.post('/sekprodi/plotting/:id', isAuthenticated, checkRole(['sekretaris_prodi']), SekprodiController.processPlottingAndVerify);
 
+// Sekprodi: Validasi Judul TA
+router.get('/sekprodi/verifikasi-judul', isAuthenticated, checkRole(['sekretaris_prodi']), JudulTaController.renderSekprodiVerifikasi);
+router.post('/sekprodi/verifikasi-judul', isAuthenticated, checkRole(['sekretaris_prodi']), JudulTaController.processSekprodiVerifikasi);
+
 // 6. Kaprodi Routes
 router.get('/kaprodi/dashboard', isAuthenticated, checkRole(['kaprodi']), KaprodiController.dashboard);
 router.get('/kaprodi/approval/:id', isAuthenticated, checkRole(['kaprodi']), KaprodiController.renderApproval);
 router.post('/kaprodi/approval/:id', isAuthenticated, checkRole(['kaprodi']), KaprodiController.processApproval);
 
+// Kaprodi: Otorisasi Keputusan Judul TA
+router.get('/kaprodi/persetujuan-judul', isAuthenticated, checkRole(['kaprodi']), JudulTaController.renderKaprodiDecision);
+router.post('/kaprodi/persetujuan-judul', isAuthenticated, checkRole(['kaprodi']), JudulTaController.processKaprodiDecision);
+
 // 7. Staff TU Routes
 router.get('/tu/dashboard', isAuthenticated, checkRole(['staff_tu']), TuController.dashboard);
 router.get('/tu/penomoran/:id', isAuthenticated, checkRole(['staff_tu']), TuController.renderPenomoran);
 router.post('/tu/penomoran/:id', isAuthenticated, checkRole(['staff_tu']), TuController.processPenomoranAndGeneratePdf);
+
+// Staff TU: Verifikasi Judul TA
+router.get('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu']), JudulTaController.renderTuVerifikasi);
+router.post('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu']), JudulTaController.processTuVerifikasi);
 
 module.exports = router;

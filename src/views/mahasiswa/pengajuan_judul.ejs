@@ -1,0 +1,160 @@
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Pengajuan Judul Tugas Akhir / Skripsi</h2>
+            <p class="text-xs text-slate-500 mt-1">Formulir pengajuan usulan judul TA dan usulan Dosen Pembimbing 1 & 2.</p>
+        </div>
+        <a href="/dashboard" class="self-start px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 text-xs flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            <span><%= error %></span>
+        </div>
+    <% } %>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-base"></i>
+            <span><%= success %></span>
+        </div>
+    <% } %>
+
+    <!-- Form Pengajuan Judul Baru -->
+    <form action="/mahasiswa/pengajuan-judul" method="POST" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+        <h3 class="text-sm font-black text-slate-900 border-b border-slate-200 pb-3 flex items-center gap-2">
+            <i class="fa-solid fa-book-bookmark text-blue-700"></i> Form Usulan Judul TA Baru
+        </h3>
+
+        <!-- Judul TA -->
+        <div>
+            <label for="judul_ta" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Rencana Judul Skripsi / Tugas Akhir *</label>
+            <textarea id="judul_ta" name="judul_ta" rows="2" required placeholder="Contoh: Rancang Bangun Sistem E-Surat Administrasi Berbasis Microservices dan Kriptografi SHA-256 pada UNIDAYAN"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-sm font-bold text-slate-900 placeholder-slate-400 transition"></textarea>
+        </div>
+
+        <!-- Abstrak / Rumusan Masalah -->
+        <div>
+            <label for="abstrak_rumusan" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Ringkasan Latar Belakang & Rumusan Masalah *</label>
+            <textarea id="abstrak_rumusan" name="abstrak_rumusan" rows="4" required placeholder="Jelaskan secara singkat latar belakang penelitian, permasalahan utama, serta metode/algoritma yang akan digunakan..."
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-semibold text-slate-800 placeholder-slate-400 transition"></textarea>
+        </div>
+
+        <!-- Selection Usulan Pembimbing 1 & Pembimbing 2 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div>
+                <label for="dosen_pembimbing_1_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Usulan Dosen Pembimbing 1 (Utama) *</label>
+                <select id="dosen_pembimbing_1_id" name="dosen_pembimbing_1_id" required
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
+                    <option value="" disabled selected>-- Pilih Dosen Pembimbing 1 --</option>
+                    <% dosenList.forEach(dosen => { %>
+                        <option value="<%= dosen.id %>"><%= dosen.nama_dosen %> (<%= dosen.jabatan || 'Dosen' %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div>
+                <label for="dosen_pembimbing_2_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Usulan Dosen Pembimbing 2 (Pendamping) *</label>
+                <select id="dosen_pembimbing_2_id" name="dosen_pembimbing_2_id" required
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
+                    <option value="" disabled selected>-- Pilih Dosen Pembimbing 2 --</option>
+                    <% dosenList.forEach(dosen => { %>
+                        <option value="<%= dosen.id %>"><%= dosen.nama_dosen %> (<%= dosen.jabatan || 'Dosen' %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+
+        <!-- Berkas Proposal PDF -->
+        <div>
+            <label for="file_proposal" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Draft Proposal Skripsi / Outine Penelitian (PDF)</label>
+            <div class="p-4 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center hover:border-blue-500 transition">
+                <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white cursor-pointer">
+            </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane text-amber-400"></i> Kirim Usulan Judul TA
+        </button>
+    </form>
+
+    <!-- Riwayat Pengajuan Judul -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <h3 class="text-sm font-black text-slate-900 border-b border-slate-200 pb-3 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> Riwayat Status Pengajuan Judul Saya
+        </h3>
+
+        <% if (listJudul && listJudul.length > 0) { %>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Judul TA</th>
+                            <th class="p-3">Usulan Pembimbing</th>
+                            <th class="p-3">Status Verifikasi</th>
+                            <th class="p-3">Kesediaan Dosen</th>
+                            <th class="p-3">Catatan / Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 font-medium">
+                        <% listJudul.forEach(item => { %>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900 max-w-xs leading-relaxed"><%= item.judul_ta %></td>
+                                <td class="p-3 text-slate-700 space-y-1">
+                                    <p><strong class="text-slate-900">P1:</strong> <%= item.pembimbing_1_nama %></p>
+                                    <p><strong class="text-slate-900">P2:</strong> <%= item.pembimbing_2_nama %></p>
+                                </td>
+                                <td class="p-3">
+                                    <% if (item.status === 'pending_tu') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 text-[10px] font-bold">Verifikasi TU</span>
+                                    <% } else if (item.status === 'pending_sekprodi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Validasi Sekprodi</span>
+                                    <% } else if (item.status === 'pending_kaprodi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">Otorisasi Kaprodi</span>
+                                    <% } else if (item.status === 'diterima') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">DITERIMA</span>
+                                    <% } else if (item.status === 'revisi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold">REVISI</span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold">DITOLAK</span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3 space-y-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[10px] text-slate-500 font-bold">P1:</span>
+                                        <% if (item.pembimbing_1_status === 'bersedia') { %>
+                                            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">BERSEDIA</span>
+                                        <% } else if (item.pembimbing_1_status === 'menolak') { %>
+                                            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-bold">MENOLAK</span>
+                                        <% } else { %>
+                                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">PENDING</span>
+                                        <% } %>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[10px] text-slate-500 font-bold">P2:</span>
+                                        <% if (item.pembimbing_2_status === 'bersedia') { %>
+                                            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">BERSEDIA</span>
+                                        <% } else if (item.pembimbing_2_status === 'menolak') { %>
+                                            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-bold">MENOLAK</span>
+                                        <% } else { %>
+                                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">PENDING</span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td class="p-3 text-slate-600 text-[11px]">
+                                    <%= item.catatan_kaprodi || item.catatan_sekprodi || item.catatan_tu || '-' %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p class="text-xs text-slate-500 text-center py-6">Belum ada pengajuan judul TA. Gunakan form di atas untuk mengajukan judul baru.</p>
+        <% } %>
+    </div>
+</div>

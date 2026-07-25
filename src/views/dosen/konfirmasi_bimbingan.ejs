@@ -1,0 +1,76 @@
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Konfirmasi Kesediaan Membimbing TA</h2>
+            <p class="text-xs text-slate-500 mt-1">Notifikasi judul mahasiswa yang telah disetujui Kaprodi dan menunggu konfirmasi kesediaan Anda.</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+        </a>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold">
+            <%= success %>
+        </div>
+    <% } %>
+
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <h3 class="text-sm font-black text-slate-900 border-b border-slate-200 pb-3 flex items-center gap-2">
+            <i class="fa-solid fa-bell text-amber-500"></i> Notifikasi Penunjukan Pembimbing Skripsi
+        </h3>
+
+        <% if (proposals && proposals.length > 0) { %>
+            <div class="space-y-4">
+                <% proposals.forEach(p => { 
+                    const isP1 = p.dosen_pembimbing_1_id === dosen.id;
+                    const isP2 = p.dosen_pembimbing_2_id === dosen.id;
+                    const roleLabel = isP1 ? 'Pembimbing 1 (Utama)' : (isP2 ? 'Pembimbing 2 (Pendamping)' : 'Dosen');
+                    const myStatus = isP1 ? p.pembimbing_1_status : p.pembimbing_2_status;
+                %>
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded bg-blue-700 text-white text-[10px] font-black uppercase tracking-wider"><%= roleLabel %></span>
+                                <h4 class="font-extrabold text-sm text-slate-900 mt-1"><%= p.mhs_nama %> (NIM: <%= p.nim %>)</h4>
+                            </div>
+                            <div>
+                                <% if (myStatus === 'bersedia') { %>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold"><i class="fa-solid fa-circle-check mr-1"></i> Anda Bersedia Membimbing</span>
+                                <% } else if (myStatus === 'menolak') { %>
+                                    <span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold"><i class="fa-solid fa-xmark mr-1"></i> Anda Menolak</span>
+                                <% } else { %>
+                                    <span class="px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-extrabold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Menunggu Respon Anda</span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1 text-xs text-slate-800">
+                            <p><strong class="text-slate-900">Judul Skripsi Disetujui:</strong> <%= p.judul_ta %></p>
+                            <p><strong class="text-slate-900">Ringkasan Abstrak:</strong> <%= p.abstrak_rumusan %></p>
+                        </div>
+
+                        <% if (myStatus === 'pending') { %>
+                            <form action="/dosen/konfirmasi-bimbingan" method="POST" class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center gap-3">
+                                <input type="hidden" name="proposal_id" value="<%= p.id %>">
+                                <input type="hidden" name="role_position" value="<%= isP1 ? 1 : 2 %>">
+                                <input type="text" name="catatan" placeholder="Catatan respon dosen (opsional)" class="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs">
+                                
+                                <div class="flex items-center gap-2">
+                                    <button type="submit" name="status_choice" value="bersedia" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs shadow">
+                                        <i class="fa-solid fa-check mr-1"></i> Saya Bersedia Membimbing
+                                    </button>
+                                    <button type="submit" name="status_choice" value="menolak" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-xs shadow">
+                                        <i class="fa-solid fa-xmark mr-1"></i> Menolak
+                                    </button>
+                                </div>
+                            </form>
+                        <% } %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p class="text-xs text-slate-500 text-center py-6">Belum ada notifikasi penunjukan pembimbing baru dari Kaprodi.</p>
+        <% } %>
+    </div>
+</div>

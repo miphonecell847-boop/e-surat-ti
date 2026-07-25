@@ -15,7 +15,6 @@ function saveDb() {
     }
 }
 
-// Synchronous / Promise-based init
 async function getDbInstance() {
     if (db) return db;
 
@@ -26,8 +25,6 @@ async function getDbInstance() {
     }
 
     db = filebuffer ? new SQL.Database(filebuffer) : new SQL.Database();
-    
-    // Enable Foreign Keys
     db.run("PRAGMA foreign_keys = ON;");
 
     initTables(db);
@@ -44,10 +41,20 @@ function initTables(database) {
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL CHECK (role IN ('mahasiswa', 'sekretaris_prodi', 'kaprodi', 'staff_tu', 'dosen', 'admin')),
             is_active INTEGER DEFAULT 1,
+            is_email_verified INTEGER DEFAULT 0,
+            email_verification_token TEXT,
+            password_reset_token TEXT,
+            password_reset_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `);
+
+    // Auto-migration for existing SQLite database if columns missing
+    try { database.run("ALTER TABLE users ADD COLUMN is_email_verified INTEGER DEFAULT 0;"); } catch(e){}
+    try { database.run("ALTER TABLE users ADD COLUMN email_verification_token TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE users ADD COLUMN password_reset_token TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE users ADD COLUMN password_reset_expires DATETIME;"); } catch(e){}
 
     // 2. Table mahasiswa
     database.run(`
@@ -189,46 +196,46 @@ function seedData(database) {
         const passHash = (plain) => bcrypt.hashSync(plain, 10);
 
         // 1. Admin
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['admin', 'admin@univ.ac.id', passHash('admin123'), 'admin']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['admin', 'admin@univ.ac.id', passHash('admin123'), 'admin']);
 
         // 2. Mahasiswa
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['mahasiswa', 'mahasiswa@univ.ac.id', passHash('mhs123'), 'mahasiswa']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['mahasiswa', 'mahasiswa@univ.ac.id', passHash('mhs123'), 'mahasiswa']);
         const mhsUserRes = database.exec("SELECT id FROM users WHERE username = 'mahasiswa'");
         const mhsUserId = mhsUserRes[0].values[0][0];
         database.run("INSERT INTO mahasiswa (user_id, nim, nama_lengkap, angkatan, no_hp, judul_ta) VALUES (?, ?, ?, ?, ?, ?)", [mhsUserId, '21081010001', 'Ahmad Fauzi', 2021, '081234567890', 'Rancang Bangun Sistem E-Surat Berbasis Microservices']);
 
         // 3. Sekprodi
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['sekprodi', 'sekprodi@univ.ac.id', passHash('sekprodi123'), 'sekretaris_prodi']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['sekprodi', 'sekprodi@univ.ac.id', passHash('sekprodi123'), 'sekretaris_prodi']);
 
         // 4. Kaprodi
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['kaprodi', 'kaprodi@univ.ac.id', passHash('kaprodi123'), 'kaprodi']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['kaprodi', 'kaprodi@univ.ac.id', passHash('kaprodi123'), 'kaprodi']);
         const kaprodiUserRes = database.exec("SELECT id FROM users WHERE username = 'kaprodi'");
         const kaprodiUserId = kaprodiUserRes[0].values[0][0];
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [kaprodiUserId, '198501012010121001', 'Dr. Eng. Nama Kaprodi, M.T.', 'Ketua Program Studi']);
 
         // 5. Staff TU
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['stafftu', 'stafftu@univ.ac.id', passHash('tu123'), 'staff_tu']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['stafftu', 'stafftu@univ.ac.id', passHash('tu123'), 'staff_tu']);
 
         // 6. Dosen Pembimbing 1
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['pembimbing1', 'pembimbing1@univ.ac.id', passHash('dosen123'), 'dosen']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing1', 'pembimbing1@univ.ac.id', passHash('dosen123'), 'dosen']);
         const p1UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing1'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p1UserRes[0].values[0][0], '197805122005011002', 'Prof. Dr. Ir. Budi Santoso, M.Kom.', 'Guru Besar / Pembimbing Utama']);
 
         // 7. Dosen Pembimbing 2
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['pembimbing2', 'pembimbing2@univ.ac.id', passHash('dosen123'), 'dosen']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing2', 'pembimbing2@univ.ac.id', passHash('dosen123'), 'dosen']);
         const p2UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing2'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p2UserRes[0].values[0][0], '198203152008042003', 'Siti Rahmawati, S.T., M.T.', 'Lektor Kepala / Pembimbing Pendamping']);
 
         // 8. Dosen Penguji 1, 2, 3
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['penguji1', 'penguji1@univ.ac.id', passHash('dosen123'), 'dosen']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji1', 'penguji1@univ.ac.id', passHash('dosen123'), 'dosen']);
         const u1UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji1'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u1UserRes[0].values[0][0], '197509102003121004', 'Dr. Agus Setiawan, M.Sc.', 'Ketua Penguji']);
 
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['penguji2', 'penguji2@univ.ac.id', passHash('dosen123'), 'dosen']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji2', 'penguji2@univ.ac.id', passHash('dosen123'), 'dosen']);
         const u2UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji2'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u2UserRes[0].values[0][0], '198811202015041005', 'Dian Lestari, M.T.', 'Penguji Anggota 1']);
 
-        database.run("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)", ['penguji3', 'penguji3@univ.ac.id', passHash('dosen123'), 'dosen']);
+        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji3', 'penguji3@univ.ac.id', passHash('dosen123'), 'dosen']);
         const u3UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji3'");
         database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u3UserRes[0].values[0][0], '199002142019032006', 'Eko Prasetyo, M.Comp.', 'Penguji Anggota 2']);
 
@@ -241,10 +248,12 @@ function seedData(database) {
         const u3Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '199002142019032006'")[0].values[0][0];
 
         database.run("INSERT INTO plotting_tugas_akhir (mahasiswa_id, dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id, sk_dekan_nomor, status_ta) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [mhsId, p1Id, p2Id, u1Id, u2Id, u3Id, 'SK-DEKAN/2026/089', 'bimbingan']);
+    } else {
+        // Ensure seeded accounts have is_email_verified = 1
+        database.run("UPDATE users SET is_email_verified = 1 WHERE is_email_verified IS NULL OR is_email_verified = 0;");
     }
 }
 
-// Database helper functions mirroring ORM interface
 class DatabaseWrapper {
     static async query(sql, params = []) {
         const instance = await getDbInstance();

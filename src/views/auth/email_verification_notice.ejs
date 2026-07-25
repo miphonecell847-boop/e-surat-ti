@@ -1,0 +1,26 @@
+<div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+    <div class="w-16 h-16 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 flex items-center justify-center mx-auto text-2xl shadow-xl">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+    </div>
+
+    <div>
+        <h2 class="text-xl font-bold text-white">Tautan Verifikasi Email Terkirim</h2>
+        <p class="text-xs text-slate-400 mt-2">
+            Pendaftaran berhasil! Tautan verifikasi email telah dikirimkan ke:
+        </p>
+        <p class="text-sm font-bold font-mono text-purple-300 mt-1"><%= email %></p>
+    </div>
+
+    <!-- Simulated Verification Box for Local Demo Testing -->
+    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-left space-y-2">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Simulasi Inbox Verifikasi Instant:</span>
+        <p class="text-xs text-slate-300">Klik tombol di bawah ini untuk memverifikasi akun Anda secara langsung:</p>
+        <a href="<%= verifyUrl %>" class="block text-center py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md transition">
+            <i class="fa-solid fa-square-check mr-1"></i> Verifikasi Email Sekarang
+        </a>
+    </div>
+
+    <div class="pt-2 text-xs text-slate-500">
+        Setelah verifikasi selesai, Anda dapat <a href="/login" class="text-purple-400 font-bold hover:underline">Masuk ke Sistem</a>.
+    </div>
+</div>

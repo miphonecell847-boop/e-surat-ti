@@ -7,17 +7,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bg-verify-gradient {
+            background: linear-gradient(135deg, #090e17 0%, #1e3a8a 50%, #0f172a 100%);
+        }
+    </style>
 </head>
-<body class="min-h-full flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
-    <div class="w-full max-w-2xl bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+<body class="min-h-full flex items-center justify-center p-4 bg-verify-gradient">
+    <div class="w-full max-w-2xl bg-slate-900/90 border-2 border-amber-400/40 rounded-3xl p-8 shadow-2xl space-y-6">
         
         <!-- Institution Header -->
-        <div class="text-center border-b border-slate-800 pb-6">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3 text-xl shadow-lg">
-                <i class="fa-solid fa-shield-halved"></i>
+        <div class="text-center border-b border-slate-800 pb-6 space-y-2">
+            <div class="w-14 h-14 rounded-2xl bg-blue-600/30 text-amber-400 border border-amber-400/30 flex items-center justify-center mx-auto text-2xl shadow-xl">
+                <i class="fa-solid fa-graduation-cap"></i>
             </div>
-            <h1 class="text-lg font-bold text-white uppercase tracking-wide">Portal Verifikasi Dokumen Publik</h1>
-            <p class="text-xs text-slate-400">Program Studi Teknik Informatika - E-Surat Administrasi TA</p>
+            <h1 class="text-lg font-extrabold text-white uppercase tracking-wider">PORTAL VERIFIKASI KEABSAHAN DOKUMEN RESMI</h1>
+            <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Program Studi Teknik Informatika</p>
         </div>
 
         <% if (isValid && pengajuan) { %>
@@ -25,8 +31,8 @@
             <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-4">
                 <i class="fa-solid fa-circle-check text-3xl"></i>
                 <div>
-                    <h3 class="font-bold text-sm">DOKUMEN RESMI TERVERIFIKASI & ASLI</h3>
-                    <p class="text-xs text-emerald-300/80">Surat terdaftar resmi di sistem database relational prodi & tersimpan di Google Drive Cloud Storage.</p>
+                    <h3 class="font-extrabold text-sm uppercase">DOKUMEN RESMI TERVERIFIKASI & SAH</h3>
+                    <p class="text-xs text-emerald-300/80">Dokumen terdaftar di database relational prodi & tersimpan aman di Google Drive Cloud Storage.</p>
                 </div>
             </div>
 
@@ -35,7 +41,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <span class="text-slate-500 block mb-1">Nomor Surat Resmi</span>
-                        <span class="font-bold font-mono text-emerald-400 text-sm"><%= pengajuan.nomor_surat || 'B/---/UN.1/TI/TA/2026' %></span>
+                        <span class="font-extrabold font-mono text-amber-400 text-sm"><%= pengajuan.nomor_surat || 'B/---/UN.1/TI/TA/2026' %></span>
                     </div>
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <span class="text-slate-500 block mb-1">Jenis Surat</span>
@@ -56,13 +62,13 @@
 
                 <!-- Penandatangan -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <span class="text-slate-500 block font-semibold uppercase tracking-wider text-[10px]">Otorisasi E-Signature</span>
+                    <span class="text-slate-500 block font-semibold uppercase tracking-wider text-[10px]">Otorisasi Digital Kaprodi</span>
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="font-bold text-white">Dr. Eng. Nama Kaprodi, M.T.</p>
                             <p class="text-slate-400 text-[11px]">Ketua Program Studi Teknik Informatika (NIP: 198501012010121001)</p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono text-[10px]">
+                        <span class="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 font-mono text-[10px]">
                             E-Signed
                         </span>
                     </div>
@@ -71,14 +77,14 @@
                 <!-- Hash -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                     <span class="text-slate-500 block mb-1 text-[10px] font-semibold uppercase">Hash Kriptografi SHA-256 Dokumen</span>
-                    <span class="font-mono text-[10px] text-indigo-400 break-all"><%= pengajuan.qr_signature_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4e0835d07b5761' %></span>
+                    <span class="font-mono text-[10px] text-amber-400 break-all"><%= pengajuan.qr_signature_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4e0835d07b5761' %></span>
                 </div>
             </div>
 
             <!-- GDrive Download Button -->
             <% if (finalPdfDoc) { %>
-                <a href="<%= finalPdfDoc.web_view_link %>" target="_blank" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-google-drive"></i> Unduh / Lihat PDF Resmi Final di Google Drive
+                <a href="<%= finalPdfDoc.web_view_link %>" target="_blank" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-google-drive text-amber-400"></i> Unduh / Lihat PDF Resmi Final di Google Drive
                 </a>
             <% } %>
 

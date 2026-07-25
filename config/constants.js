@@ -43,6 +43,11 @@ module.exports = {
             kode: 'SK-BEBAS-TA',
             nama: 'Surat Keterangan Bebas Laboratorium & Revisi (Bebas Masalah TA)',
             template: 'sk_bebas_ta'
+        },
+        BA_UJIAN: {
+            kode: 'BA-UJIAN',
+            nama: 'Berita Acara Ujian / Seminar Tugas Akhir',
+            template: 'berita_acara_ujian'
         }
     }
 };

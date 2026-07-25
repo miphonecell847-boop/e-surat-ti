@@ -187,7 +187,15 @@ function seedData(database) {
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SEMPRO', 'Surat Undangan Seminar Proposal (Sempro)', 'undangan_sempro', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SIDANG', 'Surat Undangan Sidang Akhir / Munaqasyah', 'undangan_sidang', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SK-BEBAS-TA', 'Surat Keterangan Bebas Laboratorium & Revisi (Bebas Masalah TA)', 'sk_bebas_ta', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian', 1);");
+    } else {
+        const checkBa = database.exec("SELECT COUNT(*) as count FROM jenis_surat WHERE kode_surat = 'BA-UJIAN'");
+        const countBa = checkBa.length > 0 ? checkBa[0].values[0][0] : 0;
+        if (countBa === 0) {
+            database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian', 1);");
+        }
     }
+
 
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");
     const countUser = checkUser.length > 0 ? checkUser[0].values[0][0] : 0;

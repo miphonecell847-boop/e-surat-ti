@@ -1,0 +1,66 @@
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 border border-emerald-500/20 rounded-3xl p-6 shadow-xl flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold text-white mb-1">Inbox Verification Dosen Pembimbing</h2>
+            <p class="text-xs text-slate-400">Nama: <span class="text-emerald-400 font-semibold"><%= dosen ? dosen.nama_dosen : user.username %></span> | NIP/NIDN: <%= dosen ? dosen.nip_nidn : '-' %></p>
+        </div>
+        <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold">
+            <i class="fa-solid fa-chalkboard-user mr-1"></i> Mode Reviewer Bimbingan
+        </div>
+    </div>
+
+    <!-- Inbox List -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white">Pengajuan Masuk Membutuhkan Persetujuan (Pembimbing 1 & 2)</h3>
+        </div>
+
+        <% const pendingAll = [...(pendingP1 || []), ...(pendingP2 || [])]; %>
+
+        <% if (!pendingAll || pendingAll.length === 0) { %>
+            <div class="p-12 text-center text-slate-500">
+                <i class="fa-solid fa-circle-check text-4xl text-emerald-400/40 mb-3"></i>
+                <p class="text-sm">Tidak ada pengajuan surat yang tertunda. Semua tugas bimbingan telah diproses!</p>
+            </div>
+        <% } else { %>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                        <tr>
+                            <th class="px-6 py-3.5">Mahasiswa</th>
+                            <th class="px-6 py-3.5">Jenis Surat</th>
+                            <th class="px-6 py-3.5">Perihal</th>
+                            <th class="px-6 py-3.5">Status Inbox</th>
+                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        <% pendingAll.forEach(surat => { %>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-white block"><%= surat.mhs_nama %></span>
+                                    <span class="text-xs text-indigo-400 font-mono">NIM: <%= surat.mhs_nim %></span>
+                                </td>
+                                <td class="px-6 py-4 font-semibold text-white">
+                                    <%= surat.nama_surat %>
+                                    <span class="block text-[10px] text-slate-400 font-mono"><%= surat.kode_surat %></span>
+                                </td>
+                                <td class="px-6 py-4 text-slate-300"><%= surat.perihal %></td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                        <i class="fa-solid fa-clock"></i> <%= surat.status.replace(/_/g, ' ').toUpperCase() %>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="/dosen/review/<%= surat.id %>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-emerald-600/20">
+                                        <i class="fa-solid fa-signature mr-1"></i> Review & Acc
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>

@@ -1,0 +1,7 @@
+node_modules/
+e_surat.db
+.env
+public/uploads/*
+!public/uploads/.gitkeep
+service-account-gdrive.json
+*.log

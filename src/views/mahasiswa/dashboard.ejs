@@ -1,0 +1,130 @@
+<div class="space-y-6">
+    <!-- Student Header Banner -->
+    <div class="bg-gradient-to-r from-indigo-900/60 via-slate-900 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-white mb-1">Selamat Datang, <%= mhs ? mhs.nama_lengkap : user.username %> 👋</h2>
+            <p class="text-xs text-slate-400">NIM: <span class="text-indigo-400 font-semibold"><%= mhs ? mhs.nim : '-' %></span> | Angkatan: <%= mhs ? mhs.angkatan : '-' %></p>
+            <p class="text-xs text-slate-400 mt-1 italic">Judul TA: "<%= mhs ? (mhs.judul_ta || 'Belum diisi') : '-' %>"</p>
+        </div>
+        <div>
+            <a href="/mahasiswa/buat-surat" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus"></i> Ajukan Surat Baru
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Total Pengajuan</span>
+                <h3 class="text-2xl font-bold text-white mt-1"><%= listSurat ? listSurat.length : 0 %></h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Dalam Proses</span>
+                <h3 class="text-2xl font-bold text-amber-400 mt-1">
+                    <%= listSurat ? listSurat.filter(s => s.status !== 'selesai' && s.status !== 'ditolak').length : 0 %>
+                </h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Surat Selesai</span>
+                <h3 class="text-2xl font-bold text-emerald-400 mt-1">
+                    <%= listSurat ? listSurat.filter(s => s.status === 'selesai').length : 0 %>
+                </h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Surat List Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-white">Riwayat & Status Disposisi Surat</h3>
+        </div>
+
+        <% if (!listSurat || listSurat.length === 0) { %>
+            <div class="p-12 text-center text-slate-500">
+                <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+                <p class="text-sm">Belum ada pengajuan surat. Klik tombol "Ajukan Surat Baru" untuk memulai.</p>
+            </div>
+        <% } else { %>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                        <tr>
+                            <th class="px-6 py-3.5">Jenis Surat</th>
+                            <th class="px-6 py-3.5">Perihal</th>
+                            <th class="px-6 py-3.5">Tanggal Pengajuan</th>
+                            <th class="px-6 py-3.5">Status Disposisi</th>
+                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        <% listSurat.forEach(surat => { %>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="px-6 py-4 font-semibold text-white">
+                                    <%= surat.nama_surat %>
+                                    <span class="block text-[10px] text-indigo-400 font-mono"><%= surat.kode_surat %></span>
+                                </td>
+                                <td class="px-6 py-4 text-slate-300"><%= surat.perihal %></td>
+                                <td class="px-6 py-4 text-slate-400 text-xs"><%= surat.tgl_pengajuan %></td>
+                                <td class="px-6 py-4">
+                                    <% if (surat.status === 'pending_pembimbing_1') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            <i class="fa-solid fa-clock"></i> Review Pembimbing 1
+                                        </span>
+                                    <% } else if (surat.status === 'pending_pembimbing_2') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            <i class="fa-solid fa-clock"></i> Review Pembimbing 2
+                                        </span>
+                                    <% } else if (surat.status === 'pending_sekprodi') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                            <i class="fa-solid fa-spinner fa-spin"></i> Validasi Sekprodi
+                                        </span>
+                                    <% } else if (surat.status === 'pending_kaprodi') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                            <i class="fa-solid fa-stamp"></i> Otorisasi Kaprodi
+                                        </span>
+                                    <% } else if (surat.status === 'pending_tu') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                            <i class="fa-solid fa-file-signature"></i> Penomoran TU
+                                        </span>
+                                    <% } else if (surat.status === 'selesai') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            <i class="fa-solid fa-check-circle"></i> Selesai
+                                        </span>
+                                    <% } else if (surat.status === 'revisi') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                            <i class="fa-solid fa-pen"></i> Revisi
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                                            <i class="fa-solid fa-circle-xmark"></i> Ditolak
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-medium transition">
+                                        <i class="fa-solid fa-eye mr-1"></i> Detail Timeline
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>

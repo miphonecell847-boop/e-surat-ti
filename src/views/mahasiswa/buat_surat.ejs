@@ -1,0 +1,70 @@
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold text-white">Form Pengajuan Surat Administrasi TA</h2>
+            <p class="text-xs text-slate-400 mt-1">Isi formulir dan sertakan dokumen lampiran pendukung dalam format PDF.</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+        </a>
+    </div>
+
+    <% if (error) { %>
+        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><%= error %></span>
+        </div>
+    <% } %>
+
+    <form action="/mahasiswa/buat-surat" method="POST" enctype="multipart/form-data" class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-xl">
+        <!-- Select Jenis Surat -->
+        <div>
+            <label for="jenis_surat_id" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Jenis Surat TA *</label>
+            <select id="jenis_surat_id" name="jenis_surat_id" required onchange="toggleFormFields(this.value)"
+                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm text-slate-100 transition">
+                <option value="" disabled selected>-- Pilih Jenis Surat Administrasi --</option>
+                <% jenisList.forEach(jenis => { %>
+                    <option value="<%= jenis.id %>"><%= jenis.nama_surat %> (<%= jenis.kode_surat %>)</option>
+                <% }); %>
+            </select>
+        </div>
+
+        <!-- Perihal Surat -->
+        <div>
+            <label for="perihal" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Perihal Surat *</label>
+            <input type="text" id="perihal" name="perihal" required placeholder="Contoh: Permohonan Izin Riset Penelitian Skripsi"
+                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm text-slate-100 placeholder-slate-500 transition">
+        </div>
+
+        <!-- Dynamic Fields Container -->
+        <div id="dynamic-fields" class="space-y-5">
+            <!-- Default field: Nama Instansi / Lokasi Riset -->
+            <div>
+                <label for="tujuan_instansi" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tujuan Instansi / Perusahaan / Mitra</label>
+                <input type="text" id="tujuan_instansi" name="tujuan_instansi" placeholder="Contoh: PT. Teknologi Utama Indonesia, Jakarta"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm text-slate-100 placeholder-slate-500 transition">
+            </div>
+
+            <div>
+                <label for="tanggal_kegiatan" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Rencana Tanggal Pelaksanaan</label>
+                <input type="date" id="tanggal_kegiatan" name="tanggal_kegiatan"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm text-slate-100 transition">
+            </div>
+        </div>
+
+        <!-- File Upload to GDrive -->
+        <div class="pt-4 border-t border-slate-800/80">
+            <label for="file_lampiran" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Upload Berkas Lampiran / Dokumen Syarat (PDF) *</label>
+            <div class="p-6 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-950/40 text-center hover:border-indigo-500/50 transition">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 mb-2"></i>
+                <p class="text-xs text-slate-300 font-medium">Pilih file PDF (Draft Skripsi, Proposal, atau Transkrip Nilai)</p>
+                <p class="text-[10px] text-slate-500 mt-1">Otomatis di-upload dan tersimpan di Google Drive Prodi. Max size 10MB.</p>
+                <input type="file" id="file_lampiran" name="file_lampiran" accept=".pdf,.doc,.docx" class="mt-4 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i> Kirim Pengajuan Surat
+        </button>
+    </form>
+</div>

@@ -1,0 +1,77 @@
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Top Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold text-white">Detail Status & Disposisi Surat</h2>
+            <p class="text-xs text-slate-400 mt-1">UUID: <span class="font-mono text-indigo-400"><%= pengajuan.uuid_surat %></span></p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
+    <!-- Info Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Jenis Surat</span>
+            <h3 class="text-base font-bold text-white"><%= pengajuan.nama_surat %></h3>
+            <p class="text-xs text-indigo-400 font-mono mt-0.5"><%= pengajuan.kode_surat %></p>
+
+            <div class="mt-4">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Perihal</span>
+                <p class="text-sm text-slate-200"><%= pengajuan.perihal %></p>
+            </div>
+        </div>
+
+        <div class="space-y-3 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-6">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Nomor Surat Resmi</span>
+                <p class="text-sm font-bold font-mono text-emerald-400"><%= pengajuan.nomor_surat || 'Belum diterbitkan (Pending TU)' %></p>
+            </div>
+
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tanggal Pengajuan</span>
+                <p class="text-xs text-slate-300"><%= pengajuan.tgl_pengajuan %></p>
+            </div>
+
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Google Drive Cloud Status</span>
+                <% if (docs && docs.length > 0) { %>
+                    <a href="<%= docs[docs.length - 1].web_view_link %>" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition">
+                        <i class="fa-brands fa-google-drive"></i> Lihat di Google Drive
+                    </a>
+                <% } else { %>
+                    <span class="text-xs text-slate-500">Tidak ada berkas terlampir</span>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Tracker -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+        <h3 class="font-bold text-sm text-white mb-6 border-b border-slate-800 pb-3">Pelacakan Disposisi Surat (Timeline Tracker)</h3>
+        
+        <div class="relative pl-6 border-l-2 border-slate-800 space-y-6">
+            <% if (riwayat && riwayat.length > 0) { %>
+                <% riwayat.forEach((log, index) => { %>
+                    <div class="relative">
+                        <!-- Dot Icon -->
+                        <div class="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-indigo-600 border-4 border-slate-900 shadow-md shadow-indigo-600/50"></div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-white uppercase"><%= log.actor_role.replace('_', ' ') %></span>
+                                <span class="text-[10px] text-slate-400"><%= log.created_at %></span>
+                            </div>
+                            <p class="text-xs text-indigo-300 font-medium mt-1">Status: <span class="uppercase tracking-wide font-bold"><%= log.status_sesudahnya.replace(/_/g, ' ') %></span></p>
+                            <% if (log.catatan_revisi) { %>
+                                <p class="text-xs text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800 mt-2 italic"><%= log.catatan_revisi %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p class="text-xs text-slate-500">Belum ada riwayat disposisi.</p>
+            <% } %>
+        </div>
+    </div>
+</div>

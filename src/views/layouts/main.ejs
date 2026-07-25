@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title || 'E-Surat Administrasi TA' %></title>
+    <title><%= title || 'E-Surat TA - UNIDAYAN' %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,10 +15,8 @@
 
     <!-- Mobile Header -->
     <header class="md:hidden h-16 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
-        <a href="/dashboard" class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-xl bg-blue-700 flex items-center justify-center text-amber-400 font-bold">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </div>
+        <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2" title="Buka www.unidayan.ac.id">
+            <img src="/images/logo-unidayan.png" alt="UNIDAYAN" class="w-8 h-8 object-contain">
             <span class="font-bold text-sm text-white">E-Surat TA</span>
         </a>
         <button id="mobile-sidebar-toggle" class="p-2 text-slate-300 hover:text-white rounded-lg bg-slate-800">
@@ -30,16 +28,16 @@
     <aside id="app-sidebar" class="w-64 bg-slate-900 border-r border-slate-800 flex-col justify-between hidden md:flex shrink-0">
         <div>
             <!-- Brand Logo Desktop -->
-            <div class="h-20 px-6 hidden md:flex items-center gap-3 border-b border-slate-800">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-800 border border-amber-400/30 flex items-center justify-center text-amber-400 font-extrabold shadow-lg shadow-blue-950/50">
-                    <i class="fa-solid fa-graduation-cap text-lg"></i>
-                </div>
+            <div class="h-20 px-5 hidden md:flex items-center gap-3 border-b border-slate-800">
+                <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="group shrink-0" title="Buka Website Resmi UNIDAYAN Baubau (www.unidayan.ac.id)">
+                    <img src="/images/logo-unidayan.png" alt="Logo UNIDAYAN" class="w-10 h-10 object-contain group-hover:scale-110 transition duration-300 drop-shadow">
+                </a>
                 <div>
                     <div class="flex items-center gap-1.5">
                         <h2 class="font-extrabold text-sm text-white tracking-tight leading-none">E-Surat TA</h2>
-                        <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-amber-500 text-slate-950">PRODI TI</span>
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-amber-400 text-slate-950">UNIDAYAN</span>
                     </div>
-                    <span class="text-[10px] font-medium text-slate-400">Teknik Informatika</span>
+                    <span class="text-[10px] font-semibold text-slate-400">Teknik Informatika</span>
                 </div>
             </div>
 
@@ -90,6 +88,10 @@
                 <a href="/change-password" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
                     <i class="fa-solid fa-key w-5 text-center"></i> Ganti Password
                 </a>
+
+                <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-4 py-3 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 transition">
+                    <i class="fa-solid fa-globe w-5 text-center"></i> Web UNIDAYAN
+                </a>
             </nav>
         </div>
 
@@ -124,6 +126,9 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <i class="fa-solid fa-globe"></i> www.unidayan.ac.id
+                </a>
                 <span class="text-xs text-slate-300 flex items-center gap-2 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 shadow-inner">
                     <i class="fa-brands fa-google-drive text-emerald-400"></i> Google Drive Cloud: Connected
                 </span>

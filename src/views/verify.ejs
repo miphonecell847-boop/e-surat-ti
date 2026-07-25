@@ -17,13 +17,13 @@
 <body class="min-h-full flex items-center justify-center p-4 bg-verify-gradient">
     <div class="w-full max-w-2xl bg-slate-900/90 border-2 border-amber-400/40 rounded-3xl p-8 shadow-2xl space-y-6">
         
-        <!-- Institution Header -->
+        <!-- Institution Header with UNIDAYAN Logo Link -->
         <div class="text-center border-b border-slate-800 pb-6 space-y-2">
-            <div class="w-14 h-14 rounded-2xl bg-blue-600/30 text-amber-400 border border-amber-400/30 flex items-center justify-center mx-auto text-2xl shadow-xl">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </div>
+            <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="inline-block hover:scale-105 transition" title="Kunjungi Website Resmi www.unidayan.ac.id">
+                <img src="/images/logo-unidayan.png" alt="Logo UNIDAYAN" class="w-20 h-20 object-contain mx-auto mb-2 drop-shadow-xl">
+            </a>
             <h1 class="text-lg font-extrabold text-white uppercase tracking-wider">PORTAL VERIFIKASI KEABSAHAN DOKUMEN RESMI</h1>
-            <p class="text-xs text-amber-400 font-semibold uppercase tracking-widest">Program Studi Teknik Informatika</p>
+            <p class="text-xs text-amber-400 font-extrabold uppercase tracking-widest">UNIVERSITAS DAYANU IKHSANUDDIN (UNIDAYAN)</p>
         </div>
 
         <% if (isValid && pengajuan) { %>
@@ -41,7 +41,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <span class="text-slate-500 block mb-1">Nomor Surat Resmi</span>
-                        <span class="font-extrabold font-mono text-amber-400 text-sm"><%= pengajuan.nomor_surat || 'B/---/UN.1/TI/TA/2026' %></span>
+                        <span class="font-extrabold font-mono text-amber-400 text-sm"><%= pengajuan.nomor_surat || 'B/---/UNIDAYAN/TI/TA/2026' %></span>
                     </div>
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <span class="text-slate-500 block mb-1">Jenis Surat</span>
@@ -93,12 +93,15 @@
             <div class="p-6 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-center space-y-2">
                 <i class="fa-solid fa-triangle-exclamation text-4xl"></i>
                 <h3 class="font-bold text-base">DOKUMEN TIDAK DITEMUKAN / TIDAK VALID</h3>
-                <p class="text-xs text-red-300/80">Dokumen dengan QR Code ini tidak terdaftar dalam database E-Surat Teknik Informatika.</p>
+                <p class="text-xs text-red-300/80">Dokumen dengan QR Code ini tidak terdaftar dalam database E-Surat Teknik Informatika UNIDAYAN.</p>
             </div>
         <% } %>
 
-        <div class="text-center pt-4 border-t border-slate-800 text-[10px] text-slate-500">
-            &copy; 2026 Program Studi Teknik Informatika. Integrated with Google Drive API v3.
+        <div class="text-center pt-4 border-t border-slate-800 text-[10px] text-slate-400 flex items-center justify-between">
+            <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="hover:text-amber-400 transition font-bold">
+                <i class="fa-solid fa-globe mr-1"></i> www.unidayan.ac.id
+            </a>
+            <span>&copy; 2026 Universitas Dayanu Ikhsanuddin</span>
         </div>
     </div>
 </body>

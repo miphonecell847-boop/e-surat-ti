@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem E-Surat Administrasi Tugas Akhir - Teknik Informatika</title>
-    <meta name="description" content="Portal Resmi Administrasi Dokumen Tugas Akhir Program Studi Teknik Informatika dengan Integrasi Google Drive API & E-Signature QR Code.">
+    <title>E-Surat TA - Universitas Dayanu Ikhsanuddin (UNIDAYAN)</title>
+    <meta name="description" content="Portal Resmi Administrasi Dokumen Tugas Akhir Program Studi Teknik Informatika Universitas Dayanu Ikhsanuddin (UNIDAYAN) Baubau.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -17,17 +17,15 @@
     <!-- 1. NAVIGATION BAR -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Brand & University Crest -->
-            <a href="/" class="flex items-center gap-3.5 group">
-                <div class="w-11 h-11 rounded-2xl bg-blue-700 text-amber-400 font-extrabold flex items-center justify-center border-2 border-amber-400/40 shadow-lg group-hover:scale-105 transition">
-                    <i class="fa-solid fa-graduation-cap text-xl"></i>
-                </div>
+            <!-- Brand & University Crest with UNIDAYAN Logo Link -->
+            <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3.5 group" title="Buka Website Resmi UNIDAYAN Baubau (www.unidayan.ac.id)">
+                <img src="/images/logo-unidayan.png" alt="Logo UNIDAYAN" class="w-12 h-12 object-contain drop-shadow-md group-hover:scale-110 transition duration-300">
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-lg text-white tracking-tight block leading-none">E-Surat TA</span>
-                        <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-widest">PRODI TI</span>
+                        <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-widest">UNIDAYAN</span>
                     </div>
-                    <span class="text-[11px] font-semibold text-slate-300">Administrasi Dokumen Tugas Akhir</span>
+                    <span class="text-[11px] font-semibold text-slate-300">Universitas Dayanu Ikhsanuddin</span>
                 </div>
             </a>
 
@@ -67,6 +65,9 @@
             <a href="#fitur" class="block text-slate-200 hover:text-amber-400">Fitur Akademis</a>
             <a href="#alur" class="block text-slate-200 hover:text-amber-400">Alur Disposisi Surat</a>
             <a href="#verifikasi" class="block text-slate-200 hover:text-amber-400">Verifikasi QR Dokumen</a>
+            <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="block text-amber-400 hover:underline">
+                <i class="fa-solid fa-globe mr-1"></i> Website Utama UNIDAYAN
+            </a>
             <div class="pt-4 border-t border-slate-800 space-y-2">
                 <% if (user) { %>
                     <a href="/dashboard" class="block text-center py-3 bg-amber-400 text-slate-950 font-black rounded-xl">Ke Dashboard</a>
@@ -78,16 +79,17 @@
         </div>
     </header>
 
-    <!-- 2. HERO BANNER SECTION (High Contrast Solid Colors) -->
+    <!-- 2. HERO BANNER SECTION -->
     <section class="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-slate-950 text-white border-b-4 border-amber-400">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
                 <!-- Left Text Column -->
                 <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900 border-2 border-blue-500 text-amber-300 text-xs font-black uppercase tracking-wider shadow">
-                        <i class="fa-solid fa-award"></i> PORTAL RESMI TATA KELOLA ADMINISTRASI SKRIPSI
-                    </div>
+                    <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-950 border-2 border-blue-600 text-amber-300 text-xs font-black uppercase tracking-wider shadow hover:bg-blue-900 transition">
+                        <img src="/images/logo-unidayan.png" alt="UNIDAYAN" class="w-5 h-5 object-contain">
+                        PORTAL RESMI SKRIPSI UNIVERSITAS DAYANU IKHSANUDDIN
+                    </a>
 
                     <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white">
                         E-Surat Administrasi TA <br>
@@ -109,17 +111,17 @@
                     </div>
                 </div>
 
-                <!-- Right Visual Column (Certificate Card Display) -->
+                <!-- Right Visual Column (Certificate Card Display with UNIDAYAN Logo) -->
                 <div class="lg:col-span-5 flex justify-center">
                     <div class="relative w-full max-w-sm">
                         <div class="relative bg-slate-900 p-6 rounded-3xl border-4 border-amber-400 shadow-2xl space-y-4 text-slate-100">
-                            <!-- Kop Header -->
-                            <div class="text-center border-b border-slate-800 pb-4 space-y-1">
-                                <div class="w-12 h-12 rounded-full bg-blue-700 text-amber-400 border-2 border-amber-400 flex items-center justify-center mx-auto text-xl shadow">
-                                    <i class="fa-solid fa-building-columns"></i>
-                                </div>
-                                <h3 class="text-xs font-black text-white uppercase tracking-wider">UNIVERSITAS TEKNOLOGI INFORMATIKA</h3>
-                                <p class="text-[11px] font-bold text-amber-400">PROGRAM STUDI TEKNIK INFORMATIKA</p>
+                            <!-- Kop Header with Clickable Logo -->
+                            <div class="text-center border-b border-slate-800 pb-4 space-y-2">
+                                <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="inline-block hover:scale-105 transition" title="Kunjungi Website Resmi www.unidayan.ac.id">
+                                    <img src="/images/logo-unidayan.png" alt="Logo UNIDAYAN" class="w-16 h-16 object-contain mx-auto drop-shadow-md">
+                                </a>
+                                <h3 class="text-xs font-black text-white uppercase tracking-wider">UNIVERSITAS DAYANU IKHSANUDDIN</h3>
+                                <p class="text-[11px] font-bold text-amber-400 uppercase">PROGRAM STUDI TEKNIK INFORMATIKA</p>
                             </div>
 
                             <!-- Document Status Mock -->
@@ -128,7 +130,7 @@
                                     <span class="font-extrabold text-amber-400 text-xs">SK DOSEN PEMBIMBING TA</span>
                                     <span class="px-2.5 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-mono font-black">SELESAI</span>
                                 </div>
-                                <p class="text-[11px] font-semibold text-slate-200">Nomor: B/123/UN.1/TI/TA/2026</p>
+                                <p class="text-[11px] font-semibold text-slate-200">Nomor: B/123/UNIDAYAN/TI/TA/2026</p>
                                 <p class="text-[11px] font-semibold text-slate-300">Mahasiswa: Ahmad Fauzi (NIM: 21081010001)</p>
                             </div>
 
@@ -167,7 +169,7 @@
                 </div>
                 <div>
                     <h3 class="font-extrabold text-sm text-slate-900 mb-1">Google Drive API Integration</h3>
-                    <p class="text-xs text-slate-700 font-medium leading-relaxed">Direct stream direct upload ke struktur folder Drive Prodi tanpa membebani storage server.</p>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">Direct stream upload berkas syarat & output PDF resmi ke Google Drive UNIDAYAN.</p>
                 </div>
             </div>
 
@@ -199,10 +201,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
                 <span class="text-xs font-black text-blue-900 uppercase tracking-widest bg-blue-200 px-4 py-1.5 rounded-full border border-blue-300">
-                    Sistem Tata Kelola Modern
+                    Sistem Tata Kelola Modern UNIDAYAN
                 </span>
                 <h2 class="text-3xl font-black text-slate-900">Transformasi Administrasi Skripsi Digital</h2>
-                <p class="text-sm font-semibold text-slate-700 leading-relaxed">Sistem E-Surat Tugas Akhir memberikan kepastian alur, kecepatan verifikasi, dan transparansi status bagi seluruh civitas akademika.</p>
+                <p class="text-sm font-semibold text-slate-700 leading-relaxed">Sistem E-Surat Tugas Akhir memberikan kepastian alur, kecepatan verifikasi, dan transparansi status bagi seluruh civitas akademika UNIDAYAN.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -331,13 +333,14 @@
     <!-- 7. FOOTER -->
     <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-blue-800 text-amber-400 flex items-center justify-center font-bold">
-                    <i class="fa-solid fa-graduation-cap"></i>
+            <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 hover:opacity-90 transition">
+                <img src="/images/logo-unidayan.png" alt="Logo UNIDAYAN" class="w-10 h-10 object-contain">
+                <div>
+                    <span class="font-extrabold text-white block">E-Surat Administrasi TA UNIDAYAN &copy; 2026</span>
+                    <span class="text-[10px] text-amber-400">www.unidayan.ac.id</span>
                 </div>
-                <span class="font-extrabold text-white">E-Surat Administrasi TA &copy; 2026</span>
-            </div>
-            <p class="text-slate-400">Program Studi Teknik Informatika | Integrated with Google Drive API v3</p>
+            </a>
+            <p class="text-slate-400">Program Studi Teknik Informatika - Fakultas Teknik | Baubau, Sulawesi Tenggara</p>
         </div>
     </footer>
 

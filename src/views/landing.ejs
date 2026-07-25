@@ -7,54 +7,32 @@
     <meta name="description" content="Portal Resmi Administrasi Dokumen Tugas Akhir Program Studi Teknik Informatika dengan Integrasi Google Drive API & E-Signature QR Code.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .bg-academic-navy {
-            background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 45%, #172554 80%, #0f172a 100%);
-        }
-        .bg-academic-grid {
-            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-            background-size: 28px 28px;
-        }
-        .gold-badge {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
-        }
-        .glass-academic {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .academic-card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .academic-card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 30px -10px rgba(30, 58, 138, 0.15);
-        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-700 selection:text-white">
+<body class="bg-slate-100 text-slate-900 antialiased selection:bg-blue-700 selection:text-white">
 
-    <!-- 1. ACADEMIC TOP NAVBAR -->
-    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
+    <!-- 1. NAVIGATION BAR -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand & University Crest -->
             <a href="/" class="flex items-center gap-3.5 group">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-700 to-blue-900 flex items-center justify-center text-amber-400 font-extrabold shadow-lg shadow-blue-900/50 group-hover:scale-105 transition border border-amber-400/30">
+                <div class="w-11 h-11 rounded-2xl bg-blue-700 text-amber-400 font-extrabold flex items-center justify-center border-2 border-amber-400/40 shadow-lg group-hover:scale-105 transition">
                     <i class="fa-solid fa-graduation-cap text-xl"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="font-extrabold text-lg text-white tracking-tight leading-none">E-Surat TA</span>
-                        <span class="px-2 py-0.5 rounded text-[9px] font-bold gold-badge text-slate-950 uppercase tracking-widest">PRODI TI</span>
+                        <span class="font-extrabold text-lg text-white tracking-tight block leading-none">E-Surat TA</span>
+                        <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-widest">PRODI TI</span>
                     </div>
-                    <span class="text-[11px] font-medium text-slate-400">Administrasi Dokumen Tugas Akhir</span>
+                    <span class="text-[11px] font-semibold text-slate-300">Administrasi Dokumen Tugas Akhir</span>
                 </div>
             </a>
 
-            <!-- Navigation Links -->
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-200">
                 <a href="#tentang" class="hover:text-amber-400 transition">Tentang Layanan</a>
                 <a href="#fitur" class="hover:text-amber-400 transition">Fitur Akademis</a>
                 <a href="#alur" class="hover:text-amber-400 transition">Alur Disposisi</a>
@@ -64,115 +42,110 @@
             <!-- CTA Buttons -->
             <div class="hidden md:flex items-center gap-3">
                 <% if (user) { %>
-                    <a href="/dashboard" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 hover:from-amber-400 hover:to-amber-300 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <a href="/dashboard" class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition flex items-center gap-2">
                         <i class="fa-solid fa-gauge text-sm"></i> Ke Dashboard (<%= user.username %>)
                     </a>
                 <% } else { %>
-                    <a href="/login" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-2">
-                        <i class="fa-solid fa-right-to-bracket text-blue-400"></i> Masuk / Login
+                    <a href="/login" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-extrabold text-xs transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket text-amber-400"></i> Masuk / Login
                     </a>
-                    <a href="/register" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-amber-400"></i> Daftar Akun Baru
+                    <a href="/register" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-lg transition flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-amber-300"></i> Daftar Akun Baru
                     </a>
                 <% } %>
             </div>
 
             <!-- Mobile Menu Toggle Button -->
-            <button id="mobile-menu-btn" class="md:hidden p-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-slate-800">
+            <button id="mobile-menu-btn" class="md:hidden p-2.5 rounded-xl bg-slate-800 text-slate-200 hover:text-white border border-slate-700">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </div>
 
         <!-- Mobile Drawer Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-slate-950 border-b border-slate-800 px-6 py-6 space-y-4 text-xs">
-            <a href="#tentang" class="block font-medium text-slate-300 hover:text-amber-400">Tentang Layanan</a>
-            <a href="#fitur" class="block font-medium text-slate-300 hover:text-amber-400">Fitur Akademis</a>
-            <a href="#alur" class="block font-medium text-slate-300 hover:text-amber-400">Alur Disposisi Surat</a>
-            <a href="#verifikasi" class="block font-medium text-slate-300 hover:text-amber-400">Verifikasi QR Dokumen</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-950 border-b border-slate-800 px-6 py-6 space-y-4 text-xs font-bold">
+            <a href="#tentang" class="block text-slate-200 hover:text-amber-400">Tentang Layanan</a>
+            <a href="#fitur" class="block text-slate-200 hover:text-amber-400">Fitur Akademis</a>
+            <a href="#alur" class="block text-slate-200 hover:text-amber-400">Alur Disposisi Surat</a>
+            <a href="#verifikasi" class="block text-slate-200 hover:text-amber-400">Verifikasi QR Dokumen</a>
             <div class="pt-4 border-t border-slate-800 space-y-2">
                 <% if (user) { %>
-                    <a href="/dashboard" class="block text-center py-3 bg-amber-500 text-slate-950 font-extrabold rounded-xl">Ke Dashboard</a>
+                    <a href="/dashboard" class="block text-center py-3 bg-amber-400 text-slate-950 font-black rounded-xl">Ke Dashboard</a>
                 <% } else { %>
-                    <a href="/login" class="block text-center py-2.5 bg-slate-900 text-slate-200 font-bold rounded-xl border border-slate-800 mb-2">Masuk / Login</a>
+                    <a href="/login" class="block text-center py-2.5 bg-slate-900 text-white font-bold rounded-xl border border-slate-800 mb-2">Masuk / Login</a>
                     <a href="/register" class="block text-center py-2.5 bg-blue-600 text-white font-bold rounded-xl">Daftar Akun Baru</a>
                 <% } %>
             </div>
         </div>
     </header>
 
-    <!-- 2. HERO BANNER SECTION (Academic Navy & Golden Accents) -->
-    <section class="relative pt-32 pb-24 md:pt-40 md:pb-36 bg-academic-navy bg-academic-grid text-white overflow-hidden border-b border-blue-900/50">
-        <!-- Subtle Ambient Glow -->
-        <div class="absolute top-1/3 left-10 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
+    <!-- 2. HERO BANNER SECTION (High Contrast Solid Colors) -->
+    <section class="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-slate-950 text-white border-b-4 border-amber-400">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
-                <!-- Left Column Text -->
+                <!-- Left Text Column -->
                 <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-900/60 border border-blue-400/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
-                        <i class="fa-solid fa-award text-amber-400"></i> Portal Resmi Tata Kelola Administrasi Skripsi
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900 border-2 border-blue-500 text-amber-300 text-xs font-black uppercase tracking-wider shadow">
+                        <i class="fa-solid fa-award"></i> PORTAL RESMI TATA KELOLA ADMINISTRASI SKRIPSI
                     </div>
 
-                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white">
                         E-Surat Administrasi TA <br>
-                        <span class="bg-gradient-to-r from-amber-200 via-amber-400 to-white bg-clip-text text-transparent">Program Studi Teknik Informatika</span>
+                        <span class="text-amber-400 font-black">Program Studi Teknik Informatika</span>
                     </h1>
 
-                    <p class="text-base sm:text-lg text-slate-300 font-light max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                        Digitalisasi pembuatan, pengajuan, ploting dosen, hingga penerbitan **E-Signature QR Code SHA-256** & pengarsipan otomatis ke **Google Drive Cloud Storage**.
+                    <p class="text-base sm:text-lg text-slate-200 font-semibold max-w-2xl mx-auto lg:mx-0 leading-relaxed bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        Digitalisasi pembuatan, pengajuan, ploting dosen, hingga penerbitan <strong class="text-amber-300">E-Signature QR Code SHA-256</strong> & pengarsipan otomatis ke <strong class="text-blue-300">Google Drive Cloud Storage</strong>.
                     </p>
 
                     <!-- CTA Buttons -->
-                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-                        <a href="/login" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold rounded-2xl text-sm shadow-xl shadow-amber-500/20 transition transform hover:-translate-y-1 flex items-center justify-center gap-3">
-                            <i class="fa-solid fa-right-to-bracket text-slate-900"></i> Masuk / Ajukan Surat
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                        <a href="/login" class="w-full sm:w-auto px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-xl transition transform hover:-translate-y-1 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-right-to-bracket text-slate-950 text-base"></i> Masuk / Ajukan Surat
                         </a>
-                        <a href="#verifikasi" class="w-full sm:w-auto px-8 py-4 glass-academic hover:bg-white/10 text-white font-semibold rounded-2xl text-sm transition flex items-center justify-center gap-3">
-                            <i class="fa-solid fa-qrcode text-amber-400"></i> Verifikasi Keaslian QR
+                        <a href="#verifikasi" class="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-qrcode text-amber-400 text-base"></i> Verifikasi Keaslian QR
                         </a>
                     </div>
                 </div>
 
-                <!-- Right Visual Column (Official Academic Certificate Card) -->
+                <!-- Right Visual Column (Certificate Card Display) -->
                 <div class="lg:col-span-5 flex justify-center">
                     <div class="relative w-full max-w-sm">
-                        <!-- Certificate Card Glass Frame -->
-                        <div class="relative bg-slate-950 p-5 rounded-3xl border-2 border-amber-400/40 shadow-2xl shadow-blue-950/80 space-y-4">
+                        <div class="relative bg-slate-900 p-6 rounded-3xl border-4 border-amber-400 shadow-2xl space-y-4 text-slate-100">
                             <!-- Kop Header -->
-                            <div class="text-center border-b border-slate-800 pb-3 space-y-1">
-                                <div class="w-10 h-10 rounded-full bg-blue-600/30 text-amber-400 border border-amber-400/30 flex items-center justify-center mx-auto text-lg shadow">
+                            <div class="text-center border-b border-slate-800 pb-4 space-y-1">
+                                <div class="w-12 h-12 rounded-full bg-blue-700 text-amber-400 border-2 border-amber-400 flex items-center justify-center mx-auto text-xl shadow">
                                     <i class="fa-solid fa-building-columns"></i>
                                 </div>
-                                <h3 class="text-xs font-bold text-white uppercase tracking-wider">UNIVERSITAS TEKNOLOGI INFORMATIKA</h3>
-                                <p class="text-[10px] text-slate-400">PROGRAM STUDI TEKNIK INFORMATIKA</p>
+                                <h3 class="text-xs font-black text-white uppercase tracking-wider">UNIVERSITAS TEKNOLOGI INFORMATIKA</h3>
+                                <p class="text-[11px] font-bold text-amber-400">PROGRAM STUDI TEKNIK INFORMATIKA</p>
                             </div>
 
                             <!-- Document Status Mock -->
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1 text-xs">
+                            <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5 text-xs">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-amber-400 text-[11px]">SK DOSEN PEMBIMBING TA</span>
-                                    <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[9px] font-mono font-bold">SELESAI</span>
+                                    <span class="font-extrabold text-amber-400 text-xs">SK DOSEN PEMBIMBING TA</span>
+                                    <span class="px-2.5 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-mono font-black">SELESAI</span>
                                 </div>
-                                <p class="text-[10px] text-slate-300">Nomor: B/123/UN.1/TI/TA/2026</p>
-                                <p class="text-[10px] text-slate-400">Mahasiswa: Ahmad Fauzi (NIM: 21081010001)</p>
+                                <p class="text-[11px] font-semibold text-slate-200">Nomor: B/123/UN.1/TI/TA/2026</p>
+                                <p class="text-[11px] font-semibold text-slate-300">Mahasiswa: Ahmad Fauzi (NIM: 21081010001)</p>
                             </div>
 
                             <!-- E-Signature QR Code Box -->
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 flex items-center gap-3">
-                                <div class="w-16 h-16 bg-white p-1 rounded-lg shrink-0 flex items-center justify-center">
+                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-3">
+                                <div class="w-16 h-16 bg-white p-1 rounded-lg shrink-0 flex items-center justify-center shadow">
                                     <i class="fa-solid fa-qrcode text-4xl text-slate-900"></i>
                                 </div>
-                                <div class="text-[10px] space-y-0.5">
-                                    <span class="font-bold text-white block">Tanda Tangan Digital Kaprodi</span>
-                                    <p class="text-slate-400">Dr. Eng. Nama Kaprodi, M.T.</p>
-                                    <p class="font-mono text-amber-400 text-[9px] truncate">Hash: e3b0c44298fc1c14...</p>
+                                <div class="text-xs space-y-0.5">
+                                    <span class="font-black text-white block">Tanda Tangan Digital Kaprodi</span>
+                                    <p class="text-slate-300 text-[11px]">Dr. Eng. Nama Kaprodi, M.T.</p>
+                                    <p class="font-mono text-amber-400 text-[10px] font-bold">Hash: e3b0c44298fc1c14...</p>
                                 </div>
                             </div>
 
                             <div class="text-center pt-1">
-                                <span class="text-[9px] text-emerald-400 font-semibold inline-flex items-center gap-1">
+                                <span class="text-[11px] text-emerald-400 font-extrabold inline-flex items-center gap-1.5">
                                     <i class="fa-solid fa-cloud-arrow-up"></i> Auto Archiving ke Google Drive Prodi
                                 </span>
                             </div>
@@ -184,37 +157,37 @@
         </div>
     </section>
 
-    <!-- 3. ACADEMIC HIGHLIGHT STRIP -->
+    <!-- 3. HIGHLIGHT CARDS -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-900/10 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
             <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center text-xl shrink-0 shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-900 text-amber-400 flex items-center justify-center text-xl shrink-0 shadow-md">
                     <i class="fa-brands fa-google-drive"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-sm text-slate-900 mb-1">Google Drive API Integration</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Direct stream direct upload ke struktur folder Drive Prodi tanpa membebani storage server.</p>
+                    <h3 class="font-extrabold text-sm text-slate-900 mb-1">Google Drive API Integration</h3>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">Direct stream direct upload ke struktur folder Drive Prodi tanpa membebani storage server.</p>
                 </div>
             </div>
 
             <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0 shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-900 text-amber-400 flex items-center justify-center text-xl shrink-0 shadow-md">
                     <i class="fa-solid fa-stamp"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-sm text-slate-900 mb-1">Keabsahan QR E-Signature</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Pengesahan legalitas dokumen menggunakan hash enkripsi kriptografi SHA-256 terverifikasi.</p>
+                    <h3 class="font-extrabold text-sm text-slate-900 mb-1">Keabsahan QR E-Signature</h3>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">Pengesahan legalitas dokumen menggunakan hash enkripsi kriptografi SHA-256 terverifikasi.</p>
                 </div>
             </div>
 
             <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center text-xl shrink-0 shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-900 text-amber-400 flex items-center justify-center text-xl shrink-0 shadow-md">
                     <i class="fa-solid fa-list-check"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-sm text-slate-900 mb-1">Tracking Disposisi 5 Peran</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">Pelacakan posisi dokumen dari Mahasiswa, Pembimbing, Sekprodi, Kaprodi, hingga Staff TU.</p>
+                    <h3 class="font-extrabold text-sm text-slate-900 mb-1">Tracking Disposisi 5 Peran</h3>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">Pelacakan posisi dokumen dari Mahasiswa, Pembimbing, Sekprodi, Kaprodi, hingga Staff TU.</p>
                 </div>
             </div>
 
@@ -222,69 +195,69 @@
     </div>
 
     <!-- 4. ABOUT THE SYSTEM SECTION -->
-    <section id="tentang" class="py-20 bg-slate-50">
+    <section id="tentang" class="py-20 bg-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                <span class="text-xs font-extrabold text-blue-800 uppercase tracking-widest bg-blue-100 px-3.5 py-1 rounded-full border border-blue-200">
+                <span class="text-xs font-black text-blue-900 uppercase tracking-widest bg-blue-200 px-4 py-1.5 rounded-full border border-blue-300">
                     Sistem Tata Kelola Modern
                 </span>
-                <h2 class="text-3xl font-extrabold text-slate-900">Transformasi Administrasi Skripsi Digital</h2>
-                <p class="text-sm text-slate-600 leading-relaxed">Sistem E-Surat Tugas Akhir memberikan kepastian alur, kecepatan verifikasi, dan transparansi status bagi seluruh civitas akademika.</p>
+                <h2 class="text-3xl font-black text-slate-900">Transformasi Administrasi Skripsi Digital</h2>
+                <p class="text-sm font-semibold text-slate-700 leading-relaxed">Sistem E-Surat Tugas Akhir memberikan kepastian alur, kecepatan verifikasi, dan transparansi status bagi seluruh civitas akademika.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div class="space-y-6">
-                    <h3 class="text-2xl font-bold text-slate-900">Keunggulan Sistem Bagi Pengguna</h3>
+                    <h3 class="text-2xl font-black text-slate-900">Keunggulan Sistem Bagi Pengguna</h3>
                     <ul class="space-y-4">
-                        <li class="flex items-start gap-3">
-                            <i class="fa-solid fa-circle-check text-blue-600 text-lg mt-0.5"></i>
+                        <li class="flex items-start gap-3.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-blue-700 text-xl mt-0.5"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-slate-900">Mahasiswa</h4>
-                                <p class="text-xs text-slate-500">Mengajukan 5 jenis surat administrasi TA dari mana saja dan memantau status disposisi secara realtime.</p>
+                                <h4 class="text-sm font-extrabold text-slate-900">Mahasiswa</h4>
+                                <p class="text-xs font-medium text-slate-700">Mengajukan 5 jenis surat administrasi TA dari mana saja dan memantau status disposisi secara realtime.</p>
                             </div>
                         </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fa-solid fa-circle-check text-blue-600 text-lg mt-0.5"></i>
+                        <li class="flex items-start gap-3.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-blue-700 text-xl mt-0.5"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-slate-900">Dosen Pembimbing & Penguji</h4>
-                                <p class="text-xs text-slate-500">Menerima inbox review bimbingan dan mengakses draft skripsi langsung dari Google Drive.</p>
+                                <h4 class="text-sm font-extrabold text-slate-900">Dosen Pembimbing & Penguji</h4>
+                                <p class="text-xs font-medium text-slate-700">Menerima inbox review bimbingan dan mengakses draft skripsi langsung dari Google Drive.</p>
                             </div>
                         </li>
-                        <li class="flex items-start gap-3">
-                            <i class="fa-solid fa-circle-check text-blue-600 text-lg mt-0.5"></i>
+                        <li class="flex items-start gap-3.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-blue-700 text-xl mt-0.5"></i>
                             <div>
-                                <h4 class="text-sm font-bold text-slate-900">Sekretaris Prodi & Kaprodi</h4>
-                                <p class="text-xs text-slate-500">Kemudahan ploting 2 Pembimbing + 3 Penguji dan pembubuhan E-Signature QR Code yang sah.</p>
+                                <h4 class="text-sm font-extrabold text-slate-900">Sekretaris Prodi & Kaprodi</h4>
+                                <p class="text-xs font-medium text-slate-700">Kemudahan ploting 2 Pembimbing + 3 Penguji dan pembubuhan E-Signature QR Code yang sah.</p>
                             </div>
                         </li>
                     </ul>
                 </div>
 
                 <!-- Card List of 5 Surat Types -->
-                <div class="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl space-y-4 border border-slate-800">
-                    <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+                <div class="bg-slate-950 rounded-3xl p-8 text-white shadow-2xl space-y-4 border-2 border-slate-800">
+                    <h3 class="text-base font-black text-amber-400 flex items-center gap-2">
                         <i class="fa-solid fa-file-signature"></i> 5 Jenis Surat Administrasi TA Supported:
                     </h3>
-                    <div class="space-y-2.5 text-xs">
-                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                            <span>1. Surat Pengantar Riset / Penelitian Instansi</span>
-                            <span class="font-mono text-amber-400 font-bold">SRT-RISET</span>
+                    <div class="space-y-2.5 text-xs font-bold">
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-100">1. Surat Pengantar Riset / Penelitian Instansi</span>
+                            <span class="font-mono text-amber-400">SRT-RISET</span>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                            <span>2. Surat Permohonan Penetapan Dosen Pembimbing</span>
-                            <span class="font-mono text-amber-400 font-bold">SK-PEMBIMBING</span>
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-100">2. Surat Permohonan Penetapan Dosen Pembimbing</span>
+                            <span class="font-mono text-amber-400">SK-PEMBIMBING</span>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                            <span>3. Surat Undangan Seminar Proposal (Sempro)</span>
-                            <span class="font-mono text-amber-400 font-bold">UND-SEMPRO</span>
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-100">3. Surat Undangan Seminar Proposal (Sempro)</span>
+                            <span class="font-mono text-amber-400">UND-SEMPRO</span>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                            <span>4. Surat Undangan Sidang Akhir / Munaqasyah</span>
-                            <span class="font-mono text-amber-400 font-bold">UND-SIDANG</span>
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-100">4. Surat Undangan Sidang Akhir / Munaqasyah</span>
+                            <span class="font-mono text-amber-400">UND-SIDANG</span>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                            <span>5. Surat Bebas Laboratorium & Revisi (Bebas TA)</span>
-                            <span class="font-mono text-amber-400 font-bold">SK-BEBAS-TA</span>
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-100">5. Surat Bebas Laboratorium & Revisi (Bebas TA)</span>
+                            <span class="font-mono text-amber-400">SK-BEBAS-TA</span>
                         </div>
                     </div>
                 </div>
@@ -293,62 +266,62 @@
     </section>
 
     <!-- 5. WORKFLOW ALUR DISPOSISI SECTION -->
-    <section id="alur" class="py-20 bg-white border-y border-slate-200">
+    <section id="alur" class="py-20 bg-white border-y border-slate-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                <span class="text-xs font-extrabold text-blue-800 uppercase tracking-widest bg-blue-100 px-3.5 py-1 rounded-full border border-blue-200">
+                <span class="text-xs font-black text-blue-900 uppercase tracking-widest bg-blue-100 px-4 py-1.5 rounded-full border border-blue-300">
                     Alur Disposisi Sistem
                 </span>
-                <h2 class="text-3xl font-extrabold text-slate-900">5 Tahapan Proses Pengurusan Surat</h2>
-                <p class="text-sm text-slate-600">Disposisi teratur untuk menjamin keabsahan dan kerapian arsip dokumen TA.</p>
+                <h2 class="text-3xl font-black text-slate-900">5 Tahapan Proses Pengurusan Surat</h2>
+                <p class="text-sm font-semibold text-slate-700">Disposisi teratur untuk menjamin keabsahan dan kerapian arsip dokumen TA.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
-                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-900 text-amber-400 font-extrabold flex items-center justify-center mx-auto text-sm shadow">1</div>
-                    <h4 class="font-bold text-xs text-slate-900 uppercase">Mahasiswa Submit</h4>
-                    <p class="text-[11px] text-slate-500">Input form & stream upload berkas ke Google Drive.</p>
+                <div class="p-6 rounded-2xl bg-slate-100 border border-slate-300 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-950 text-amber-400 font-black flex items-center justify-center mx-auto text-sm shadow">1</div>
+                    <h4 class="font-extrabold text-xs text-slate-900 uppercase">Mahasiswa Submit</h4>
+                    <p class="text-[11px] text-slate-700 font-medium">Input form & stream upload berkas ke Google Drive.</p>
                 </div>
-                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-900 text-amber-400 font-extrabold flex items-center justify-center mx-auto text-sm shadow">2</div>
-                    <h4 class="font-bold text-xs text-slate-900 uppercase">Dosen Review</h4>
-                    <p class="text-[11px] text-slate-500">Approval Pembimbing Utama & Pembimbing Pendamping.</p>
+                <div class="p-6 rounded-2xl bg-slate-100 border border-slate-300 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-950 text-amber-400 font-black flex items-center justify-center mx-auto text-sm shadow">2</div>
+                    <h4 class="font-extrabold text-xs text-slate-900 uppercase">Dosen Review</h4>
+                    <p class="text-[11px] text-slate-700 font-medium">Approval Pembimbing Utama & Pembimbing Pendamping.</p>
                 </div>
-                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-900 text-amber-400 font-extrabold flex items-center justify-center mx-auto text-sm shadow">3</div>
-                    <h4 class="font-bold text-xs text-slate-900 uppercase">Sekprodi Ploting</h4>
-                    <p class="text-[11px] text-slate-500">Validasi berkas & ploting 2 Pembimbing + 3 Penguji.</p>
+                <div class="p-6 rounded-2xl bg-slate-100 border border-slate-300 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-950 text-amber-400 font-black flex items-center justify-center mx-auto text-sm shadow">3</div>
+                    <h4 class="font-extrabold text-xs text-slate-900 uppercase">Sekprodi Ploting</h4>
+                    <p class="text-[11px] text-slate-700 font-medium">Validasi berkas & ploting 2 Pembimbing + 3 Penguji.</p>
                 </div>
-                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-900 text-amber-400 font-extrabold flex items-center justify-center mx-auto text-sm shadow">4</div>
-                    <h4 class="font-bold text-xs text-slate-900 uppercase">Kaprodi E-Sign</h4>
-                    <p class="text-[11px] text-slate-500">Otorisasi & pembuatan QR Code E-Signature Hash.</p>
+                <div class="p-6 rounded-2xl bg-slate-100 border border-slate-300 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-950 text-amber-400 font-black flex items-center justify-center mx-auto text-sm shadow">4</div>
+                    <h4 class="font-extrabold text-xs text-slate-900 uppercase">Kaprodi E-Sign</h4>
+                    <p class="text-[11px] text-slate-700 font-medium">Otorisasi & pembuatan QR Code E-Signature Hash.</p>
                 </div>
-                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-900 text-amber-400 font-extrabold flex items-center justify-center mx-auto text-sm shadow">5</div>
-                    <h4 class="font-bold text-xs text-slate-900 uppercase">Staff TU PDF</h4>
-                    <p class="text-[11px] text-slate-500">Penomoran resmi & auto-archiving ke GDrive.</p>
+                <div class="p-6 rounded-2xl bg-slate-100 border border-slate-300 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-950 text-amber-400 font-black flex items-center justify-center mx-auto text-sm shadow">5</div>
+                    <h4 class="font-extrabold text-xs text-slate-900 uppercase">Staff TU PDF</h4>
+                    <p class="text-[11px] text-slate-700 font-medium">Penomoran resmi & auto-archiving ke GDrive.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- 6. PUBLIC VERIFICATION SECTION -->
-    <section id="verifikasi" class="py-20 bg-slate-950 text-white border-b border-slate-800">
+    <section id="verifikasi" class="py-20 bg-slate-950 text-white border-b-4 border-amber-400">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <div class="w-16 h-16 rounded-3xl bg-blue-600/20 border border-blue-500/30 text-amber-400 flex items-center justify-center mx-auto text-2xl shadow-xl">
+            <div class="w-16 h-16 rounded-3xl bg-blue-900 text-amber-400 flex items-center justify-center mx-auto text-2xl shadow-xl border border-blue-700">
                 <i class="fa-solid fa-qrcode"></i>
             </div>
 
-            <h2 class="text-3xl font-extrabold">Verifikasi Keaslian Dokumen Publik</h2>
-            <p class="text-sm text-slate-300 max-w-xl mx-auto">
+            <h2 class="text-3xl font-black text-white">Verifikasi Keaslian Dokumen Publik</h2>
+            <p class="text-sm font-semibold text-slate-300 max-w-xl mx-auto">
                 Scan QR Code pada lembaran PDF fisik/digital atau masukkan UUID Surat di bawah ini untuk memvalidasi keabsahan dokumen:
             </p>
 
             <form action="" onsubmit="event.preventDefault(); verifyUuid();" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
                 <input type="text" id="uuid-input" placeholder="Masukkan UUID Surat (Contoh: uuid-surat-12345)" required
-                    class="flex-1 px-5 py-3.5 bg-slate-900 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono">
-                <button type="submit" class="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold rounded-2xl text-xs transition shadow-lg shadow-amber-500/20">
+                    class="flex-1 px-5 py-3.5 bg-slate-900 border-2 border-slate-700 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 font-mono font-bold">
+                <button type="submit" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs transition shadow-lg">
                     <i class="fa-solid fa-magnifying-glass mr-1"></i> Verifikasi Surat
                 </button>
             </form>
@@ -356,15 +329,15 @@
     </section>
 
     <!-- 7. FOOTER -->
-    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs">
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-blue-900 text-amber-400 flex items-center justify-center font-bold">
+                <div class="w-9 h-9 rounded-xl bg-blue-800 text-amber-400 flex items-center justify-center font-bold">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <span class="font-bold text-white">E-Surat Administrasi TA &copy; 2026</span>
+                <span class="font-extrabold text-white">E-Surat Administrasi TA &copy; 2026</span>
             </div>
-            <p class="text-slate-500">Program Studi Teknik Informatika | Integrated with Google Drive API v3</p>
+            <p class="text-slate-400">Program Studi Teknik Informatika | Integrated with Google Drive API v3</p>
         </div>
     </footer>
 

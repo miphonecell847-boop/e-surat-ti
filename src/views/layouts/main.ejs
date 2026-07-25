@@ -11,13 +11,26 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
-<body class="h-full flex overflow-hidden bg-slate-950">
+<body class="h-full flex flex-col md:flex-row overflow-hidden bg-slate-950">
 
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex">
+    <!-- Mobile Header -->
+    <header class="md:hidden h-16 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
+        <a href="/dashboard" class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+            <span class="font-bold text-sm text-white">E-Surat TA</span>
+        </a>
+        <button id="mobile-sidebar-toggle" class="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800">
+            <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation (Desktop & Mobile Drawer) -->
+    <aside id="app-sidebar" class="w-64 bg-slate-900 border-r border-slate-800 flex-col justify-between hidden md:flex shrink-0">
         <div>
-            <!-- Brand Logo -->
-            <div class="h-16 px-6 flex items-center gap-3 border-b border-slate-800">
+            <!-- Brand Logo Desktop -->
+            <div class="h-16 px-6 hidden md:flex items-center gap-3 border-b border-slate-800">
                 <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-600/40">
                     <i class="fa-solid fa-envelope-open-text"></i>
                 </div>
@@ -29,6 +42,10 @@
 
             <!-- Navigation Links -->
             <nav class="p-4 space-y-1 text-sm font-medium">
+                <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition">
+                    <i class="fa-solid fa-house w-5 text-center"></i> Halaman Utamas
+                </a>
+
                 <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 font-semibold">
                     <i class="fa-solid fa-gauge w-5 text-center"></i> Dashboard
                 </a>
@@ -93,8 +110,8 @@
     <!-- Main Content Wrapper -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        <!-- Header -->
-        <header class="h-16 bg-slate-900/60 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md">
+        <!-- Desktop Header -->
+        <header class="h-16 bg-slate-900/60 border-b border-slate-800 px-6 hidden md:flex items-center justify-between backdrop-blur-md">
             <div class="flex items-center gap-4">
                 <h1 class="font-bold text-base text-slate-100"><%= title %></h1>
             </div>
@@ -107,10 +124,20 @@
         </header>
 
         <!-- Dynamic Body Page Content -->
-        <main class="flex-1 overflow-y-auto p-6 bg-slate-950">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950">
             <%- body %>
         </main>
     </div>
 
+    <script>
+        const btn = document.getElementById('mobile-sidebar-toggle');
+        const sidebar = document.getElementById('app-sidebar');
+        if (btn && sidebar) {
+            btn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('flex');
+            });
+        }
+    </script>
 </body>
 </html>

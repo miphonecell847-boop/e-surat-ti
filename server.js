@@ -45,13 +45,14 @@ app.use('/', authRoutes);
 app.use('/', webRoutes);
 app.use('/api/v1', apiRoutes);
 
-// Root Route Redirect
+// Root Route - Landing Page
 app.get('/', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/dashboard');
-    }
-    return res.redirect('/login');
+    return res.render('landing', {
+        user: req.session.user || null,
+        layout: false
+    });
 });
+
 
 // 404 Handler
 app.use((req, res) => {

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Surat Administrasi Tugas Akhir - Prodi Teknik Informatika</title>
+    <meta name="description" content="Sistem Informasi Administrasi E-Surat Tugas Akhir berbasis MVC dengan integrasi Google Drive API v3 dan E-Signature QR Code.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bg-hero-gradient {
+            background: linear-gradient(135deg, #4c1d95 0%, #6b21a8 40%, #581c87 70%, #3b0764 100%);
+        }
+        .constellation-bg {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-purple-600 selection:text-white">
+
+    <!-- 1. NAVIGATION BAR -->
+    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-purple-950/80 backdrop-blur-md border-b border-purple-800/40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-400 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/30 group-hover:scale-105 transition">
+                    <i class="fa-solid fa-envelope-open-text text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-lg text-white tracking-tight block leading-none">E-Surat TA</span>
+                    <span class="text-[10px] font-semibold text-purple-300/80 tracking-wider uppercase">Teknik Informatika</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-purple-100">
+                <a href="#tentang" class="hover:text-purple-300 transition">Tentang System</a>
+                <a href="#fitur" class="hover:text-purple-300 transition">Fitur Unggulan</a>
+                <a href="#alur" class="hover:text-purple-300 transition">Alur Disposisi</a>
+                <a href="#verifikasi" class="hover:text-purple-300 transition">Verifikasi QR</a>
+            </nav>
+
+            <!-- Login / Dashboard CTA -->
+            <div class="hidden md:flex items-center gap-3">
+                <% if (user) { %>
+                    <a href="/dashboard" class="px-5 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-bold text-xs shadow-lg shadow-purple-900/40 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="fa-solid fa-gauge"></i> Ke Dashboard (<%= user.username %>)
+                    </a>
+                <% } else { %>
+                    <a href="/login" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs shadow-lg shadow-purple-600/40 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> Masuk / Login
+                    </a>
+                <% } %>
+            </div>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobile-menu-btn" class="md:hidden p-2.5 rounded-xl bg-purple-900/60 text-purple-200 hover:text-white border border-purple-700/50">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-purple-950 border-b border-purple-800/60 px-6 py-6 space-y-4">
+            <a href="#tentang" class="block text-sm font-medium text-purple-200 hover:text-white">Tentang System</a>
+            <a href="#fitur" class="block text-sm font-medium text-purple-200 hover:text-white">Fitur Unggulan</a>
+            <a href="#alur" class="block text-sm font-medium text-purple-200 hover:text-white">Alur Disposisi</a>
+            <a href="#verifikasi" class="block text-sm font-medium text-purple-200 hover:text-white">Verifikasi QR Dokumen</a>
+            <div class="pt-4 border-t border-purple-800/60">
+                <% if (user) { %>
+                    <a href="/dashboard" class="block text-center py-3 bg-white text-purple-950 font-bold text-xs rounded-xl shadow">Ke Dashboard</a>
+                <% } else { %>
+                    <a href="/login" class="block text-center py-3 bg-purple-600 text-white font-bold text-xs rounded-xl shadow">Masuk / Login</a>
+                <% } %>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. HERO BANNER SECTION (Matching purple gradient reference design) -->
+    <section class="relative pt-32 pb-24 md:pt-40 md:pb-36 bg-hero-gradient constellation-bg overflow-hidden text-white">
+        <!-- Ambient Glowing Orbs -->
+        <div class="absolute top-1/4 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Text Column -->
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-semibold uppercase tracking-wider shadow-inner">
+                        <i class="fa-solid fa-sparkles text-purple-300"></i> Platform Digital Administrasi Skripsi 100% Paperless
+                    </div>
+
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+                        Layanan E-Surat TA <br>
+                        <span class="bg-gradient-to-r from-purple-200 via-pink-200 to-white bg-clip-text text-transparent">Cepat, Transparan & Safe</span>
+                    </h1>
+
+                    <p class="text-base sm:text-lg text-purple-100/90 font-light max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Otomatisasi pengajuan 5 jenis surat administrasi Tugas Akhir, integrasi **Google Drive Cloud Storage** institusi, serta pengesahan legal berbasis **E-Signature QR Code Kriptografi SHA-256**.
+                    </p>
+
+                    <!-- Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                        <a href="/login" class="w-full sm:w-auto px-8 py-4 bg-white hover:bg-purple-50 text-purple-950 font-bold rounded-2xl text-sm shadow-2xl shadow-purple-950/80 transition transform hover:-translate-y-1 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-right-to-bracket text-purple-700"></i> Masuk / Ajukan Surat
+                        </a>
+                        <a href="#verifikasi" class="w-full sm:w-auto px-8 py-4 glass-card hover:bg-white/10 text-white font-semibold rounded-2xl text-sm transition flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-qrcode"></i> Cek Verifikasi QR
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Visual Column (Mockup Display) -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="relative w-full max-w-sm">
+                        <!-- Frame Graphic -->
+                        <div class="relative bg-slate-950 p-4 rounded-[40px] border-4 border-purple-400/30 shadow-2xl shadow-purple-900/60 transform rotate-1 hover:rotate-0 transition duration-500">
+                            <!-- Screen Inner -->
+                            <div class="bg-slate-900 rounded-[30px] p-5 space-y-4 text-left border border-slate-800">
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    </div>
+                                    <span class="text-[10px] font-mono text-purple-400">e-surat.ti.ac.id</span>
+                                </div>
+
+                                <div class="p-3 bg-purple-950/60 rounded-xl border border-purple-800/60 space-y-1">
+                                    <span class="text-[10px] font-semibold text-purple-300 uppercase">Status Surats</span>
+                                    <h4 class="text-xs font-bold text-white">SK Dosen Pembimbing TA</h4>
+                                    <span class="inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[9px] font-bold">SELESAI - DRIVE STORED</span>
+                                </div>
+
+                                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-center">
+                                    <div class="w-20 h-20 bg-white p-1.5 rounded-xl mx-auto shadow">
+                                        <i class="fa-solid fa-qrcode text-5xl text-slate-900"></i>
+                                    </div>
+                                    <p class="text-[9px] font-mono text-slate-400">Hash: e3b0c44298fc1c149afbf4c8...</p>
+                                    <span class="inline-block px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-[9px] font-semibold">Verified E-Signature</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. FLOATING FEATURE STRIP CARDS (Matching horizontal icon strip) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20">
+        <div class="glass-card-light rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-900/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl shrink-0 shadow-md">
+                    <i class="fa-brands fa-google-drive"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 mb-1">Direct GDrive Storage</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Penyimpanan berkas skripsi & PDF otomatis di-stream ke Google Drive prodi.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0 shadow-md">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 mb-1">QR Code E-Signature</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Pengesahan legal Kaprodi berbasis QR Code & enkripsi SHA-256.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-pink-100 text-pink-700 flex items-center justify-center text-xl shrink-0 shadow-md">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 mb-1">Realtime Disposisi Tracking</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">Pantau perkembangan posisi surat dari Dosen, Sekprodi, hingga TU secara transparan.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 4. ABOUT THE APP SECTION -->
+    <section id="tentang" class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+                <span class="text-xs font-extrabold text-purple-700 uppercase tracking-widest bg-purple-100 px-3 py-1 rounded-full">Tentang Sistem</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Solusi Digitalisasi Administrasi Skripsi</h2>
+                <p class="text-sm text-slate-600 leading-relaxed">Sistem E-Surat Tugas Akhir hadir memangkas birokrasi manual, mencegah keterlambatan tanda tangan fisik, serta mengeliminasi risiko berkas hilang.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-bold text-slate-900">Mengapa Menggunakan E-Surat TA?</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-purple-600 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">Digitalisasi 100% Paperless</h4>
+                                <p class="text-xs text-slate-500">Mahasiswa tidak perlu mencetak dokumen fisik untuk meminta persetujuan.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-purple-600 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">Ploting 2 Pembimbing & 3 Penguji</h4>
+                                <p class="text-xs text-slate-500">Sekprodi dapat mem-plot tim bimbingan dan sidang langsung dalam satu sistem.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-purple-600 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900">PDF High Precision Engine</h4>
+                                <p class="text-xs text-slate-500">Cetak otomatis lembar PDF berstandar instansi lengkap dengan Kop Surat resmi.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-gradient-to-tr from-purple-900 to-indigo-900 rounded-3xl p-8 text-white shadow-2xl space-y-6">
+                    <h3 class="text-lg font-bold">5 Jenis Surat Administrasi TA Supported:</h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="p-3 rounded-xl bg-white/10 border border-white/10 font-semibold flex items-center justify-between">
+                            <span>1. Surat Pengantar Riset / Penelitian Instansi</span>
+                            <span class="font-mono text-purple-300">SRT-RISET</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/10 border border-white/10 font-semibold flex items-center justify-between">
+                            <span>2. Surat Permohonan Penetapan Dosen Pembimbing</span>
+                            <span class="font-mono text-purple-300">SK-PEMBIMBING</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/10 border border-white/10 font-semibold flex items-center justify-between">
+                            <span>3. Surat Undangan Seminar Proposal (Sempro)</span>
+                            <span class="font-mono text-purple-300">UND-SEMPRO</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/10 border border-white/10 font-semibold flex items-center justify-between">
+                            <span>4. Surat Undangan Sidang Akhir / Munaqasyah</span>
+                            <span class="font-mono text-purple-300">UND-SIDANG</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/10 border border-white/10 font-semibold flex items-center justify-between">
+                            <span>5. Surat Bebas Laboratorium & Revisi</span>
+                            <span class="font-mono text-purple-300">SK-BEBAS-TA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. WORKFLOW ALUR DISPOSISI SECTION -->
+    <section id="alur" class="py-20 bg-white border-y border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+                <span class="text-xs font-extrabold text-indigo-700 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded-full">Alur Kerja</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">5 Tahapan Disposisi Surat</h2>
+                <p class="text-sm text-slate-600">Alur terstruktur dari pengajuan hingga penerbitan dokumen resmi.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center mx-auto text-sm shadow">1</div>
+                    <h4 class="font-bold text-xs text-slate-900 uppercase">Mahasiswa Submit</h4>
+                    <p class="text-[11px] text-slate-500">Input form & stream upload berkas ke Google Drive.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center mx-auto text-sm shadow">2</div>
+                    <h4 class="font-bold text-xs text-slate-900 uppercase">Dosen Review</h4>
+                    <p class="text-[11px] text-slate-500">Approval Pembimbing Utama & Pembimbing Pendamping.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center mx-auto text-sm shadow">3</div>
+                    <h4 class="font-bold text-xs text-slate-900 uppercase">Sekprodi Ploting</h4>
+                    <p class="text-[11px] text-slate-500">Validasi berkas & ploting 2 Pembimbing + 3 Penguji.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center mx-auto text-sm shadow">4</div>
+                    <h4 class="font-bold text-xs text-slate-900 uppercase">Kaprodi E-Sign</h4>
+                    <p class="text-[11px] text-slate-500">Otorisasi & pembuatan QR Code E-Signature Hash.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center mx-auto text-sm shadow">5</div>
+                    <h4 class="font-bold text-xs text-slate-900 uppercase">Staff TU PDF</h4>
+                    <p class="text-[11px] text-slate-500">Penomoran resmi & auto-archiving ke GDrive.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. PUBLIC VERIFICATION SECTION -->
+    <section id="verifikasi" class="py-20 bg-slate-900 text-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+            <div class="w-16 h-16 rounded-3xl bg-purple-600/20 border border-purple-500/30 text-purple-400 flex items-center justify-center mx-auto text-2xl shadow-xl">
+                <i class="fa-solid fa-qrcode"></i>
+            </div>
+
+            <h2 class="text-3xl font-extrabold">Cek Keaslian Dokumen E-Surat</h2>
+            <p class="text-sm text-purple-200 max-w-xl mx-auto">
+                Scan QR Code pada lembaran PDF fisik/digital atau masukkan UUID Surat di bawah ini untuk memverifikasi keabsahan dokumen:
+            </p>
+
+            <form action="" onsubmit="event.preventDefault(); verifyUuid();" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <input type="text" id="uuid-input" placeholder="Masukkan UUID Surat (Contoh: uuid-surat-12345)" required
+                    class="flex-1 px-5 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono">
+                <button type="submit" class="px-6 py-3.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl text-xs transition shadow-lg shadow-purple-600/40">
+                    <i class="fa-solid fa-magnifying-glass mr-1"></i> Verifikasi Surat
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 7. FOOTER -->
+    <footer class="bg-purple-950 text-purple-200 py-12 border-t border-purple-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                </div>
+                <span class="font-bold text-white">E-Surat Administrasi TA &copy; 2026</span>
+            </div>
+            <p class="text-purple-300/70">Program Studi Teknik Informatika. Powered by Node.js MVC & Google Drive API v3.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Drawer Toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        function verifyUuid() {
+            const uuid = document.getElementById('uuid-input').value.trim();
+            if (uuid) {
+                window.location.href = '/verify-doc/' + encodeURIComponent(uuid);
+            }
+        }
+    </script>
+</body>
+</html>

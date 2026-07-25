@@ -34,6 +34,11 @@ module.exports = {
             nama: 'Surat Undangan Seminar Proposal (Sempro)',
             template: 'undangan_sempro'
         },
+        UND_SEMHAS: {
+            kode: 'UND-SEMHAS',
+            nama: 'Surat Undangan Seminar Hasil (Semhas)',
+            template: 'undangan_semhas'
+        },
         UND_SIDANG: {
             kode: 'UND-SIDANG',
             nama: 'Surat Undangan Sidang Akhir / Munaqasyah',

@@ -121,6 +121,106 @@ class SuratModel {
         `;
         return await db.query(sql);
     }
+
+    static async getJenisSuratById(id) {
+        return await db.get('SELECT * FROM jenis_surat WHERE id = ?', [id]);
+    }
+    static async createPengajuanByTu({ uuid_surat, mahasiswa_id, jenis_surat_id, perihal, data_dinamis, ttd_tu_path }) {
+        const sql = `
+            INSERT INTO pengajuan_surat 
+            (uuid_surat, mahasiswa_id, jenis_surat_id, perihal, data_dinamis, status, ttd_tu_path, created_by_role)
+            VALUES (?, ?, ?, ?, ?, 'pending_sekprodi', ?, 'staff_tu')
+        `;
+        const dinamisStr = typeof data_dinamis === 'object' ? JSON.stringify(data_dinamis) : data_dinamis;
+        await db.run(sql, [uuid_surat, mahasiswa_id, jenis_surat_id, perihal, dinamisStr, ttd_tu_path || null]);
+        return await db.get('SELECT * FROM pengajuan_surat WHERE uuid_surat = ?', [uuid_surat]);
+    }
+
+    static async updateTtdSekprodi(id, ttdPath) {
+        const sql = 'UPDATE pengajuan_surat SET ttd_sekprodi_path = ? WHERE id = ?';
+        await db.run(sql, [ttdPath, id]);
+    }
+
+    static async updateTtdKaprodi(id, ttdPath) {
+        const sql = 'UPDATE pengajuan_surat SET ttd_kaprodi_path = ? WHERE id = ?';
+        await db.run(sql, [ttdPath, id]);
+    }
+
+    static async getByFilter({ jenis_surat_id, statusList }) {
+        let sql = `
+            SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, j.nama_surat, j.kode_surat
+            FROM pengajuan_surat s
+            JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            WHERE 1=1
+        `;
+        const params = [];
+        if (statusList && statusList.length > 0) {
+            const placeholders = statusList.map(() => '?').join(',');
+            sql += ` AND s.status IN (${placeholders})`;
+            params.push(...statusList);
+        }
+        if (jenis_surat_id) {
+            sql += ` AND s.jenis_surat_id = ?`;
+            params.push(jenis_surat_id);
+        }
+        sql += ` ORDER BY s.tgl_pengajuan DESC`;
+        return await db.query(sql, params);
+    }
+
+    static async getByDosenPembimbing(dosenId) {
+        const allSurat = await db.query(`
+            SELECT s.*, m.nama_lengkap as mhs_nama, m.nim as mhs_nim, j.nama_surat, j.kode_surat
+            FROM pengajuan_surat s
+            JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            WHERE s.status = 'selesai'
+            ORDER BY s.tgl_pengajuan DESC
+        `);
+        return allSurat.filter(s => {
+            let dataDinamis = {};
+            try {
+                dataDinamis = typeof s.data_dinamis === 'string' ? JSON.parse(s.data_dinamis) : s.data_dinamis;
+            } catch(e){}
+            return (dataDinamis && (dataDinamis.pembimbing_1_id == dosenId || dataDinamis.pembimbing_2_id == dosenId));
+        });
+    }
+
+    static async updateSuratByTu(id, { mahasiswa_id, jenis_surat_id, perihal, data_dinamis, ttd_tu_path }) {
+        const dinamisStr = typeof data_dinamis === 'object' ? JSON.stringify(data_dinamis) : data_dinamis;
+        let sql = `UPDATE pengajuan_surat SET mahasiswa_id = ?, jenis_surat_id = ?, perihal = ?, data_dinamis = ?`;
+        const params = [mahasiswa_id, jenis_surat_id, perihal, dinamisStr];
+
+        if (ttd_tu_path) {
+            sql += `, ttd_tu_path = ?`;
+            params.push(ttd_tu_path);
+        }
+        sql += ` WHERE id = ?`;
+        params.push(id);
+        await db.run(sql, params);
+        return await this.getDetailById(id);
+    }
+
+    static async forwardSuratByTu(id, { mahasiswa_id, jenis_surat_id, perihal, data_dinamis, ttd_tu_path }) {
+        const dinamisStr = typeof data_dinamis === 'object' ? JSON.stringify(data_dinamis) : data_dinamis;
+        let sql = `UPDATE pengajuan_surat SET mahasiswa_id = ?, jenis_surat_id = ?, perihal = ?, data_dinamis = ?, created_by_role = 'staff_tu', status = 'pending_sekprodi'`;
+        const params = [mahasiswa_id, jenis_surat_id, perihal, dinamisStr];
+
+        if (ttd_tu_path) {
+            sql += `, ttd_tu_path = ?`;
+            params.push(ttd_tu_path);
+        }
+        sql += ` WHERE id = ?`;
+        params.push(id);
+        await db.run(sql, params);
+        return await this.getDetailById(id);
+    }
+
+    static async deleteSurat(id) {
+        await db.run('DELETE FROM riwayat_disposisi WHERE pengajuan_surat_id = ?', [id]);
+        await db.run('DELETE FROM google_drive_docs WHERE pengajuan_surat_id = ?', [id]);
+        await db.run('DELETE FROM pengajuan_surat WHERE id = ?', [id]);
+    }
 }
 
 module.exports = SuratModel;

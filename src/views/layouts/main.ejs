@@ -70,6 +70,9 @@
                 <% } %>
 
                 <% if (user && user.role === 'sekretaris_prodi') { %>
+                    <a href="/sekprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
+                    </a>
                     <a href="/sekprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-user-check w-5 text-center text-amber-400"></i> Validasi & Ploting
                     </a>
@@ -79,8 +82,11 @@
                 <% } %>
 
                 <% if (user && user.role === 'kaprodi') { %>
+                    <a href="/kaprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-list-check w-5 text-center text-purple-400"></i> Daftar Menu Surat (10 Kategori)
+                    </a>
                     <a href="/kaprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-signature w-5 text-center text-purple-400"></i> Otorisasi & E-Signature
+                        <i class="fa-solid fa-signature w-5 text-center text-emerald-400"></i> Otorisasi & E-Signature
                     </a>
                     <a href="/kaprodi/persetujuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-gavel w-5 text-center text-amber-400"></i> Persetujuan Judul TA
@@ -88,11 +94,17 @@
                 <% } %>
 
                 <% if (user && user.role === 'staff_tu') { %>
+                    <a href="/tu/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-list-check w-5 text-center text-amber-400"></i> Daftar Menu Surat (10 Kategori)
+                    </a>
+                    <a href="/tu/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-file-circle-plus w-5 text-center text-blue-400"></i> Buat Surat Permintaan
+                    </a>
                     <a href="/tu/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-pdf w-5 text-center text-blue-400"></i> Penomoran & Output PDF
+                        <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Penomoran & Output PDF
                     </a>
                     <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-check w-5 text-center text-emerald-400"></i> Verifikasi Judul TA
+                        <i class="fa-solid fa-file-check w-5 text-center text-cyan-400"></i> Verifikasi Judul TA
                     </a>
                 <% } %>
 

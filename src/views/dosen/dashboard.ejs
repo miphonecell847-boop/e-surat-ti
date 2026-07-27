@@ -63,4 +63,89 @@
             </div>
         <% } %>
     </div>
+
+    <!-- Arsip Surat Terbimbing Selesai (Tembusan Pembimbing 1 & 2) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl space-y-4 p-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-emerald-400"></i> Arsip Surat Terbimbing Selesai (Tembusan Dosen Pembimbing 1 & 2)
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Daftar surat resmi mahasiswa terbimbing yang telah disetujui Kaprodi dan diberi penomoran resmi oleh TU.</p>
+            </div>
+        </div>
+
+        <% if (!assignedSuratSelesai || assignedSuratSelesai.length === 0) { %>
+            <div class="p-8 text-center text-slate-500 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-2"></i>
+                <p class="text-xs">Belum ada surat terbimbing yang selesai diterbitkan.</p>
+            </div>
+        <% } else { %>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                        <tr>
+                            <th class="px-4 py-3">Mahasiswa</th>
+                            <th class="px-4 py-3">Jenis Surat</th>
+                            <th class="px-4 py-3">Perihal</th>
+                            <th class="px-4 py-3">Nomor Surat</th>
+                            <th class="px-4 py-3 text-right">Preview / Unduh</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        <% assignedSuratSelesai.forEach(s => { %>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-white block"><%= s.mhs_nama %></span>
+                                    <span class="text-xs text-slate-400 font-mono">NIM: <%= s.mhs_nim %></span>
+                                </td>
+                                <td class="px-4 py-3 font-semibold text-white">
+                                    <%= s.nama_surat %>
+                                </td>
+                                <td class="px-4 py-3 text-slate-300"><%= s.perihal %></td>
+                                <td class="px-4 py-3 font-mono text-emerald-400 text-xs font-bold">
+                                    <%= s.nomor_surat || '-' %>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="openPdfPreview('<%= s.id %>', '<%= s.nama_surat %>')" class="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/40 text-blue-300 font-bold rounded-xl text-xs flex items-center gap-1.5 ml-auto">
+                                        <i class="fa-solid fa-file-pdf text-blue-400"></i> Pratinjau PDF
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
 </div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

@@ -34,7 +34,48 @@
                                 <p class="font-bold text-slate-900"><%= p.mhs_nama %></p>
                                 <p class="text-slate-500 font-mono">NIM: <%= p.nim %></p>
                             </td>
-                            <td class="p-3 font-semibold text-slate-800 max-w-xs"><%= p.judul_ta %></td>
+                            <td class="p-3 font-semibold text-slate-800 max-w-md space-y-2">
+                                <!-- Judul 1 -->
+                                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs space-y-1">
+                                    <div class="font-extrabold text-blue-900 flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 bg-blue-700 text-white rounded text-[10px]">1</span>
+                                        <span><%= p.judul_1 || p.judul_ta %></span>
+                                    </div>
+                                    <% if (p.abstraksi_1 || p.abstrak_rumusan) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_1 || p.abstrak_rumusan %></p>
+                                    <% } %>
+                                    <% if (p.tujuan_1) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_1 %></p>
+                                    <% } %>
+                                    <% if (p.manfaat_1) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_1 %></p>
+                                    <% } %>
+                                </div>
+                                <!-- Judul 2 -->
+                                <% if (p.judul_2) { %>
+                                    <div class="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs space-y-1">
+                                        <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[10px]">2</span>
+                                            <span><%= p.judul_2 %></span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_2 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_2 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_2 %></p>
+                                    </div>
+                                <% } %>
+                                <!-- Judul 3 -->
+                                <% if (p.judul_3) { %>
+                                    <div class="p-2.5 bg-purple-50/80 border border-purple-200 rounded-xl text-xs space-y-1">
+                                        <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 bg-purple-700 text-white rounded text-[10px]">3</span>
+                                            <span><%= p.judul_3 %></span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_3 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_3 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_3 %></p>
+                                    </div>
+                                <% } %>
+                            </td>
                             <td class="p-3 text-slate-700 text-[11px]">
                                 <p><strong class="text-slate-900">P1:</strong> <%= p.pembimbing_1_nama %></p>
                                 <p><strong class="text-slate-900">P2:</strong> <%= p.pembimbing_2_nama %></p>
@@ -43,7 +84,7 @@
                                 <% if (p.status === 'pending_kaprodi') { %>
                                     <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">Pending Kaprodi</span>
                                 <% } else if (p.status === 'diterima') { %>
-                                    <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">DITERIMA</span>
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">DITERIMA (Judul <%= p.judul_disetujui_nomor || 1 %>)</span>
                                 <% } else if (p.status === 'revisi') { %>
                                     <span class="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold">REVISI</span>
                                 <% } else { %>
@@ -54,16 +95,24 @@
                                 <% if (p.status === 'pending_kaprodi') { %>
                                     <form action="/kaprodi/persetujuan-judul" method="POST" class="space-y-2">
                                         <input type="hidden" name="proposal_id" value="<%= p.id %>">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pilih Judul Yang ACC *</label>
+                                            <select name="judul_disetujui_nomor" class="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-bold">
+                                                <option value="1">Judul 1 (Utama)</option>
+                                                <option value="2">Judul 2 (Alternatif)</option>
+                                                <option value="3">Judul 3 (Cadangan)</option>
+                                            </select>
+                                        </div>
                                         <input type="text" name="catatan_kaprodi" placeholder="Catatan Keputusan Kaprodi" class="w-full px-2.5 py-1 bg-slate-50 border border-slate-300 rounded text-xs">
                                         <div class="flex items-center gap-1.5">
                                             <button type="submit" name="status_decision" value="diterima" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px]">
-                                                <i class="fa-solid fa-check mr-1"></i> Diterima
+                                                <i class="fa-solid fa-check mr-1"></i> ACC Judul Selected
                                             </button>
                                             <button type="submit" name="status_decision" value="revisi" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[10px]">
                                                 <i class="fa-solid fa-rotate-left mr-1"></i> Revisi
                                             </button>
                                             <button type="submit" name="status_decision" value="ditolak" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded text-[10px]">
-                                                <i class="fa-solid fa-xmark mr-1"></i> Ditolak
+                                                <i class="fa-solid fa-xmark mr-1"></i> Tolak All
                                             </button>
                                         </div>
                                     </form>

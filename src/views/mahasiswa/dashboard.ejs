@@ -115,9 +115,12 @@
                                         </span>
                                     <% } %>
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-medium transition">
-                                        <i class="fa-solid fa-eye mr-1"></i> Detail Timeline
+                                <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                                    <button onclick="openPdfPreview('<%= surat.id %>', '<%= surat.nama_surat %>')" class="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+                                        <i class="fa-solid fa-file-pdf"></i> Preview
+                                    </button>
+                                    <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-medium transition">
+                                        <i class="fa-solid fa-eye mr-1"></i> Detail
                                     </a>
                                 </td>
                             </tr>
@@ -128,3 +131,33 @@
         <% } %>
     </div>
 </div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

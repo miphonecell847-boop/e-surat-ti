@@ -37,9 +37,42 @@
         </div>
 
         <div class="flex items-center gap-3 pt-2">
+            <button type="button" onclick="openPdfPreview('<%= pengajuan.id %>', '<%= pengajuan.nama_surat %>')" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold rounded-xl text-xs flex items-center gap-2 border border-slate-700">
+                <i class="fa-solid fa-file-pdf text-amber-400"></i> Mode Preview PDF
+            </button>
             <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
-                <i class="fa-solid fa-file-pdf"></i> Terbitkan PDF Final & Upload ke Google Drive
+                <i class="fa-solid fa-cloud-arrow-up"></i> Terbitkan PDF Final & Upload ke Google Drive
             </button>
         </div>
     </form>
 </div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

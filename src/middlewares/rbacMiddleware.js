@@ -5,7 +5,24 @@ function checkRole(allowedRoles = []) {
         }
 
         const userRole = req.session.user.role;
-        if (allowedRoles.includes(userRole) || userRole === 'admin') {
+        const normalizedAllowed = new Set(allowedRoles);
+
+        // Role Aliases
+        if (normalizedAllowed.has('sekretaris_prodi') || normalizedAllowed.has('sekprodi')) {
+            normalizedAllowed.add('sekretaris_prodi');
+            normalizedAllowed.add('sekprodi');
+        }
+        if (normalizedAllowed.has('staff_tu') || normalizedAllowed.has('stafftu') || normalizedAllowed.has('tu')) {
+            normalizedAllowed.add('staff_tu');
+            normalizedAllowed.add('stafftu');
+            normalizedAllowed.add('tu');
+        }
+        if (normalizedAllowed.has('mahasiswa') || normalizedAllowed.has('mhs')) {
+            normalizedAllowed.add('mahasiswa');
+            normalizedAllowed.add('mhs');
+        }
+
+        if (normalizedAllowed.has(userRole) || userRole === 'admin') {
             return next();
         }
 

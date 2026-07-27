@@ -33,10 +33,18 @@ class JudulTaController {
             const mhs = await MahasiswaModel.findByUserId(user.id);
             if (!mhs) return res.status(403).send('Profil Mahasiswa tidak ditemukan.');
 
-            const { judul_ta, abstrak_rumusan, dosen_pembimbing_1_id, dosen_pembimbing_2_id } = req.body;
+            const { 
+                judul_1, abstraksi_1, tujuan_1, manfaat_1,
+                judul_2, abstraksi_2, tujuan_2, manfaat_2,
+                judul_3, abstraksi_3, tujuan_3, manfaat_3,
+                dosen_pembimbing_1_id, dosen_pembimbing_2_id 
+            } = req.body;
 
-            if (!judul_ta || !abstrak_rumusan || !dosen_pembimbing_1_id || !dosen_pembimbing_2_id) {
-                return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Judul, Ringkasan Abstrak, dan Pilihan Pembimbing 1 & 2 wajib diisi!'));
+            if (!judul_1 || !abstraksi_1 || !tujuan_1 || !manfaat_1 ||
+                !judul_2 || !abstraksi_2 || !tujuan_2 || !manfaat_2 ||
+                !judul_3 || !abstraksi_3 || !tujuan_3 || !manfaat_3 ||
+                !dosen_pembimbing_1_id || !dosen_pembimbing_2_id) {
+                return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Wajib mengisi 3 Usulan Judul lengkap beserta Abstraksi, Tujuan, Manfaat, dan Pilihan Pembimbing 1 & 2!'));
             }
 
             if (dosen_pembimbing_1_id === dosen_pembimbing_2_id) {
@@ -50,14 +58,15 @@ class JudulTaController {
 
             await JudulTaModel.createProposal({
                 mahasiswa_id: mhs.id,
-                judul_ta,
-                abstrak_rumusan,
+                judul_1, abstraksi_1, tujuan_1, manfaat_1,
+                judul_2, abstraksi_2, tujuan_2, manfaat_2,
+                judul_3, abstraksi_3, tujuan_3, manfaat_3,
                 dosen_pembimbing_1_id,
                 dosen_pembimbing_2_id,
                 file_proposal_url: fileProposalUrl
             });
 
-            return res.redirect('/mahasiswa/pengajuan-judul?success=' + encodeURIComponent('Pengajuan Judul Tugas Akhir berhasil dikirim! Menunggu verifikasi Tata Usaha, Sekprodi, dan Kaprodi.'));
+            return res.redirect('/mahasiswa/pengajuan-judul?success=' + encodeURIComponent('Pengajuan 3 Usulan Judul Tugas Akhir berhasil dikirim! Menunggu verifikasi Tata Usaha, Sekprodi, dan Kaprodi.'));
         } catch (err) {
             console.error('Error processSubmitJudul:', err);
             return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Gagal submit pengajuan judul: ' + err.message));
@@ -144,10 +153,10 @@ class JudulTaController {
 
     static async processKaprodiDecision(req, res) {
         try {
-            const { proposal_id, status_decision, catatan_kaprodi } = req.body;
+            const { proposal_id, status_decision, catatan_kaprodi, judul_disetujui_nomor } = req.body;
             // status_decision: 'diterima', 'ditolak', 'revisi'
 
-            await JudulTaModel.updateStatusKaprodi(proposal_id, status_decision, catatan_kaprodi);
+            await JudulTaModel.updateStatusKaprodi(proposal_id, status_decision, catatan_kaprodi, judul_disetujui_nomor);
 
             return res.redirect('/kaprodi/persetujuan-judul?success=' + encodeURIComponent(`Keputusan Judul TA (${status_decision.toUpperCase()}) berhasil disimpan & diteruskan ke Dosen Pembimbing.`));
         } catch (err) {

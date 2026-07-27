@@ -136,10 +136,20 @@ function initTables(database) {
             approval_pembimbing_1 INTEGER DEFAULT 0,
             approval_pembimbing_2 INTEGER DEFAULT 0,
             qr_signature_hash TEXT DEFAULT NULL,
+            ttd_tu_path TEXT DEFAULT NULL,
+            ttd_sekprodi_path TEXT DEFAULT NULL,
+            ttd_kaprodi_path TEXT DEFAULT NULL,
+            created_by_role TEXT DEFAULT 'mahasiswa',
             tgl_pengajuan DATETIME DEFAULT CURRENT_TIMESTAMP,
             tgl_selesai DATETIME DEFAULT NULL
         );
     `);
+
+    try { database.run("ALTER TABLE pengajuan_surat ADD COLUMN ttd_tu_path TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_surat ADD COLUMN ttd_sekprodi_path TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_surat ADD COLUMN ttd_kaprodi_path TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_surat ADD COLUMN created_by_role TEXT DEFAULT 'mahasiswa';"); } catch(e){}
+
 
     // 7. Table google_drive_docs
     database.run(`
@@ -178,8 +188,21 @@ function initTables(database) {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             uuid_pengajuan TEXT UNIQUE NOT NULL,
             mahasiswa_id INTEGER NOT NULL REFERENCES mahasiswa(id) ON DELETE CASCADE,
-            judul_ta TEXT NOT NULL,
-            abstrak_rumusan TEXT NOT NULL,
+            judul_1 TEXT NOT NULL,
+            abstraksi_1 TEXT NOT NULL,
+            tujuan_1 TEXT NOT NULL,
+            manfaat_1 TEXT NOT NULL,
+            judul_2 TEXT NOT NULL,
+            abstraksi_2 TEXT NOT NULL,
+            tujuan_2 TEXT NOT NULL,
+            manfaat_2 TEXT NOT NULL,
+            judul_3 TEXT NOT NULL,
+            abstraksi_3 TEXT NOT NULL,
+            tujuan_3 TEXT NOT NULL,
+            manfaat_3 TEXT NOT NULL,
+            judul_disetujui_nomor INTEGER DEFAULT 1,
+            judul_ta TEXT,
+            abstrak_rumusan TEXT,
             dosen_pembimbing_1_id INTEGER NOT NULL REFERENCES dosen(id),
             dosen_pembimbing_2_id INTEGER NOT NULL REFERENCES dosen(id),
             file_proposal_gdrive_id TEXT,
@@ -205,6 +228,21 @@ function initTables(database) {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `);
+
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN judul_1 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN abstraksi_1 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN tujuan_1 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN manfaat_1 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN judul_2 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN abstraksi_2 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN tujuan_2 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN manfaat_2 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN judul_3 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN abstraksi_3 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN tujuan_3 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN manfaat_3 TEXT;"); } catch(e){}
+    try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN judul_disetujui_nomor INTEGER DEFAULT 1;"); } catch(e){}
+
 
     seedData(database);
     saveDb();

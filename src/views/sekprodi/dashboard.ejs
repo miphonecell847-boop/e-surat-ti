@@ -1,8 +1,8 @@
 <div class="space-y-6">
     <div class="bg-gradient-to-r from-blue-900/40 via-slate-900 to-slate-900 border border-blue-500/20 rounded-3xl p-6 shadow-xl flex items-center justify-between">
         <div>
-            <h2 class="text-xl font-bold text-white mb-1">Dashboard Validasi & Ploting (Sekretaris Prodi)</h2>
-            <p class="text-xs text-slate-400">Verifikasi kelengkapan berkas & alokasi 2 Dosen Pembimbing + 3 Dosen Penguji Sidang TA.</p>
+            <h2 class="text-xl font-bold text-white mb-1">Dashboard Verifikasi & Validasi (Sekretaris Prodi)</h2>
+            <p class="text-xs text-slate-400">Verifikasi & Validasi pengajuan surat administrasi mahasiswa sebelum diteruskan ke Kaprodi.</p>
         </div>
         <div class="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-400 text-xs font-semibold">
             <i class="fa-solid fa-user-gear mr-1"></i> Mode Sekprodi
@@ -12,7 +12,7 @@
     <!-- Table Pending Sekprodi -->
     <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
         <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="font-bold text-sm text-white">Pengajuan Menunggu Validasi Sekprodi</h3>
+            <h3 class="font-bold text-sm text-white">Pengajuan Menunggu Verifikasi Sekprodi</h3>
         </div>
 
         <% if (!pendingSurat || pendingSurat.length === 0) { %>
@@ -46,8 +46,8 @@
                                 <td class="px-6 py-4 text-slate-300"><%= surat.perihal %></td>
                                 <td class="px-6 py-4 text-xs text-slate-400"><%= surat.tgl_pengajuan %></td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="/sekprodi/plotting/<%= surat.id %>" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-blue-600/20">
-                                        <i class="fa-solid fa-users-gear mr-1"></i> Ploting & Validasi
+                                    <a href="/sekprodi/verifikasi-surat/<%= surat.id %>" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-blue-600/20">
+                                        <i class="fa-solid fa-file-signature mr-1"></i> Verifikasi & Validasi
                                     </a>
                                 </td>
                             </tr>

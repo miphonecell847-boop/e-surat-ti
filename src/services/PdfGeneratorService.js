@@ -1,103 +1,192 @@
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
+const fs = require('fs');
+const path = require('path');
+const DosenModel = require('../models/DosenModel');
 
 class PdfGeneratorService {
     /**
-     * Generate Surat PDF Buffer using PDFKit with Official UNIDAYAN Kop
+     * Format Tanggal Bahasa Indonesia (Contoh: 11 Maret 2026)
      */
-    static async generateSuratPdf({ pengajuan, mahasiswa, jenisSurat, kaprodi, verifyUrl, signatureHash }) {
+    static formatDateIndonesian(dateObj = new Date()) {
+        const months = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        const day = dateObj.getDate();
+        const month = months[dateObj.getMonth()];
+        const year = dateObj.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
+
+    static generateSuratPdf(opts) {
+        return this.generateSuratIzinPenelitianPdf(opts);
+    }
+
+    /**
+     * PDF Template Resmi UNIDAYAN Baubau (Surat Izin Penelitian)
+     */
+    static generateSuratIzinPenelitianPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
         return new Promise(async (resolve, reject) => {
             try {
-                const doc = new PDFDocument({ size: 'A4', margin: 40 });
-                const buffers = [];
+                const doc = new PDFDocument({
+                    size: 'A4',
+                    margin: 40
+                });
 
+                const buffers = [];
                 doc.on('data', buffers.push.bind(buffers));
                 doc.on('end', () => {
                     const pdfBuffer = Buffer.concat(buffers);
                     resolve(pdfBuffer);
                 });
 
-                // Generate QR Code Buffer
-                const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 100, margin: 1 });
+                // Generate QR Code Buffer E-Signature
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 90
+                });
 
-                // --- 1. KOP SURAT UNIDAYAN ---
-                doc.fontSize(11).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', { align: 'center' });
-                doc.fontSize(13).font('Helvetica-Bold').text('FAKULTAS TEKNIK - PROGRAM STUDI TEKNIK INFORMATIKA', { align: 'center' });
-                doc.fontSize(9).font('Helvetica-Oblique').text('Jl. Sultan Dayanu Ikhsanuddin No. 109, Baubau, Sulawesi Tenggara', { align: 'center' });
-                doc.fontSize(8).font('Helvetica').text('Website: www.unidayan.ac.id | Email: info@unidayan.ac.id', { align: 'center' });
+                // 1. KOP SURAT UNIDAYAN
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 40, 36, { width: 62 });
+                }
 
-                // Double Line Under Kop
-                const startY = doc.y + 5;
-                doc.moveTo(40, startY).lineTo(555, startY).lineWidth(2).stroke('#000000');
-                doc.moveTo(40, startY + 3).lineTo(555, startY + 3).lineWidth(0.5).stroke('#000000');
+                doc.fontSize(12).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 35, { align: 'center' });
+                doc.fontSize(14).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 50, { align: 'center' });
+                doc.fontSize(13).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 66, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica').text('Jln. Sultan Dayanu Ikhsanuddin No. 124 Telp. (0402) 2821404 Baubau 93724', 110, 82, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica-Oblique').text('Website: www.unidayan.ac.id Email: ft@unidayan.ac.id', 110, 94, { align: 'center' });
 
-                doc.moveDown(1.5);
+                // Garis Ganda Kop Surat
+                doc.moveTo(40, 110).lineTo(555, 110).lineWidth(2.5).stroke('#000000');
+                doc.moveTo(40, 114).lineTo(555, 114).lineWidth(0.8).stroke('#000000');
 
-                // --- 2. JUDUL SURAT & NOMOR ---
-                doc.fontSize(13).font('Helvetica-Bold').text(jenisSurat.nama_surat.toUpperCase(), { align: 'center', underline: true });
-                doc.fontSize(10).font('Helvetica').text(`Nomor: ${pengajuan.nomor_surat || 'B/---/UNIDAYAN/TI/TA/2026'}`, { align: 'center' });
+                // 2. NOMOR & PERIHAL SURAT
+                doc.y = 126;
+                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : '... / N / TI-UND / III / 2026';
+                doc.fontSize(10.5).font('Helvetica').text(`Nomor     : ${nomorResmi}`, 40, 126);
+                doc.text('Lamp.     : -', 40, 139);
+                doc.text('Perihal   : Permohonan Surat Ijin Penelitian', 40, 152);
 
-                doc.moveDown(1.5);
+                // 3. ALAMAT TUJUAN (INSTANSI)
+                doc.y = 175;
+                doc.fontSize(10.5).font('Helvetica').text('Kepada Yth.', 40, 175);
+                doc.fontSize(10.5).font('Helvetica-Bold').text(pengajuan.perihal || 'Bapak/Ibu Pimpinan Instansi / Perusahaan', 40, 188);
+                doc.fontSize(10.5).font('Helvetica').text('di -', 40, 201);
+                doc.fontSize(10.5).font('Helvetica-Bold').text('    Place / Tempat', 40, 214);
 
-                // --- 3. ISI SURAT ---
-                doc.fontSize(11).font('Helvetica').text('Ketua Program Studi Teknik Informatika Universitas Dayanu Ikhsanuddin menerangkan bahwa mahasiswa berikut:');
-                doc.moveDown(0.5);
+                // 4. PARAGRAF PEMBUKA
+                doc.y = 238;
+                doc.fontSize(10.5).font('Helvetica')
+                    .text('Dengan hormat, disampaikan bahwa mahasiswa Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin Baubau tersebut di bawah ini:', 40, doc.y, { align: 'justify', lineGap: 3 });
 
-                // Table / Field Details
-                const labelX = 60;
-                const valueX = 200;
-                let currentY = doc.y;
+                // 5. TABEL FIELD DATA MAHASISWA
+                let currentY = doc.y + 12;
+                const labelX = 55;
+                const colonX = 175;
+                const valueX = 185;
 
-                const addRow = (label, val) => {
-                    doc.font('Helvetica-Bold').text(label, labelX, currentY);
-                    doc.font('Helvetica').text(`:  ${val || '-'}`, valueX, currentY);
-                    currentY += 18;
+                const addRow = (label, val, isBold = false) => {
+                    doc.fontSize(10.5).font('Helvetica').text(label, labelX, currentY);
+                    doc.text(':', colonX, currentY);
+                    if (isBold) {
+                        doc.font('Helvetica-Bold').text(val || '-', valueX, currentY, { width: 360, align: 'justify', lineGap: 2 });
+                    } else {
+                        doc.font('Helvetica').text(val || '-', valueX, currentY, { width: 360, align: 'justify' });
+                    }
+                    currentY = doc.y + 6;
                 };
 
-                addRow('Nama Mahasiswa', mahasiswa.nama_lengkap);
-                addRow('NIM', mahasiswa.nim);
-                addRow('Angkatan', mahasiswa.angkatan ? mahasiswa.angkatan.toString() : '-');
-                addRow('Perihal', pengajuan.perihal);
-                if (mahasiswa.judul_ta) {
-                    addRow('Judul Skripsi / TA', mahasiswa.judul_ta);
-                }
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMAD ADRIAN');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650119');
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'IMPLEMENTASI ALGORITMA UNTUK SISTEM E-SURAT ADMINISTRASI TUGAS AKHIR');
 
-                // Data Dinamis Parse
-                let dinamis = {};
-                try {
-                    dinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
-                } catch (e) {}
-
-                if (dinamis && Object.keys(dinamis).length > 0) {
-                    Object.entries(dinamis).forEach(([k, v]) => {
-                        const formattedKey = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        addRow(formattedKey, v);
-                    });
-                }
+                addRow('Nama', namaMhs);
+                addRow('Stambuk', nimMhs);
+                addRow('Fakultas', 'Teknik');
+                addRow('Program Studi', 'Teknik Informatika');
+                addRow('Judul Penelitian', judulTa, true);
 
                 doc.y = currentY + 10;
-                doc.font('Helvetica').text('Telah memenuhi seluruh kualifikasi dan tahapan verifikasi administrasi Tugas Akhir pada Program Studi Teknik Informatika UNIDAYAN.', { align: 'justify' });
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
 
-                doc.moveDown(2);
+                const instansiTujuan = (dataDinamis && dataDinamis.instansi_tujuan) ? dataDinamis.instansi_tujuan : 'Laboratorium Teknik Informatika';
+                const durasi = (dataDinamis && dataDinamis.durasi) ? dataDinamis.durasi : '2,5 bulan';
 
-                // --- 4. BLOK TANDA TANGAN DIGITAL (E-SIGNATURE) ---
-                const ttdBoxY = doc.y;
-                doc.fontSize(10).font('Helvetica').text('Disetujui secara Digital oleh,', 340, ttdBoxY);
-                doc.text('Ketua Program Studi Teknik Informatika', 340, ttdBoxY + 14);
+                // Get Pembimbing Names for Tembusan
+                let p1Name = 'Dosen Pembimbing I';
+                let p2Name = 'Dosen Pembimbing II';
+                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
+                    if (p1) p1Name = p1.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
+                    if (p2) p2Name = p2.nama_dosen;
+                }
 
-                // Embed QR Code
-                doc.image(qrBuffer, 380, ttdBoxY + 32, { width: 80, height: 80 });
+                doc.fontSize(10.5).font('Helvetica')
+                    .text(`Akan melakukan penelitian pada ${instansiTujuan}, kiranya dapat diterima dan diberikan izin untuk proses pengambilan data yang diperlukan selama kurun waktu ± ${durasi}.`, 40, doc.y, { align: 'justify', lineGap: 3 });
 
-                doc.fontSize(10).font('Helvetica-Bold').text(kaprodi.nama_dosen || 'Dr. Eng. Nama Kaprodi, M.T.', 340, ttdBoxY + 118);
-                doc.fontSize(9).font('Helvetica').text(`NIP/NIDN. ${kaprodi.nip_nidn || '198501012010121001'}`, 340, ttdBoxY + 132);
+                // 7. PARAGRAF PENUTUP
+                doc.moveDown(1.2);
+                doc.text('Demikian Surat permohonan ini, atas perhatian serta kerjasamanya kami ucapkan terima kasih.', 40, doc.y, { align: 'justify' });
 
-                // --- 5. FOOTER VERIFIKASI DIGITAL ---
-                const footerY = 750;
-                doc.moveTo(40, footerY).lineTo(555, footerY).lineWidth(0.5).stroke('#888888');
-                doc.fontSize(8).font('Helvetica-Oblique').fillColor('#444444')
-                    .text('Dokumen Berita Acara / Surat ini telah ditandatangani secara digital menggunakan E-Signature E-Surat UNIDAYAN.', 40, footerY + 5, { align: 'center' });
-                doc.text(`Hash Kriptografi SHA-256: ${signatureHash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4'}`, 40, footerY + 16, { align: 'center' });
-                doc.text(`Verifikasi Keaslian Dokumen: ${verifyUrl}`, 40, footerY + 27, { align: 'center' });
+                // 8. BLOK TANDA TANGAN KAPRODI (RIGHT ALIGNED / BOTTOM RIGHT)
+                const ttdY = Math.max(doc.y + 30, 510);
+                const rightX = 330;
+                const dateStr = this.formatDateIndonesian(new Date());
+
+                doc.fontSize(10.5).font('Helvetica').text(`Baubau, ${dateStr}`, rightX, ttdY);
+                doc.text('Hormat Kami,', rightX, ttdY + 16);
+                doc.text('Plt. Ketua Program Studi', rightX, ttdY + 30);
+
+                let signatureOffset = 46;
+                if (pengajuan && pengajuan.ttd_kaprodi_path) {
+                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
+                    if (fs.existsSync(kaprodiTtdPath)) {
+                        doc.image(kaprodiTtdPath, rightX, ttdY + signatureOffset, { width: 95, height: 45 });
+                    }
+                }
+                doc.image(qrBuffer, rightX + 115, ttdY + signatureOffset - 5, { width: 68, height: 68 });
+
+                const namaKaprodi = (kaprodi && kaprodi.nama_dosen) ? kaprodi.nama_dosen : 'Prof. Dr. Rasmuin, S.Pd., M.Pd.';
+                const nipKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '196812311994031012';
+
+                const nameY = ttdY + 115;
+                doc.fontSize(10.5).font('Helvetica-Bold').text(namaKaprodi, rightX, nameY, { underline: true });
+                doc.fontSize(10).font('Helvetica').text(`NIP. ${nipKaprodi}`, rightX, nameY + 15);
+
+                // 8.5 BLOK TEMBUSAN SURAT (BOTTOM LEFT)
+                const tembusanY = ttdY + 20;
+                doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#000000').text('Tembusan :', 40, tembusanY);
+                doc.fontSize(9).font('Helvetica');
+                let tIndexY = tembusanY + 14;
+                doc.text('1. Yth. Rektor Universitas Dayanu Ikhsanuddin (sebagai laporan)', 40, tIndexY);
+                tIndexY += 12;
+                doc.text('2. Yth. Dekan Fakultas Teknik UNIDAYAN', 40, tIndexY);
+                tIndexY += 12;
+                doc.text(`3. Yth. ${instansiTujuan}`, 40, tIndexY);
+                tIndexY += 12;
+                doc.text(`4. Yth. Dosen Pembimbing I (${p1Name})`, 40, tIndexY);
+                tIndexY += 12;
+                doc.text(`5. Yth. Dosen Pembimbing II (${p2Name})`, 40, tIndexY);
+                tIndexY += 12;
+                doc.text('6. Arsip', 40, tIndexY);
+
+                // 9. FOOTER VERIFIKASI KEASLIAN DIGITAL
+                const footerY = 770;
+                doc.moveTo(40, footerY).lineTo(555, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#555555')
+                    .text('Dokumen ini diterbitkan secara sah oleh E-Surat Administrasi TA UNIDAYAN dan dilindungi E-Signature QR Code.', 40, footerY + 4, { align: 'center' });
+                doc.text(`Hash Kriptografi SHA-256: ${signatureHash || pengajuan.qr_signature_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4'}`, 40, footerY + 13, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Publik: ${verifyUrl}`, 40, footerY + 22, { align: 'center' });
 
                 doc.end();
             } catch (err) {

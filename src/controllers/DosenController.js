@@ -17,6 +17,7 @@ class DosenController {
             const pendingP1 = await SuratModel.getByStatus(['pending_pembimbing_1']);
             const pendingP2 = await SuratModel.getByStatus(['pending_pembimbing_2']);
             const allAssignedBimbingan = await PlottingModel.getByDosenPembimbing(dosen.id);
+            const assignedSuratSelesai = await SuratModel.getByDosenPembimbing(dosen.id);
 
             return res.render('dosen/dashboard', {
                 title: 'Dashboard Dosen Pembimbing & Penguji',
@@ -24,7 +25,8 @@ class DosenController {
                 dosen,
                 pendingP1,
                 pendingP2,
-                allAssignedBimbingan
+                allAssignedBimbingan,
+                assignedSuratSelesai
             });
         } catch (err) {
             console.error('Dosen dashboard error:', err);

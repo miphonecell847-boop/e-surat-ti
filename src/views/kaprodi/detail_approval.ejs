@@ -21,20 +21,29 @@
         </div>
 
         <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 text-center space-y-2">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Preview Target QR Verification</span>
-            <div class="w-24 h-24 bg-white p-2 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-qrcode text-6xl text-slate-900"></i>
-            </div>
-            <a href="<%= verifyUrl %>" target="_blank" class="text-[11px] text-purple-400 hover:underline block truncate font-mono"><%= verifyUrl %></a>
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Preview Target QR & Surat PDF</span>
+            <button type="button" onclick="openPdfPreview('<%= pengajuan.id %>', '<%= pengajuan.nama_surat %>')" class="w-full py-2 bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/40 text-purple-300 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-file-pdf"></i> Open Live Preview PDF
+            </button>
+            <a href="<%= verifyUrl %>" target="_blank" class="text-[11px] text-purple-400 hover:underline block truncate font-mono mt-1"><%= verifyUrl %></a>
         </div>
     </div>
 
     <!-- Action Form -->
-    <form action="/kaprodi/approval/<%= pengajuan.id %>" method="POST" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+    <form action="/kaprodi/approval/<%= pengajuan.id %>" method="POST" enctype="multipart/form-data" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
         <div>
             <label for="catatan_kaprodi" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Catatan / Instruksi Otorisasi Kaprodi (Opsional)</label>
             <textarea id="catatan_kaprodi" name="catatan_kaprodi" rows="2" placeholder="Catatan persetujuan resmi..."
                 class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500"></textarea>
+        </div>
+
+        <!-- Upload TTD Digital Kaprodi Image -->
+        <div class="p-4 bg-purple-950/40 border border-purple-800/40 rounded-2xl space-y-2">
+            <label for="ttd_kaprodi" class="block text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-purple-400"></i> Upload Tanda Tangan Digital Kaprodi (PNG/JPG Transparan)
+            </label>
+            <input type="file" id="ttd_kaprodi" name="ttd_kaprodi" accept="image/png, image/jpeg, image/jpg" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-700 file:text-white cursor-pointer">
+            <p class="text-[11px] text-slate-400">Gambar TTD digital akan otomatis disematkan pada dokumen PDF resmi bersanding dengan QR Code keabsahan publik.</p>
         </div>
 
         <div class="flex items-center gap-3 pt-2">
@@ -47,3 +56,33 @@
         </div>
     </form>
 </div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

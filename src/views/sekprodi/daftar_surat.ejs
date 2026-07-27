@@ -1,0 +1,137 @@
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Daftar Menu Surat Validasi (Sekretaris Prodi)</h2>
+            <p class="text-xs text-slate-500 mt-1">Verifikasi & validasi berkas pengajuan surat mahasiswa dari 10 jenis surat resmi sebelum diotorisasi Kaprodi.</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-base"></i>
+            <span><%= success %></span>
+        </div>
+    <% } %>
+
+    <!-- Filter 10 Jenis Surat -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <form action="/sekprodi/daftar-surat" method="GET" class="flex flex-col sm:flex-row items-center gap-4">
+            <div class="flex-1 w-full">
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Filter Kategori 10 Jenis Surat:</label>
+                <select name="jenis_surat_id" onchange="this.form.submit()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                    <option value="">-- Semua Jenis Surat (10 Kategori) --</option>
+                    <% jenisList.forEach(j => { %>
+                        <option value="<%= j.id %>" <%= selectedJenis == j.id ? 'selected' : '' %>><%= j.nama_surat %> (<%= j.kode_surat %>)</option>
+                    <% }); %>
+                </select>
+            </div>
+            <% if (selectedJenis) { %>
+                <a href="/sekprodi/daftar-surat" class="self-end px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl">Reset Filter</a>
+            <% } %>
+        </form>
+    </div>
+
+    <!-- Tabel Surat -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3">Mahasiswa Pemohon</th>
+                        <th class="p-3">Jenis Surat</th>
+                        <th class="p-3">Perihal</th>
+                        <th class="p-3">TTD Sekprodi</th>
+                        <th class="p-3">Status Verifikasi</th>
+                        <th class="p-3">Aksi Sekprodi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 font-medium">
+                    <% if (suratList && suratList.length > 0) { %>
+                        <% suratList.forEach(s => { %>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3">
+                                    <p class="font-bold text-slate-900"><%= s.mhs_nama %></p>
+                                    <p class="text-slate-500 font-mono text-[10px]">NIM: <%= s.mhs_nim %></p>
+                                </td>
+                                <td class="p-3 font-semibold text-blue-900">
+                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px]"><%= s.kode_surat %></span>
+                                    <p class="mt-0.5 text-[11px]"><%= s.nama_surat %></p>
+                                </td>
+                                <td class="p-3 text-slate-700 max-w-xs"><%= s.perihal %></td>
+                                <td class="p-3">
+                                    <% if (s.ttd_sekprodi_path) { %>
+                                        <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold"><i class="fa-solid fa-signature mr-1"></i> TTD Uploaded</span>
+                                    <% } else { %>
+                                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold">Belum Ada</span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3">
+                                    <% if (s.status === 'pending_sekprodi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Pending Validasi</span>
+                                    <% } else if (s.status === 'pending_kaprodi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">Otorisasi Kaprodi</span>
+                                    <% } else if (s.status === 'selesai') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">SELESAI</span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold"><%= s.status.toUpperCase() %></span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3 flex items-center gap-1.5">
+                                    <button onclick="openPdfPreview('<%= s.id %>', '<%= s.nama_surat %>')" class="px-2.5 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-bold rounded-lg text-[10px] flex items-center gap-1">
+                                        <i class="fa-solid fa-file-pdf text-blue-600"></i> Preview
+                                    </button>
+                                    <% if (s.status === 'pending_sekprodi') { %>
+                                        <a href="/sekprodi/verifikasi-surat/<%= s.id %>" class="px-2.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-extrabold rounded-lg text-[10px] flex items-center gap-1 shadow-sm">
+                                            Validasi
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/sekprodi/verifikasi-surat/<%= s.id %>" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg text-[10px]">
+                                            Detail
+                                        </a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" class="p-6 text-center text-slate-500 text-xs">Tidak ada surat ditemukan untuk kategori filter ini.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

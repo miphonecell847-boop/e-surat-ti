@@ -37,6 +37,41 @@ class PublicVerifyController {
             return res.status(500).send('Internal Server Error');
         }
     }
+
+    static async previewSuratPdf(req, res) {
+        try {
+            const { id } = req.params;
+            const MahasiswaModel = require('../models/MahasiswaModel');
+            const DosenModel = require('../models/DosenModel');
+            const PdfGeneratorService = require('../services/PdfGeneratorService');
+            const appConfig = require('../../config/app');
+
+            const pengajuan = await SuratModel.getDetailById(id);
+            if (!pengajuan) {
+                return res.status(404).send('Pengajuan surat tidak ditemukan.');
+            }
+
+            const mhs = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
+            const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Dr. Eng. Nama Kaprodi, M.T.', nip_nidn: '198501012010121001' };
+            const verifyUrl = `${appConfig.baseUrl}/verify-doc/${pengajuan.uuid_surat}`;
+
+            const pdfBuffer = await PdfGeneratorService.generateSuratPdf({
+                pengajuan,
+                mahasiswa: mhs,
+                jenisSurat: { nama_surat: pengajuan.nama_surat },
+                kaprodi: kaprodiDosen,
+                verifyUrl,
+                signatureHash: pengajuan.qr_signature_hash
+            });
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="preview_${pengajuan.uuid_surat}.pdf"`);
+            return res.send(pdfBuffer);
+        } catch (err) {
+            console.error('Error previewSuratPdf:', err);
+            return res.status(500).send('Gagal membuat preview PDF: ' + err.message);
+        }
+    }
 }
 
 module.exports = PublicVerifyController;

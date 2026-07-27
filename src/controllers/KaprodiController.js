@@ -86,6 +86,19 @@ class KaprodiController {
                 timestamp: Date.now()
             });
 
+            // Save TTD Digital Kaprodi if uploaded
+            if (req.file) {
+                const fs = require('fs');
+                const path = require('path');
+                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const filename = `ttd_kaprodi_${Date.now()}_${req.file.originalname}`;
+                fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+                await SuratModel.updateTtdKaprodi(id, `/uploads/signatures/${filename}`);
+            }
+
             // Update status & embed signature hash
             await SuratModel.updateStatus(id, 'pending_tu', null, null, signatureHash);
 
@@ -95,12 +108,36 @@ class KaprodiController {
                 actor_role: 'kaprodi',
                 status_sebelumnya: pengajuan.status,
                 status_sesudahnya: 'pending_tu',
-                catatan_revisi: catatan_kaprodi || `Tanda Tangan Digital (E-Signature QR) berhasil disematkan [Hash: ${signatureHash.substring(0, 16)}...]. Diteruskan ke Staff TU.`
+                catatan_revisi: catatan_kaprodi || `Tanda Tangan Digital (E-Signature QR & Spesimen TTD) berhasil disematkan. Diteruskan ke Staff TU.`
             });
 
-            return res.redirect('/kaprodi/dashboard');
+            return res.redirect('/kaprodi/daftar-surat?success=' + encodeURIComponent('Surat berhasil diotorisasi Kaprodi.'));
         } catch (err) {
             console.error('Process approval error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async renderDaftarSurat(req, res) {
+        try {
+            const user = req.session.user;
+            const jenis_surat_id = req.query.jenis_surat_id || null;
+            const jenisList = await SuratModel.getJenisSuratList();
+
+            const suratList = await SuratModel.getByFilter({
+                jenis_surat_id: jenis_surat_id ? parseInt(jenis_surat_id, 10) : null,
+                statusList: ['pending_kaprodi', 'pending_tu', 'selesai']
+            });
+
+            return res.render('kaprodi/daftar_surat', {
+                title: 'Daftar Menu Surat Otorisasi - Ketua Prodi',
+                user,
+                jenisList,
+                suratList,
+                selectedJenis: jenis_surat_id
+            });
+        } catch (err) {
+            console.error('Kaprodi renderDaftarSurat error:', err);
             return res.status(500).send('Internal Server Error');
         }
     }

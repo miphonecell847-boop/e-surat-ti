@@ -24,24 +24,103 @@
         </div>
     <% } %>
 
-    <!-- Form Pengajuan Judul Baru -->
-    <form action="/mahasiswa/pengajuan-judul" method="POST" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-        <h3 class="text-sm font-black text-slate-900 border-b border-slate-200 pb-3 flex items-center gap-2">
-            <i class="fa-solid fa-book-bookmark text-blue-700"></i> Form Usulan Judul TA Baru
-        </h3>
-
-        <!-- Judul TA -->
-        <div>
-            <label for="judul_ta" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Rencana Judul Skripsi / Tugas Akhir *</label>
-            <textarea id="judul_ta" name="judul_ta" rows="2" required placeholder="Contoh: Rancang Bangun Sistem E-Surat Administrasi Berbasis Microservices dan Kriptografi SHA-256 pada UNIDAYAN"
-                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-sm font-bold text-slate-900 placeholder-slate-400 transition"></textarea>
+    <!-- Form Pengajuan 3 Judul Baru -->
+    <form action="/mahasiswa/pengajuan-judul" method="POST" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-8 shadow-xl">
+        <div class="border-b border-slate-200 pb-4">
+            <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-blue-700"></i> Form Usulan 3 Judul Tugas Akhir / Skripsi
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">Anda wajib mengisikan 3 usulan judul yang berbeda beserta abstraksi, tujuan, dan manfaat untuk setiap usulan.</p>
         </div>
 
-        <!-- Abstrak / Rumusan Masalah -->
-        <div>
-            <label for="abstrak_rumusan" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Ringkasan Latar Belakang & Rumusan Masalah *</label>
-            <textarea id="abstrak_rumusan" name="abstrak_rumusan" rows="4" required placeholder="Jelaskan secara singkat latar belakang penelitian, permasalahan utama, serta metode/algoritma yang akan digunakan..."
-                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-semibold text-slate-800 placeholder-slate-400 transition"></textarea>
+        <!-- USULAN JUDUL 1 -->
+        <div class="bg-slate-50/80 border border-blue-200 rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex items-center gap-2 text-blue-800 font-extrabold text-sm border-b border-blue-100 pb-2">
+                <span class="px-2.5 py-0.5 bg-blue-700 text-white rounded-lg text-xs font-black">1</span>
+                <span>Usulan Judul Utama (Judul 1) *</span>
+            </div>
+            <div>
+                <label for="judul_1" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Rencana Judul 1 *</label>
+                <textarea id="judul_1" name="judul_1" rows="2" required placeholder="Contoh: Rancang Bangun Sistem E-Surat Administrasi Berbasis Microservices pada UNIDAYAN"
+                    class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900 transition"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="abstraksi_1" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Abstraksi & Rumusan Masalah 1 *</label>
+                    <textarea id="abstraksi_1" name="abstraksi_1" rows="3" required placeholder="Abstraksi singkat dan latar belakang masalah..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+                <div>
+                    <label for="tujuan_1" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Tujuan Penelitian 1 *</label>
+                    <textarea id="tujuan_1" name="tujuan_1" rows="3" required placeholder="Tujuan yang ingin dicapai dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+                <div>
+                    <label for="manfaat_1" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Manfaat Penelitian 1 *</label>
+                    <textarea id="manfaat_1" name="manfaat_1" rows="3" required placeholder="Manfaat praktis dan akademis dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- USULAN JUDUL 2 -->
+        <div class="bg-slate-50/80 border border-emerald-200 rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex items-center gap-2 text-emerald-800 font-extrabold text-sm border-b border-emerald-100 pb-2">
+                <span class="px-2.5 py-0.5 bg-emerald-700 text-white rounded-lg text-xs font-black">2</span>
+                <span>Usulan Judul Alternatif (Judul 2) *</span>
+            </div>
+            <div>
+                <label for="judul_2" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Rencana Judul 2 *</label>
+                <textarea id="judul_2" name="judul_2" rows="2" required placeholder="Contoh: Analisis Sentimen Opini Publik Menggunakan Algoritma Support Vector Machine"
+                    class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600 text-xs font-bold text-slate-900 transition"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="abstraksi_2" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Abstraksi & Rumusan Masalah 2 *</label>
+                    <textarea id="abstraksi_2" name="abstraksi_2" rows="3" required placeholder="Abstraksi singkat dan latar belakang masalah..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600"></textarea>
+                </div>
+                <div>
+                    <label for="tujuan_2" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Tujuan Penelitian 2 *</label>
+                    <textarea id="tujuan_2" name="tujuan_2" rows="3" required placeholder="Tujuan yang ingin dicapai dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600"></textarea>
+                </div>
+                <div>
+                    <label for="manfaat_2" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Manfaat Penelitian 2 *</label>
+                    <textarea id="manfaat_2" name="manfaat_2" rows="3" required placeholder="Manfaat praktis dan akademis dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- USULAN JUDUL 3 -->
+        <div class="bg-slate-50/80 border border-purple-200 rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex items-center gap-2 text-purple-800 font-extrabold text-sm border-b border-purple-100 pb-2">
+                <span class="px-2.5 py-0.5 bg-purple-700 text-white rounded-lg text-xs font-black">3</span>
+                <span>Usulan Judul Cadangan (Judul 3) *</span>
+            </div>
+            <div>
+                <label for="judul_3" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Rencana Judul 3 *</label>
+                <textarea id="judul_3" name="judul_3" rows="2" required placeholder="Contoh: Penerapan Internet of Things (IoT) pada Monitoring Kualitas Air Tambak Garam"
+                    class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-purple-600 text-xs font-bold text-slate-900 transition"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="abstraksi_3" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Abstraksi & Rumusan Masalah 3 *</label>
+                    <textarea id="abstraksi_3" name="abstraksi_3" rows="3" required placeholder="Abstraksi singkat dan latar belakang masalah..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-600"></textarea>
+                </div>
+                <div>
+                    <label for="tujuan_3" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Tujuan Penelitian 3 *</label>
+                    <textarea id="tujuan_3" name="tujuan_3" rows="3" required placeholder="Tujuan yang ingin dicapai dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-600"></textarea>
+                </div>
+                <div>
+                    <label for="manfaat_3" class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Manfaat Penelitian 3 *</label>
+                    <textarea id="manfaat_3" name="manfaat_3" rows="3" required placeholder="Manfaat praktis dan akademis dari judul ini..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-purple-600"></textarea>
+                </div>
+            </div>
         </div>
 
         <!-- Selection Usulan Pembimbing 1 & Pembimbing 2 -->
@@ -78,7 +157,7 @@
         </div>
 
         <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-paper-plane text-amber-400"></i> Kirim Usulan Judul TA
+            <i class="fa-solid fa-paper-plane text-amber-400"></i> Kirim Usulan 3 Judul TA
         </button>
     </form>
 
@@ -103,7 +182,21 @@
                     <tbody class="divide-y divide-slate-200 font-medium">
                         <% listJudul.forEach(item => { %>
                             <tr class="hover:bg-slate-50">
-                                <td class="p-3 font-bold text-slate-900 max-w-xs leading-relaxed"><%= item.judul_ta %></td>
+                                <td class="p-3 font-semibold text-slate-900 max-w-sm leading-relaxed space-y-1.5">
+                                    <div class="p-2 rounded-lg bg-blue-50 border border-blue-100 text-[11px] <%= item.status === 'diterima' && (item.judul_disetujui_nomor === 1 || !item.judul_disetujui_nomor) ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
+                                        <span class="font-extrabold text-blue-700">1:</span> <%= item.judul_1 || item.judul_ta %>
+                                    </div>
+                                    <% if (item.judul_2) { %>
+                                        <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-100 text-[11px] <%= item.status === 'diterima' && item.judul_disetujui_nomor === 2 ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
+                                            <span class="font-extrabold text-emerald-700">2:</span> <%= item.judul_2 %>
+                                        </div>
+                                    <% } %>
+                                    <% if (item.judul_3) { %>
+                                        <div class="p-2 rounded-lg bg-purple-50 border border-purple-100 text-[11px] <%= item.status === 'diterima' && item.judul_disetujui_nomor === 3 ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
+                                            <span class="font-extrabold text-purple-700">3:</span> <%= item.judul_3 %>
+                                        </div>
+                                    <% } %>
+                                </td>
                                 <td class="p-3 text-slate-700 space-y-1">
                                     <p><strong class="text-slate-900">P1:</strong> <%= item.pembimbing_1_nama %></p>
                                     <p><strong class="text-slate-900">P2:</strong> <%= item.pembimbing_2_nama %></p>

@@ -24,6 +24,38 @@ class SekprodiController {
     }
 
     static async renderPlotting(req, res) {
+        return SekprodiController.renderVerifikasiSurat(req, res);
+    }
+
+    static async processPlottingAndVerify(req, res) {
+        return SekprodiController.processVerifikasiSurat(req, res);
+    }
+
+    static async renderDaftarSurat(req, res) {
+        try {
+            const user = req.session.user;
+            const jenis_surat_id = req.query.jenis_surat_id || null;
+            const jenisList = await SuratModel.getJenisSuratList();
+
+            const suratList = await SuratModel.getByFilter({
+                jenis_surat_id: jenis_surat_id ? parseInt(jenis_surat_id, 10) : null,
+                statusList: ['pending_sekprodi', 'pending_kaprodi', 'pending_tu', 'selesai']
+            });
+
+            return res.render('sekprodi/daftar_surat', {
+                title: 'Daftar Menu Surat Validasi - Sekretaris Prodi',
+                user,
+                jenisList,
+                suratList,
+                selectedJenis: jenis_surat_id
+            });
+        } catch (err) {
+            console.error('Sekprodi renderDaftarSurat error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async renderVerifikasiSurat(req, res) {
         try {
             const { id } = req.params;
             const pengajuan = await SuratModel.getDetailById(id);
@@ -31,73 +63,61 @@ class SekprodiController {
                 return res.status(404).send('Pengajuan tidak ditemukan.');
             }
 
-            const dosenList = await DosenModel.getAll();
-            const plotting = await PlottingModel.getByMahasiswaId(pengajuan.mahasiswa_id);
             const docs = await GDriveDocModel.getBySuratId(id);
             const riwayat = await DisposisiModel.getBySuratId(id);
 
-            return res.render('sekprodi/detail_plotting', {
-                title: 'Ploting Pembimbing/Penguji & Validasi Sekprodi',
+            return res.render('sekprodi/verifikasi_surat', {
+                title: 'Verifikasi & Validasi Surat (Sekprodi)',
                 user: req.session.user,
                 pengajuan,
-                dosenList,
-                plotting,
                 docs,
-                riwayat
+                riwayat,
+                error: req.query.error || null,
+                success: req.query.success || null
             });
         } catch (err) {
-            console.error('Render plotting error:', err);
+            console.error('Render verifikasi surat error:', err);
             return res.status(500).send('Internal Server Error');
         }
     }
 
-    static async processPlottingAndVerify(req, res) {
+    static async processVerifikasiSurat(req, res) {
         try {
             const { id } = req.params;
-            const {
-                dosen_pembimbing_1_id,
-                dosen_pembimbing_2_id,
-                dosen_penguji_1_id,
-                dosen_penguji_2_id,
-                dosen_penguji_3_id,
-                sk_dekan_nomor,
-                catatan_sekprodi,
-                action
-            } = req.body;
-
+            const { action, catatan_sekprodi } = req.body;
             const user = req.session.user;
             const pengajuan = await SuratModel.getDetailById(id);
+
             if (!pengajuan) {
                 return res.status(404).send('Pengajuan tidak ditemukan.');
             }
 
             if (action === 'reject') {
-                await SuratModel.updateStatus(id, 'ditolak');
+                await SuratModel.updateStatus(id, 'revisi');
                 await DisposisiModel.addLog({
                     pengajuan_surat_id: id,
                     actor_user_id: user.id,
                     actor_role: 'sekretaris_prodi',
                     status_sebelumnya: pengajuan.status,
-                    status_sesudahnya: 'ditolak',
-                    catatan_revisi: catatan_sekprodi || 'Pengajuan ditolak oleh Sekprodi.'
+                    status_sesudahnya: 'revisi',
+                    catatan_revisi: catatan_sekprodi || 'Pengajuan dikembalikan ke TU oleh Sekprodi untuk revisi perbaikan.'
                 });
-                return res.redirect('/sekprodi/dashboard');
+                return res.redirect('/sekprodi/daftar-surat?success=' + encodeURIComponent('Surat dikembalikan ke Staff TU untuk revisi perbaikan.'));
             }
 
-            // Save / Update Ploting TA
-            if (dosen_pembimbing_1_id && dosen_pembimbing_2_id) {
-                await PlottingModel.saveOrUpdate({
-                    mahasiswa_id: pengajuan.mahasiswa_id,
-                    dosen_pembimbing_1_id: parseInt(dosen_pembimbing_1_id, 10),
-                    dosen_pembimbing_2_id: parseInt(dosen_pembimbing_2_id, 10),
-                    dosen_penguji_1_id: dosen_penguji_1_id ? parseInt(dosen_penguji_1_id, 10) : null,
-                    dosen_penguji_2_id: dosen_penguji_2_id ? parseInt(dosen_penguji_2_id, 10) : null,
-                    dosen_penguji_3_id: dosen_penguji_3_id ? parseInt(dosen_penguji_3_id, 10) : null,
-                    sk_dekan_nomor: sk_dekan_nomor || null
-                });
+            // Save TTD Digital Sekprodi if uploaded
+            if (req.file) {
+                const fs = require('fs');
+                const path = require('path');
+                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const filename = `ttd_sekprodi_${Date.now()}_${req.file.originalname}`;
+                fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+                await SuratModel.updateTtdSekprodi(id, `/uploads/signatures/${filename}`);
             }
 
-            // Update status pengajuan to pending_kaprodi
             await SuratModel.updateStatus(id, 'pending_kaprodi');
 
             await DisposisiModel.addLog({
@@ -106,13 +126,13 @@ class SekprodiController {
                 actor_role: 'sekretaris_prodi',
                 status_sebelumnya: pengajuan.status,
                 status_sesudahnya: 'pending_kaprodi',
-                catatan_revisi: catatan_sekprodi || 'Berkas divalidasi dan ploting Dosen berhasil disimpan. Diteruskan ke Kaprodi.'
+                catatan_revisi: catatan_sekprodi || 'Surat divalidasi Sekprodi & TTD Digital dibubuhkan. Diteruskan ke Kaprodi.'
             });
 
-            return res.redirect('/sekprodi/dashboard');
+            return res.redirect('/sekprodi/daftar-surat?success=' + encodeURIComponent('Surat berhasil divalidasi Sekprodi dan diteruskan ke Kaprodi.'));
         } catch (err) {
-            console.error('Process plotting error:', err);
-            return res.status(500).send('Internal Server Error');
+            console.error('Process verifikasi surat error:', err);
+            return res.status(500).send('Internal Server Error: ' + err.message);
         }
     }
 }

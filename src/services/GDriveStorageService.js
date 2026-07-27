@@ -9,17 +9,48 @@ class GDriveStorageService {
         this.drive = null;
         this.isMock = !gdriveConfig.isConfigured;
 
-        if (!this.isMock) {
+        if (gdriveConfig.hasOAuth2) {
+            try {
+                const oauth2Client = new google.auth.OAuth2(
+                    gdriveConfig.clientId,
+                    gdriveConfig.clientSecret,
+                    'https://developers.google.com/oauthplayground'
+                );
+                oauth2Client.setCredentials({
+                    refresh_token: gdriveConfig.refreshToken
+                });
+                this.drive = google.drive({ version: 'v3', auth: oauth2Client });
+                this.isMock = false;
+            } catch (err) {
+                console.warn('Google Drive OAuth2 Auth error, fallback ke mock:', err.message);
+                this.isMock = true;
+            }
+        } else if (gdriveConfig.hasServiceAccount) {
             try {
                 const auth = new google.auth.GoogleAuth({
                     keyFile: gdriveConfig.serviceAccountPath,
                     scopes: gdriveConfig.scopes,
                 });
                 this.drive = google.drive({ version: 'v3', auth });
+                this.isMock = false;
             } catch (err) {
-                console.warn('Google Drive Service Auth warning, fallback ke mock storage:', err.message);
+                console.warn('Google Drive Service Account Auth warning, fallback ke mock storage:', err.message);
                 this.isMock = true;
             }
+        } else if (gdriveConfig.hasApiKey) {
+            try {
+                this.drive = google.drive({ version: 'v3', auth: gdriveConfig.apiKey });
+                this.isMock = false;
+            } catch (err) {
+                console.warn('Google Drive API Key Auth error, fallback ke mock:', err.message);
+                this.isMock = true;
+            }
+        }
+
+        if (this.isMock) {
+            console.log('ℹ️ Google Drive API: Menggunakan Penyimpanan Lokal Fallback (Menunggu berkas service-account-gdrive.json atau Client Secret).');
+        } else {
+            console.log('✅ Google Drive API: Terhubung Aktif ke Cloud Google Drive!');
         }
     }
 

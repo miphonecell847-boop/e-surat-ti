@@ -130,6 +130,266 @@ class TuController {
             return res.status(500).send('Internal Server Error: ' + err.message);
         }
     }
+    static async renderDaftarSurat(req, res) {
+        try {
+            const user = req.session.user;
+            const jenis_surat_id = req.query.jenis_surat_id || null;
+            const jenisList = await SuratModel.getJenisSuratList();
+
+            const suratList = await SuratModel.getByFilter({
+                jenis_surat_id: jenis_surat_id ? parseInt(jenis_surat_id, 10) : null,
+                statusList: null
+            });
+
+            return res.render('tu/daftar_surat', {
+                title: 'Daftar Menu Surat Administrasi - Staff TU',
+                user,
+                jenisList,
+                suratList,
+                selectedJenis: jenis_surat_id,
+                error: req.query.error || null,
+                success: req.query.success || null
+            });
+        } catch (err) {
+            console.error('TU renderDaftarSurat error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async renderBuatSurat(req, res) {
+        try {
+            const user = req.session.user;
+            const { from_id } = req.query;
+            const mahasiswaList = await MahasiswaModel.getAll();
+            const jenisList = await SuratModel.getJenisSuratList();
+            const dosenList = await DosenModel.getAll();
+
+            let prefilledData = null;
+            if (from_id) {
+                const pengajuanMhs = await SuratModel.getDetailById(from_id);
+                if (pengajuanMhs) {
+                    let dinamisObj = {};
+                    try {
+                        dinamisObj = typeof pengajuanMhs.data_dinamis === 'string' ? JSON.parse(pengajuanMhs.data_dinamis) : (pengajuanMhs.data_dinamis || {});
+                    } catch (e) {}
+
+                    prefilledData = {
+                        from_id: pengajuanMhs.id,
+                        mahasiswa_id: pengajuanMhs.mahasiswa_id,
+                        jenis_surat_id: pengajuanMhs.jenis_surat_id,
+                        perihal: pengajuanMhs.perihal,
+                        pembimbing_1_id: dinamisObj.pembimbing_1_id || '',
+                        pembimbing_2_id: dinamisObj.pembimbing_2_id || '',
+                        instansi_tujuan: dinamisObj.instansi_tujuan || '',
+                        durasi: dinamisObj.durasi || '',
+                        catatan: dinamisObj.catatan || ''
+                    };
+                }
+            }
+
+            return res.render('tu/buat_surat', {
+                title: 'Form Pembuatan Surat Permintaan (Staff TU)',
+                user,
+                mahasiswaList,
+                jenisList,
+                dosenList,
+                prefilledData,
+                error: req.query.error || null,
+                success: req.query.success || null
+            });
+        } catch (err) {
+            console.error('TU renderBuatSurat error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async processBuatSurat(req, res) {
+        try {
+            const user = req.session.user;
+            const { from_id, mahasiswa_id, jenis_surat_id, perihal, pembimbing_1_id, pembimbing_2_id, instansi_tujuan, durasi, catatan } = req.body;
+            const { v4: uuidv4 } = require('uuid');
+            const fs = require('fs');
+            const path = require('path');
+
+            if (!mahasiswa_id || !jenis_surat_id || !perihal) {
+                return res.redirect('/tu/buat-surat?error=' + encodeURIComponent('Mahasiswa, Jenis Surat, dan Perihal wajib diisi!'));
+            }
+
+            let ttdTuPath = null;
+            if (req.file) {
+                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const filename = `ttd_tu_${Date.now()}_${req.file.originalname}`;
+                fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+                ttdTuPath = `/uploads/signatures/${filename}`;
+            }
+
+            const parsedDinamis = {
+                pembimbing_1_id: pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : null,
+                pembimbing_2_id: pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : null,
+                instansi_tujuan: instansi_tujuan || '',
+                durasi: durasi || '',
+                catatan: catatan || ''
+            };
+
+            if (from_id) {
+                // UPDATE SAME EXISTING LETTER (DO NOT CREATE NEW ROW)
+                const pengajuanEksisting = await SuratModel.getDetailById(from_id);
+                if (pengajuanEksisting) {
+                    await SuratModel.forwardSuratByTu(from_id, {
+                        mahasiswa_id: parseInt(mahasiswa_id, 10),
+                        jenis_surat_id: parseInt(jenis_surat_id, 10),
+                        perihal,
+                        data_dinamis: parsedDinamis,
+                        ttd_tu_path: ttdTuPath
+                    });
+
+                    await DisposisiModel.addLog({
+                        pengajuan_surat_id: from_id,
+                        actor_user_id: user.id,
+                        actor_role: 'staff_tu',
+                        status_sebelumnya: pengajuanEksisting.status,
+                        status_sesudahnya: 'pending_sekprodi',
+                        catatan_revisi: 'Permintaan Surat Mahasiswa berhasil diproses dan diteruskan oleh Staff TU ke Sekprodi.'
+                    });
+
+                    return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Permintaan Surat Mahasiswa berhasil diteruskan ke Sekprodi.'));
+                }
+            }
+
+            // Otherwise, create a brand new letter
+            const uuidSurat = 'surat-tu-' + uuidv4().substring(0, 8);
+            const pengajuan = await SuratModel.createPengajuanByTu({
+                uuid_surat: uuidSurat,
+                mahasiswa_id: parseInt(mahasiswa_id, 10),
+                jenis_surat_id: parseInt(jenis_surat_id, 10),
+                perihal,
+                data_dinamis: parsedDinamis,
+                ttd_tu_path: ttdTuPath
+            });
+
+            await DisposisiModel.addLog({
+                pengajuan_surat_id: pengajuan.id,
+                actor_user_id: user.id,
+                actor_role: 'staff_tu',
+                status_sebelumnya: 'draft',
+                status_sesudahnya: 'pending_sekprodi',
+                catatan_revisi: 'Surat Permintaan diterbitkan oleh Staff TU dan diteruskan ke Sekprodi untuk verifikasi/validasi.'
+            });
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Surat Permintaan berhasil dibuat dan diteruskan ke Sekprodi.'));
+        } catch (err) {
+            console.error('TU processBuatSurat error:', err);
+            return res.redirect('/tu/buat-surat?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async renderEditSurat(req, res) {
+        try {
+            const { id } = req.params;
+            const pengajuan = await SuratModel.getDetailById(id);
+            if (!pengajuan) {
+                return res.status(404).send('Pengajuan surat tidak ditemukan.');
+            }
+
+            const mahasiswaList = await MahasiswaModel.getAll();
+            const jenisList = await SuratModel.getJenisSuratList();
+            const dosenList = await DosenModel.getAll();
+
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch (e) {}
+
+            return res.render('tu/edit_surat', {
+                title: 'Form Edit Surat Administrasi (Staff TU)',
+                user: req.session.user,
+                pengajuan,
+                dinamisObj,
+                mahasiswaList,
+                jenisList,
+                dosenList,
+                error: req.query.error || null,
+                success: req.query.success || null
+            });
+        } catch (err) {
+            console.error('TU renderEditSurat error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async processEditSurat(req, res) {
+        try {
+            const { id } = req.params;
+            const { mahasiswa_id, jenis_surat_id, perihal, pembimbing_1_id, pembimbing_2_id, instansi_tujuan, durasi, catatan } = req.body;
+            const fs = require('fs');
+            const path = require('path');
+
+            const pengajuan = await SuratModel.getDetailById(id);
+            if (!pengajuan) {
+                return res.status(404).send('Pengajuan surat tidak ditemukan.');
+            }
+
+            let ttdTuPath = null;
+            if (req.file) {
+                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const filename = `ttd_tu_${Date.now()}_${req.file.originalname}`;
+                fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+                ttdTuPath = `/uploads/signatures/${filename}`;
+            }
+
+            const parsedDinamis = {
+                pembimbing_1_id: pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : null,
+                pembimbing_2_id: pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : null,
+                instansi_tujuan: instansi_tujuan || '',
+                durasi: durasi || '',
+                catatan: catatan || ''
+            };
+
+            await SuratModel.updateSuratByTu(id, {
+                mahasiswa_id: parseInt(mahasiswa_id, 10),
+                jenis_surat_id: parseInt(jenis_surat_id, 10),
+                perihal,
+                data_dinamis: parsedDinamis,
+                ttd_tu_path: ttdTuPath
+            });
+
+            await DisposisiModel.addLog({
+                pengajuan_surat_id: id,
+                actor_user_id: req.session.user.id,
+                actor_role: 'staff_tu',
+                status_sebelumnya: pengajuan.status,
+                status_sesudahnya: pengajuan.status,
+                catatan_revisi: 'Data Surat Administrasi berhasil diperbarui oleh Staff TU.'
+            });
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Data Surat berhasil diperbarui.'));
+        } catch (err) {
+            console.error('TU processEditSurat error:', err);
+            return res.redirect(`/tu/edit-surat/${req.params.id}?error=` + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processDeleteSurat(req, res) {
+        try {
+            const { id } = req.params;
+            const pengajuan = await SuratModel.getDetailById(id);
+            if (!pengajuan) {
+                return res.status(404).send('Pengajuan surat tidak ditemukan.');
+            }
+
+            await SuratModel.deleteSurat(id);
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Surat berhasil dihapus dari sistem.'));
+        } catch (err) {
+            console.error('TU processDeleteSurat error:', err);
+            return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal menghapus surat: ' + err.message));
+        }
+    }
 }
 
 module.exports = TuController;

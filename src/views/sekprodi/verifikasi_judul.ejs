@@ -34,7 +34,48 @@
                                 <p class="font-bold text-slate-900"><%= p.mhs_nama %></p>
                                 <p class="text-slate-500 font-mono">NIM: <%= p.nim %></p>
                             </td>
-                            <td class="p-3 font-semibold text-slate-800 max-w-xs"><%= p.judul_ta %></td>
+                            <td class="p-3 font-semibold text-slate-800 max-w-md space-y-2">
+                                <!-- Judul 1 -->
+                                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs space-y-1">
+                                    <div class="font-extrabold text-blue-900 flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 bg-blue-700 text-white rounded text-[10px]">1</span>
+                                        <span><%= p.judul_1 || p.judul_ta %></span>
+                                    </div>
+                                    <% if (p.abstraksi_1 || p.abstrak_rumusan) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_1 || p.abstrak_rumusan %></p>
+                                    <% } %>
+                                    <% if (p.tujuan_1) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_1 %></p>
+                                    <% } %>
+                                    <% if (p.manfaat_1) { %>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_1 %></p>
+                                    <% } %>
+                                </div>
+                                <!-- Judul 2 -->
+                                <% if (p.judul_2) { %>
+                                    <div class="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs space-y-1">
+                                        <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[10px]">2</span>
+                                            <span><%= p.judul_2 %></span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_2 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_2 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_2 %></p>
+                                    </div>
+                                <% } %>
+                                <!-- Judul 3 -->
+                                <% if (p.judul_3) { %>
+                                    <div class="p-2.5 bg-purple-50/80 border border-purple-200 rounded-xl text-xs space-y-1">
+                                        <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 bg-purple-700 text-white rounded text-[10px]">3</span>
+                                            <span><%= p.judul_3 %></span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_3 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Tujuan:</strong> <%= p.tujuan_3 %></p>
+                                        <p class="text-[11px] text-slate-600"><strong>Manfaat:</strong> <%= p.manfaat_3 %></p>
+                                    </div>
+                                <% } %>
+                            </td>
                             <td class="p-3">
                                 <% if (p.status === 'pending_sekprodi') { %>
                                     <form id="form-sekpro-<%= p.id %>" action="/sekprodi/verifikasi-judul" method="POST" class="space-y-2">

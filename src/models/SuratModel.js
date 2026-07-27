@@ -103,7 +103,23 @@ class SuratModel {
     }
 
     static async getJenisSuratList() {
-        return await db.query('SELECT * FROM jenis_surat ORDER BY id ASC');
+        const sql = `
+            SELECT * FROM jenis_surat 
+            ORDER BY CASE kode_surat
+                WHEN 'SRT-IZIN-PENELITIAN' THEN 1
+                WHEN 'SRT-SELESAI-PENELITIAN' THEN 2
+                WHEN 'SK-PEMBIMBING-PENGUJI' THEN 3
+                WHEN 'KARTU-BIMBINGAN' THEN 4
+                WHEN 'UND-SEMPRO' THEN 5
+                WHEN 'UND-SEMHAS' THEN 6
+                WHEN 'LMBR-PERSETUJUAN-WKT' THEN 7
+                WHEN 'UND-SIDANG' THEN 8
+                WHEN 'LMBR-PENGESAHAN' THEN 9
+                WHEN 'BA-UJIAN' THEN 10
+                ELSE id + 100
+            END ASC
+        `;
+        return await db.query(sql);
     }
 }
 

@@ -19,15 +19,25 @@ module.exports = {
         REVISI: 'revisi'
     },
     JENIS_SURAT: {
-        SRT_RISET: {
-            kode: 'SRT-RISET',
-            nama: 'Surat Pengantar Riset / Penelitian Instansi',
-            template: 'surat_pengantar_riset'
+        SRT_IZIN_PENELITIAN: {
+            kode: 'SRT-IZIN-PENELITIAN',
+            nama: 'Surat Izin Penelitian Instansi / Perusahaan',
+            template: 'surat_izin_penelitian'
         },
-        SK_PEMBIMBING: {
-            kode: 'SK-PEMBIMBING',
-            nama: 'Surat Permohonan Penetapan Dosen Pembimbing Skripsi',
-            template: 'sk_pembimbing_ta'
+        SRT_SELESAI_PENELITIAN: {
+            kode: 'SRT-SELESAI-PENELITIAN',
+            nama: 'Surat Keterangan Telah Melakukan Penelitian',
+            template: 'surat_selesai_penelitian'
+        },
+        SK_PEMBIMBING_PENGUJI: {
+            kode: 'SK-PEMBIMBING-PENGUJI',
+            nama: 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA',
+            template: 'sk_pembimbing_penguji'
+        },
+        KARTU_BIMBINGAN: {
+            kode: 'KARTU-BIMBINGAN',
+            nama: 'Kartu Bimbingan Tugas Akhir / Skripsi',
+            template: 'kartu_bimbingan'
         },
         UND_SEMPRO: {
             kode: 'UND-SEMPRO',
@@ -39,15 +49,20 @@ module.exports = {
             nama: 'Surat Undangan Seminar Hasil (Semhas)',
             template: 'undangan_semhas'
         },
+        LMBR_PERSETUJUAN_WKT: {
+            kode: 'LMBR-PERSETUJUAN-WKT',
+            nama: 'Lembar Persetujuan Waktu Ujian / Seminar',
+            template: 'lembar_persetujuan_waktu'
+        },
         UND_SIDANG: {
             kode: 'UND-SIDANG',
             nama: 'Surat Undangan Sidang Akhir / Munaqasyah',
             template: 'undangan_sidang'
         },
-        SK_BEBAS_TA: {
-            kode: 'SK-BEBAS-TA',
-            nama: 'Surat Keterangan Bebas Laboratorium & Revisi (Bebas Masalah TA)',
-            template: 'sk_bebas_ta'
+        LMBR_PENGESAHAN: {
+            kode: 'LMBR-PENGESAHAN',
+            nama: 'Lembar Pengesahan Skripsi / Tugas Akhir',
+            template: 'lembar_pengesahan'
         },
         BA_UJIAN: {
             kode: 'BA-UJIAN',

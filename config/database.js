@@ -214,25 +214,35 @@ function seedData(database) {
     const checkJenis = database.exec("SELECT COUNT(*) as count FROM jenis_surat");
     const countJenis = checkJenis.length > 0 ? checkJenis[0].values[0][0] : 0;
 
+    // Cleanup removed jenis_surat records if existing
+    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA');");
+
     if (countJenis === 0) {
-        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SRT-RISET', 'Surat Pengantar Riset / Penelitian Instansi', 'surat_pengantar_riset', 1);");
-        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SK-PEMBIMBING', 'Surat Permohonan Penetapan Dosen Pembimbing Skripsi', 'sk_pembimbing_ta', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SRT-IZIN-PENELITIAN', 'Surat Izin Penelitian Instansi / Perusahaan', 'surat_izin_penelitian', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SRT-SELESAI-PENELITIAN', 'Surat Keterangan Telah Melakukan Penelitian', 'surat_selesai_penelitian', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SK-PEMBIMBING-PENGUJI', 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA', 'sk_pembimbing_penguji', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('KARTU-BIMBINGAN', 'Kartu Bimbingan Tugas Akhir / Skripsi', 'kartu_bimbingan', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SEMPRO', 'Surat Undangan Seminar Proposal (Sempro)', 'undangan_sempro', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SEMHAS', 'Surat Undangan Seminar Hasil (Semhas)', 'undangan_semhas', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SIDANG', 'Surat Undangan Sidang Akhir / Munaqasyah', 'undangan_sidang', 1);");
-        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SK-BEBAS-TA', 'Surat Keterangan Bebas Laboratorium & Revisi (Bebas Masalah TA)', 'sk_bebas_ta', 1);");
+        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian', 1);");
     } else {
-        const checkSemhas = database.exec("SELECT COUNT(*) as count FROM jenis_surat WHERE kode_surat = 'UND-SEMHAS'");
-        const countSemhas = checkSemhas.length > 0 ? checkSemhas[0].values[0][0] : 0;
-        if (countSemhas === 0) {
-            database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SEMHAS', 'Surat Undangan Seminar Hasil (Semhas)', 'undangan_semhas', 1);");
-        }
-        const checkBa = database.exec("SELECT COUNT(*) as count FROM jenis_surat WHERE kode_surat = 'BA-UJIAN'");
-        const countBa = checkBa.length > 0 ? checkBa[0].values[0][0] : 0;
-        if (countBa === 0) {
-            database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian', 1);");
-        }
+        const checkAndInsert = (kode, nama, tmpl) => {
+            const res = database.exec(`SELECT COUNT(*) as count FROM jenis_surat WHERE kode_surat = '${kode}'`);
+            if (!res || res.length === 0 || res[0].values[0][0] === 0) {
+                database.run(`INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('${kode}', '${nama}', '${tmpl}', 1);`);
+            }
+        };
+        checkAndInsert('SRT-IZIN-PENELITIAN', 'Surat Izin Penelitian Instansi / Perusahaan', 'surat_izin_penelitian');
+        checkAndInsert('SRT-SELESAI-PENELITIAN', 'Surat Keterangan Telah Melakukan Penelitian', 'surat_selesai_penelitian');
+        checkAndInsert('UND-SEMHAS', 'Surat Undangan Seminar Hasil (Semhas)', 'undangan_semhas');
+        checkAndInsert('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian');
+        checkAndInsert('SK-PEMBIMBING-PENGUJI', 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA', 'sk_pembimbing_penguji');
+        checkAndInsert('KARTU-BIMBINGAN', 'Kartu Bimbingan Tugas Akhir / Skripsi', 'kartu_bimbingan');
+        checkAndInsert('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu');
+        checkAndInsert('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan');
     }
 
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");

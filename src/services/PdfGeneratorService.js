@@ -39,6 +39,9 @@ class PdfGeneratorService {
         if (kode.includes('UND-') || nama.includes('undangan')) {
             return this.generateSuratUndanganSeminarPdf(opts);
         }
+        if (kode.includes('BA-UJIAN') || nama.includes('berita acara')) {
+            return this.generateBeritaAcaraUjianPdf(opts);
+        }
 
         return this.generateSuratIzinPenelitianPdf(opts);
     }
@@ -1089,6 +1092,245 @@ class PdfGeneratorService {
                 doc.end();
             } catch (err) {
                 console.error('Error generating Surat Undangan Seminar PDF:', err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * PDF Template Resmi: Berita Acara Ujian / Seminar Tugas Akhir (Lengkap dengan Rekap Nilai & Daftar Hadir)
+     */
+    static generateBeritaAcaraUjianPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 35 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 70
+                });
+
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+
+                // Dynamic values
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'SANJAY PRATAMA TIANLEAN');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650128');
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'PENERAPAN TEKNOLOGI GLOBAL POSITIONING SYSTEM (GPS) BERBASIS ANDROID PADA APLIKASI ABSENSI DIGITAL');
+
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
+
+                let p1Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
+                let p2Name = 'NURUL HIDAYAH, S.Kom., M.Kom.';
+                let penguji1Name = 'Ir. JABAL NUR, S.Kom., M.T.';
+                let penguji2Name = 'Ir. HENNY HAMSINAR, S.Kom., M.T., M.M.';
+                let penguji3Name = 'HELSON HAMID, S.T., M.T.';
+
+                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
+                    if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
+                    if (p2) p2Name = p2.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.penguji_1_id) {
+                    const pg1 = await DosenModel.findById(dataDinamis.penguji_1_id);
+                    if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.penguji_2_id) {
+                    const pg2 = await DosenModel.findById(dataDinamis.penguji_2_id);
+                    if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.penguji_3_id) {
+                    const pg3 = await DosenModel.findById(dataDinamis.penguji_3_id);
+                    if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                }
+
+                // ==================== HALAMAN 1: BERITA ACARA SEMINAR ====================
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 28, { width: 55 });
+                }
+
+                doc.fontSize(11).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 26, { align: 'center' });
+                doc.fontSize(12).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 40, { align: 'center' });
+                doc.fontSize(11).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 54, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Terakreditasi (S-1) No.3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 68, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Kampus Palagimata : Jl. Sultan Dayanu Ikhsanuddin No. 124 fax. (0402) 2821138 Baubau', 110, 79, { align: 'center' });
+
+                doc.moveTo(35, 95).lineTo(560, 95).lineWidth(1.8).stroke('#000000');
+                doc.moveTo(35, 97.5).lineTo(560, 97.5).lineWidth(0.8).stroke('#000000');
+
+                // Judul Document
+                doc.y = 106;
+                doc.fontSize(11.5).font('Helvetica-Bold').text('BERITA ACARA SEMINAR PROPOSAL', 35, doc.y, { align: 'center', underline: true });
+
+                let curY = doc.y + 14;
+                const labelX = 45;
+                const colonX = 145;
+                const valX = 155;
+
+                doc.fontSize(10).font('Helvetica').text('Pada hari ini', labelX, curY); doc.text(':', colonX, curY); doc.text('...............................................', valX, curY); curY += 13;
+                doc.text('Bertempat', labelX, curY); doc.text(':', colonX, curY); doc.text('Ruang Fakultas Teknik UNIDAYAN', valX, curY); curY += 13;
+                doc.text('J a m', labelX, curY); doc.text(':', colonX, curY); doc.text('............ WITA', valX, curY); curY += 18;
+
+                doc.fontSize(10.5).font('Helvetica-Bold').text('TELAH DISELENGGARAKAN PROPOSAL', 35, curY, { align: 'center' });
+                curY += 18;
+
+                doc.fontSize(10).font('Helvetica').text('Nama', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(namaMhs, valX, curY); doc.font('Helvetica').text('Tanda Tangan  ..........', 390, curY); curY += 14;
+                doc.font('Helvetica').text('No. Induk Mahasiswa', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(nimMhs, valX, curY); curY += 14;
+                doc.font('Helvetica').text('Program Studi/ Jurusan', labelX, curY); doc.text(':', colonX, curY); doc.text('Teknik Informatika', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Perguruan Tinggi', labelX, curY); doc.text(':', colonX, curY); doc.text('Universitas Dayanu Ikhsanuddin (UNIDAYAN) Baubau', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Judul Skripsi', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(judulTa, valX, curY, { width: 390, align: 'justify', lineGap: 2 }); curY = doc.y + 6;
+
+                doc.font('Helvetica').text('Dosen Pembimbing', labelX, curY); doc.text(':', colonX, curY);
+                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, valX, curY); doc.text('(Utama)', valX + 260, curY); curY += 14;
+                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, valX, curY); doc.text('(Pendamping)', valX + 260, curY); curY += 18;
+
+                doc.font('Helvetica').text('Saudara tersebut dinyatakan', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text('LULUS / TIDAK LULUS', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Dengan Nilai', labelX, curY); doc.text(':', colonX, curY); doc.text('...............................', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Huruf', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text('A , A- , B+ , B , B- , C+ , C , D , E', valX, curY, { underline: true }); curY += 20;
+
+                // Tabel Susunan Tim Penguji
+                doc.fontSize(9.5).font('Helvetica-Bold').text('SUSUNAN TIM PENGUJI', 35, curY, { align: 'center' }); curY += 10;
+
+                const tableX = 50;
+                const colW = [35, 235, 115, 110]; // Total = 495
+                const rowH = 22;
+
+                doc.lineWidth(0.8).strokeColor('#000000');
+                doc.rect(tableX, curY, 495, rowH).stroke();
+
+                let xAcc = tableX;
+                doc.moveTo(xAcc + colW[0], curY).lineTo(xAcc + colW[0], curY + rowH).stroke(); xAcc += colW[0];
+                doc.moveTo(xAcc + colW[1], curY).lineTo(xAcc + colW[1], curY + rowH).stroke(); xAcc += colW[1];
+                doc.moveTo(xAcc + colW[2], curY).lineTo(xAcc + colW[2], curY + rowH).stroke(); xAcc += colW[2];
+
+                doc.fontSize(9).font('Helvetica-Bold');
+                doc.text('NO', tableX, curY + 6, { width: colW[0], align: 'center' });
+                doc.text('NAMA', tableX + colW[0], curY + 6, { width: colW[1], align: 'center' });
+                doc.text('JABATAN DLM TIM', tableX + colW[0] + colW[1], curY + 2, { width: colW[2], align: 'center' });
+                doc.text('TANDA TANGAN', tableX + colW[0] + colW[1] + colW[2], curY + 2, { width: colW[3], align: 'center' });
+
+                const timPenguji = [
+                    { nama: p1Name, jab: 'Pemb. Utama' },
+                    { nama: p2Name, jab: 'Pemb. Pendamping' },
+                    { nama: penguji1Name, jab: 'Ketua Penguji' },
+                    { nama: penguji2Name, jab: 'Anggota Penguji' },
+                    { nama: penguji3Name, jab: 'Anggota Penguji' }
+                ];
+
+                let rY = curY + rowH;
+                timPenguji.forEach((t, idx) => {
+                    doc.rect(tableX, rY, 495, rowH).stroke();
+                    let xPos = tableX;
+                    colW.forEach(w => { doc.moveTo(xPos + w, rY).lineTo(xPos + w, rY + rowH).stroke(); xPos += w; });
+                    doc.fontSize(8.5).font('Helvetica').text(`${idx + 1}.`, tableX, rY + 6, { width: colW[0], align: 'center' });
+                    doc.font('Helvetica-Bold').text(t.nama, tableX + colW[0] + 6, rY + 6, { width: colW[1] - 12 });
+                    doc.font('Helvetica').text(t.jab, tableX + colW[0] + colW[1], rY + 6, { width: colW[2], align: 'center' });
+                    rY += rowH;
+                });
+
+                curY = rY + 15;
+                doc.fontSize(9.5).font('Helvetica').text('Baubau,................................... 2026', 360, curY); curY += 14;
+                doc.text('Mengetahui :', 240, curY); curY += 14;
+
+                doc.fontSize(9.5).font('Helvetica-Bold').text('Pembimbing Utama', 80, curY, { align: 'center', width: 200 });
+                doc.text('Pembimbing Pendamping', 320, curY, { align: 'center', width: 200 }); curY += 45;
+
+                doc.fontSize(9.5).font('Helvetica-Bold').text(p1Name, 50, curY, { align: 'center', width: 240, underline: true });
+                doc.text(p2Name, 300, curY, { align: 'center', width: 240, underline: true });
+
+                // ==================== HALAMAN 2: REKAPITULASI NILAI SEMINAR ====================
+                doc.addPage({ size: 'A4', margin: 35 });
+
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 28, { width: 55 });
+                }
+
+                doc.fontSize(11).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 26, { align: 'center' });
+                doc.fontSize(12).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 40, { align: 'center' });
+                doc.fontSize(11).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 54, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Terakreditasi (S-1) No.3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 68, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Kampus Palagimata : Jl. Sultan Dayanu Ikhsanuddin No. 124 fax. (0402) 2821138 Baubau', 110, 79, { align: 'center' });
+
+                doc.moveTo(35, 95).lineTo(560, 95).lineWidth(1.8).stroke('#000000');
+                doc.moveTo(35, 97.5).lineTo(560, 97.5).lineWidth(0.8).stroke('#000000');
+
+                doc.y = 106;
+                doc.fontSize(11.5).font('Helvetica-Bold').text('REKAPITULASI\nNILAI SEMINAR PROPOSAL', 35, doc.y, { align: 'center' });
+
+                curY = doc.y + 14;
+                doc.fontSize(10).font('Helvetica').text('Nama mahasiswa', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(namaMhs, valX, curY); curY += 14;
+                doc.font('Helvetica').text('No. Induk Mahasiswa', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(nimMhs, valX, curY); curY += 14;
+                doc.font('Helvetica').text('Program Studi', labelX, curY); doc.text(':', colonX, curY); doc.text('Teknik Informatika', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Dosen Pembimbing', labelX, curY); doc.text(':', colonX, curY);
+                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, valX, curY); doc.text('(Utama)', valX + 260, curY); curY += 14;
+                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, valX, curY); doc.text('(Pendamping)', valX + 260, curY); curY += 14;
+
+                doc.font('Helvetica').text('Judul Penelitian', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(judulTa, valX, curY, { width: 390, align: 'justify', lineGap: 2 }); curY = doc.y + 6;
+                doc.font('Helvetica').text('Hari/Tanggal', labelX, curY); doc.text(':', colonX, curY); doc.text('................/............................', valX, curY); curY += 14;
+                doc.font('Helvetica').text('Waktu diskusi', labelX, curY); doc.text(':', colonX, curY); doc.text('90 menit', valX, curY); curY += 20;
+
+                // Table Rekap Nilai
+                const colW2 = [35, 245, 95, 120]; // Total = 495
+                doc.rect(tableX, curY, 495, rowH).stroke();
+
+                doc.fontSize(9).font('Helvetica-Bold');
+                doc.text('No.', tableX, curY + 6, { width: colW2[0], align: 'center' });
+                doc.text('Nama Penguji', tableX + colW2[0], curY + 6, { width: colW2[1], align: 'center' });
+                doc.text('Nilai', tableX + colW2[0] + colW2[1], curY + 6, { width: colW2[2], align: 'center' });
+                doc.text('Tanda Tangan', tableX + colW2[0] + colW2[1] + colW2[2], curY + 6, { width: colW2[3], align: 'center' });
+
+                rY = curY + rowH;
+                const pengujiList2 = [p1Name, p2Name, penguji1Name, penguji2Name, penguji3Name];
+                pengujiList2.forEach((pName, idx) => {
+                    doc.rect(tableX, rY, 495, rowH).stroke();
+                    let xPos = tableX;
+                    colW2.forEach(w => { doc.moveTo(xPos + w, rY).lineTo(xPos + w, rY + rowH).stroke(); xPos += w; });
+                    doc.fontSize(8.5).font('Helvetica').text(`${idx + 1}.`, tableX, rY + 6, { width: colW2[0], align: 'center' });
+                    doc.font('Helvetica-Bold').text(pName, tableX + colW2[0] + 6, rY + 6, { width: colW2[1] - 12 });
+                    doc.font('Helvetica').text('.....................', tableX + colW2[0] + colW2[1], rY + 6, { width: colW2[2], align: 'center' });
+                    doc.font('Helvetica').text(`${idx + 1}. ....................`, tableX + colW2[0] + colW2[1] + colW2[2] + 6, rY + 6);
+                    rY += rowH;
+                });
+
+                // Row Nilai Rata Rata
+                doc.rect(tableX, rY, 495, rowH).stroke();
+                doc.fontSize(9).font('Helvetica-Bold').text('Nilai Rata-Rata', tableX, rY + 6, { width: colW2[0] + colW2[1], align: 'center' });
+                doc.moveTo(tableX + colW2[0] + colW2[1], rY).lineTo(tableX + colW2[0] + colW2[1], rY + rowH).stroke();
+                doc.font('Helvetica').text('.....................', tableX + colW2[0] + colW2[1], rY + 6, { width: colW2[2], align: 'center' });
+                rY += rowH + 15;
+
+                // Legend Penilaian & TTD Pembimbing Utama
+                doc.fontSize(8.5).font('Helvetica-BoldOblique').text('Penilaian Seminar : Nilai Lulus > 70', labelX, rY);
+                let legY = rY + 12;
+                doc.fontSize(8).font('Helvetica-Oblique');
+                doc.text('1.  > 85   = A', labelX, legY); doc.text('4.  > 71 – 75  = B', labelX + 80, legY); doc.text('7.  > 51 – 60  = C', labelX + 170, legY); legY += 10;
+                doc.text('2.  > 81 – 85 = A-', labelX, legY); doc.text('5.  > 66 – 70  = B-', labelX + 80, legY); doc.text('8.  > 45 – 50  = D', labelX + 170, legY); legY += 10;
+                doc.text('3.  > 76 – 80 = B+', labelX, legY); doc.text('6.  > 61 – 65  = C+', labelX + 80, legY); doc.text('9.  < 45  = E', labelX + 170, legY);
+
+                const signRightX = 350;
+                doc.fontSize(9.5).font('Helvetica').text('Baubau, ..................................', signRightX, rY);
+                doc.text('Pembimbing Utama,', signRightX, rY + 14);
+                doc.fontSize(9.5).font('Helvetica-Bold').text(p1Name, signRightX, rY + 60, { underline: true });
+
+                // Footer Digital Verification
+                const footerY = 790;
+                doc.moveTo(35, footerY).lineTo(560, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#555555')
+                    .text('Dokumen Resmi Berita Acara Ujian / Seminar TA FT UNIDAYAN sah diterbitkan secara digital & dilindungi E-Signature QR Code.', 35, footerY + 4, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Publik: ${verifyUrl}`, 35, footerY + 13, { align: 'center' });
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating Berita Acara Ujian PDF:', err);
                 reject(err);
             }
         });

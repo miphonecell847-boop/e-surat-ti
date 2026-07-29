@@ -181,7 +181,13 @@ class SuratModel {
             try {
                 dataDinamis = typeof s.data_dinamis === 'string' ? JSON.parse(s.data_dinamis) : s.data_dinamis;
             } catch(e){}
-            return (dataDinamis && (dataDinamis.pembimbing_1_id == dosenId || dataDinamis.pembimbing_2_id == dosenId));
+            return (dataDinamis && (
+                dataDinamis.pembimbing_1_id == dosenId || 
+                dataDinamis.pembimbing_2_id == dosenId ||
+                dataDinamis.penguji_1_id == dosenId ||
+                dataDinamis.penguji_2_id == dosenId ||
+                dataDinamis.penguji_3_id == dosenId
+            ));
         });
     }
 

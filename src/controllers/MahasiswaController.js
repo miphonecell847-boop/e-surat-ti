@@ -34,6 +34,29 @@ class MahasiswaController {
         }
     }
 
+    static async renderDaftarSurat(req, res) {
+        try {
+            const user = req.session.user;
+            let mhs = await MahasiswaModel.findByUserId(user.id);
+            if (!mhs) {
+                const allMhs = await MahasiswaModel.getAll();
+                mhs = (allMhs && allMhs.length > 0) ? allMhs[0] : { id: 1, nim: '22650025', nama_lengkap: user.username, angkatan: 2022 };
+            }
+
+            const listSurat = await SuratModel.getByMahasiswaId(mhs.id);
+
+            return res.render('mahasiswa/daftar_surat', {
+                title: 'Daftar Surat & SK Saya - E-Surat TA',
+                user,
+                mhs,
+                listSurat
+            });
+        } catch (err) {
+            console.error('Mahasiswa daftar surat error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
     static async renderBuatSurat(req, res) {
         try {
             const jenisList = await SuratModel.getJenisSuratList();

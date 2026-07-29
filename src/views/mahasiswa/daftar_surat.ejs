@@ -1,0 +1,144 @@
+<div class="space-y-6">
+
+    <!-- Top Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-bold rounded-full border border-blue-500/30 uppercase tracking-wider">
+                    Arsip Digital Mahasiswa
+                </span>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Daftar Permohonan Surat & SK Saya</h1>
+            <p class="text-slate-400 text-sm mt-1">Pantau status validasi dan unduh PDF resmi Surat & SK yang telah diterbitkan oleh Fakultas Teknik.</p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="/mahasiswa/buat-surat" class="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold rounded-2xl shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                <i class="fa-solid fa-file-circle-plus text-amber-300 text-sm"></i> Ajukan Surat / SK Baru
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Permohonan</p>
+                <p class="text-2xl font-black text-slate-800"><%= listSurat.length %></p>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Surat / SK Terbit (Selesai)</p>
+                <p class="text-2xl font-black text-emerald-600"><%= listSurat.filter(s => s.status === 'selesai').length %></p>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Dalam Proses Validasi</p>
+                <p class="text-2xl font-black text-amber-600"><%= listSurat.filter(s => s.status !== 'selesai' && s.status !== 'ditolak').length %></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main List Container -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-list-ul text-blue-600"></i> Riwayat & PDF Surat / SK
+            </h2>
+        </div>
+
+        <% if (!listSurat || listSurat.length === 0) { %>
+            <div class="p-12 text-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-inbox"></i>
+                </div>
+                <h3 class="font-bold text-slate-700 text-base mb-1">Belum Ada Surat atau SK Diajukan</h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">Anda belum pernah mengajukan permohonan surat atau SK Dekan. Silakan tekan tombol di bawah untuk membuat permohonan baru.</p>
+                <a href="/mahasiswa/buat-surat" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow hover:bg-blue-700 transition">
+                    <i class="fa-solid fa-plus"></i> Ajukan Surat Pertama Anda
+                </a>
+            </div>
+        <% } else { %>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                            <th class="py-3.5 px-6">Jenis Surat / SK</th>
+                            <th class="py-3.5 px-6">Nomor & Perihal</th>
+                            <th class="py-3.5 px-6">Tgl Pengajuan</th>
+                            <th class="py-3.5 px-6">Status Validasi</th>
+                            <th class="py-3.5 px-6 text-center">Aksi / Unduh PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <% listSurat.forEach(surat => { %>
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="py-4 px-6">
+                                    <div class="font-bold text-slate-900 text-sm mb-0.5"><%= surat.nama_surat %></div>
+                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-600 font-mono text-[10px] rounded border border-slate-200">
+                                        <%= surat.kode_surat %>
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <% if (surat.nomor_surat) { %>
+                                        <div class="font-mono text-xs font-bold text-blue-700 mb-1"><%= surat.nomor_surat %></div>
+                                    <% } else { %>
+                                        <div class="text-xs text-slate-400 italic mb-1">Belum Terbit Nomor</div>
+                                    <% } %>
+                                    <div class="text-slate-600 line-clamp-1"><%= surat.perihal %></div>
+                                </td>
+                                <td class="py-4 px-6 text-slate-500 whitespace-nowrap">
+                                    <%= new Date(surat.tgl_pengajuan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    <% if (surat.status === 'selesai') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-300">
+                                            <i class="fa-solid fa-circle-check text-emerald-500"></i> Selesai & Terbit
+                                        </span>
+                                    <% } else if (surat.status === 'ditolak') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700 border border-rose-300">
+                                            <i class="fa-solid fa-circle-xmark text-rose-500"></i> Ditolak
+                                        </span>
+                                    <% } else if (surat.status === 'revisi') { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700 border border-rose-300">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Perlu Revisi
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                                            <i class="fa-solid fa-spinner fa-spin text-amber-600"></i> <%= surat.status.replace('_', ' ').toUpperCase() %>
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td class="py-4 px-6 text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition flex items-center gap-1 text-[11px]">
+                                            <i class="fa-solid fa-eye"></i> Detail
+                                        </a>
+
+                                        <% if (surat.status === 'selesai') { %>
+                                            <a href="/surat/preview/<%= surat.id %>" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl shadow-sm transition flex items-center gap-1.5 text-[11px]">
+                                                <i class="fa-solid fa-file-pdf text-amber-300"></i> Download PDF
+                                            </a>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>

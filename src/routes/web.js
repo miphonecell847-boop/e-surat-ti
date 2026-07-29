@@ -35,6 +35,7 @@ router.get('/surat/preview/:id', isAuthenticated, PublicVerifyController.preview
 
 // 3. Mahasiswa Routes
 router.get('/mahasiswa/dashboard', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin']), MahasiswaController.dashboard);
+router.get('/mahasiswa/daftar-surat', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin']), MahasiswaController.renderDaftarSurat);
 router.get('/mahasiswa/buat-surat', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'staff_tu', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'admin']), MahasiswaController.renderBuatSurat);
 router.post('/mahasiswa/buat-surat', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'staff_tu', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'admin']), upload.single('file_lampiran'), MahasiswaController.submitSurat);
 router.get('/mahasiswa/surat/:id', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin']), MahasiswaController.detailSurat);

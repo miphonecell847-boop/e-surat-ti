@@ -42,87 +42,104 @@
             </div>
 
             <!-- Navigation Links -->
+            <%
+                const curPath = typeof currentPath !== 'undefined' ? currentPath : '';
+                function getNavClass(targetPath) {
+                    let active = false;
+                    if (targetPath === '/') {
+                        active = (curPath === '/');
+                    } else if (targetPath === '/dashboard') {
+                        active = (curPath === '/dashboard' || curPath === '/mahasiswa/dashboard' || curPath === '/dosen/dashboard' || curPath === '/sekprodi/dashboard' || curPath === '/kaprodi/dashboard' || curPath === '/tu/dashboard');
+                    } else {
+                        active = curPath.startsWith(targetPath);
+                    }
+                    if (active) {
+                        return "flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 font-bold shadow-sm";
+                    }
+                    return "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition";
+                }
+            %>
             <nav class="p-4 space-y-1 text-sm font-medium">
-                <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                <a href="/" class="<%= getNavClass('/') %>">
                     <i class="fa-solid fa-house w-5 text-center text-amber-400"></i> Halaman Utama
                 </a>
 
-                <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 font-semibold shadow-sm">
+                <a href="/dashboard" class="<%= getNavClass('/dashboard') %>">
                     <i class="fa-solid fa-gauge w-5 text-center text-amber-400"></i> Dashboard
                 </a>
 
                 <% if (user && user.role === 'mahasiswa') { %>
-                    <a href="/mahasiswa/pengajuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/mahasiswa/pengajuan-judul" class="<%= getNavClass('/mahasiswa/pengajuan-judul') %>">
                         <i class="fa-solid fa-book-bookmark w-5 text-center text-amber-400"></i> Pengajuan Judul TA
                     </a>
-                    <a href="/mahasiswa/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/mahasiswa/buat-surat" class="<%= getNavClass('/mahasiswa/buat-surat') %>">
                         <i class="fa-solid fa-paper-plane w-5 text-center text-blue-400"></i> Pengajuan Surat
                     </a>
-                    <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/mahasiswa/jadwal-ujian" class="<%= getNavClass('/mahasiswa/jadwal-ujian') %>">
                         <i class="fa-solid fa-calendar-days w-5 text-center text-amber-400"></i> Jadwal Ujian & Seminar
                     </a>
                 <% } %>
 
                 <% if (user && user.role === 'dosen') { %>
-                    <a href="/dosen/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/dosen/dashboard" class="<%= getNavClass('/dosen/dashboard') %>">
                         <i class="fa-solid fa-inbox w-5 text-center text-emerald-400"></i> Inbox Approval
                     </a>
-                    <a href="/dosen/konfirmasi-bimbingan" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/dosen/konfirmasi-bimbingan" class="<%= getNavClass('/dosen/konfirmasi-bimbingan') %>">
                         <i class="fa-solid fa-bell w-5 text-center text-amber-400"></i> Konfirmasi Bimbingan
                     </a>
-                    <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/mahasiswa/jadwal-ujian" class="<%= getNavClass('/mahasiswa/jadwal-ujian') %>">
                         <i class="fa-solid fa-calendar-days w-5 text-center text-purple-400"></i> Jadwal Ujian Mahasiswa
                     </a>
                 <% } %>
 
                 <% if (user && user.role === 'sekretaris_prodi') { %>
-                    <a href="/sekprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/sekprodi/daftar-surat" class="<%= getNavClass('/sekprodi/daftar-surat') %>">
                         <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
                     </a>
-                    <a href="/sekprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/sekprodi/dashboard" class="<%= getNavClass('/sekprodi/dashboard') %>">
                         <i class="fa-solid fa-user-check w-5 text-center text-amber-400"></i> Validasi & Ploting
                     </a>
-                    <a href="/sekprodi/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/sekprodi/verifikasi-judul" class="<%= getNavClass('/sekprodi/verifikasi-judul') %>">
                         <i class="fa-solid fa-book-bookmark w-5 text-center text-blue-400"></i> Validasi Judul TA
                     </a>
                 <% } %>
 
                 <% if (user && user.role === 'kaprodi') { %>
-                    <a href="/kaprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/kaprodi/daftar-surat" class="<%= getNavClass('/kaprodi/daftar-surat') %>">
                         <i class="fa-solid fa-list-check w-5 text-center text-purple-400"></i> Daftar Menu Surat (10 Kategori)
                     </a>
-                    <a href="/kaprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/kaprodi/dashboard" class="<%= getNavClass('/kaprodi/dashboard') %>">
                         <i class="fa-solid fa-signature w-5 text-center text-emerald-400"></i> Otorisasi & E-Signature
                     </a>
-                    <a href="/kaprodi/persetujuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/kaprodi/persetujuan-judul" class="<%= getNavClass('/kaprodi/persetujuan-judul') %>">
                         <i class="fa-solid fa-gavel w-5 text-center text-amber-400"></i> Persetujuan Judul TA
                     </a>
                 <% } %>
 
                 <% if (user && (user.role === 'staff_tu' || user.role === 'stafftu')) { %>
-                    <a href="/tu/kelola-akun" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/tu/kelola-akun" class="<%= getNavClass('/tu/kelola-akun') %>">
                         <i class="fa-solid fa-user-gear w-5 text-center text-amber-400"></i> Kelola & Validasi Akun
                     </a>
-                    <a href="/tu/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/tu/daftar-surat" class="<%= getNavClass('/tu/daftar-surat') %>">
                         <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
                     </a>
-                    <a href="/tu/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/tu/buat-surat" class="<%= getNavClass('/tu/buat-surat') %>">
                         <i class="fa-solid fa-file-circle-plus w-5 text-center text-blue-400"></i> Buat Surat Permintaan
                     </a>
-                    <a href="/tu/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/tu/dashboard" class="<%= getNavClass('/tu/dashboard') %>">
                         <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Penomoran & Output PDF
                     </a>
-                    <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                    <a href="/tu/verifikasi-judul" class="<%= getNavClass('/tu/verifikasi-judul') %>">
                         <i class="fa-solid fa-file-check w-5 text-center text-purple-400"></i> Verifikasi Judul TA
                     </a>
                 <% } %>
 
 
-                <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                <a href="/profile" class="<%= getNavClass('/profile') %>">
                     <i class="fa-solid fa-circle-user w-5 text-center"></i> Profil Saya
                 </a>
 
-                <a href="/change-password" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                <a href="/change-password" class="<%= getNavClass('/change-password') %>">
                     <i class="fa-solid fa-key w-5 text-center"></i> Ganti Password
                 </a>
 

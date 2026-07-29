@@ -30,9 +30,10 @@ app.set('view engine', 'ejs');
 // Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Pass Session User to All Views
+// Pass Session User & Current Path to All Views
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    res.locals.currentPath = req.path || '';
     next();
 });
 

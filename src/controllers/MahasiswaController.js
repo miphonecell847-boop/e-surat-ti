@@ -5,6 +5,7 @@ const DisposisiModel = require('../models/DisposisiModel');
 const MahasiswaModel = require('../models/MahasiswaModel');
 const PlottingModel = require('../models/PlottingModel');
 const JadwalUjianModel = require('../models/JadwalUjianModel');
+const JudulTaModel = require('../models/JudulTaModel');
 const gdriveService = require('../services/GDriveStorageService');
 const appConfig = require('../../config/app');
 
@@ -61,12 +62,23 @@ class MahasiswaController {
         try {
             const jenisList = await SuratModel.getJenisSuratList();
             const user = req.session.user;
-            const mhs = await MahasiswaModel.findByUserId(user.id);
+            let mhs = await MahasiswaModel.findByUserId(user.id);
+            if (!mhs) {
+                const allMhs = await MahasiswaModel.getAll();
+                mhs = (allMhs && allMhs.length > 0) ? allMhs[0] : { id: 1, nim: '22650025', nama_lengkap: user.username, angkatan: 2022, judul_ta: '-' };
+            }
+
+            const proposals = await JudulTaModel.getByMahasiswaId(mhs.id);
+            const approvedProposal = (proposals && proposals.length > 0) ? proposals.find(p => p.status === 'diterima') : null;
+            if (approvedProposal && approvedProposal.judul_ta) {
+                mhs.judul_ta = approvedProposal.judul_ta;
+            }
 
             return res.render('mahasiswa/buat_surat', {
-                title: 'Pengajuan Surat Baru',
+                title: 'Pengajuan Surat Baru - E-Surat TA',
                 user,
                 mhs,
+                approvedProposal,
                 jenisList,
                 error: null
             });

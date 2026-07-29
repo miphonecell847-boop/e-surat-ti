@@ -1,8 +1,9 @@
 <div class="max-w-3xl mx-auto space-y-6">
+    <!-- Header Page -->
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-xl font-extrabold text-slate-900">Form Pengajuan Surat & SK Administrasi TA</h2>
-            <p class="text-xs text-slate-500 mt-1">Pilih jenis surat dan lengkapi detail informasi sesuai kebutuhan dokumen yang diajukan.</p>
+            <p class="text-xs text-slate-500 mt-1">Pilih jenis surat. Data identitas dan judul Skripsi Anda terisi otomatis dari sistem.</p>
         </div>
         <a href="/mahasiswa/daftar-surat" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition shadow-sm">
             <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Daftar Surat
@@ -16,7 +17,33 @@
         </div>
     <% } %>
 
+    <!-- Read-Only Identity Card (Auto-Fetched from Database) -->
+    <div class="bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 p-6 rounded-3xl border border-blue-800 text-white shadow-lg space-y-3">
+        <div class="flex items-center justify-between border-b border-blue-800/80 pb-3">
+            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-[11px] font-bold rounded-full border border-blue-400/30 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-id-card text-amber-400"></i> Identitas Pemohon (Otomatis Terisi)
+            </span>
+            <span class="text-[11px] text-blue-300 font-mono"><%= mhs.nim %></span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+                <p class="text-blue-300/80 font-medium text-[11px] uppercase tracking-wider">Nama Mahasiswa</p>
+                <p class="font-extrabold text-sm text-white mt-0.5"><%= mhs.nama_lengkap %></p>
+            </div>
+            <div>
+                <p class="text-blue-300/80 font-medium text-[11px] uppercase tracking-wider">NIM / Stambuk</p>
+                <p class="font-extrabold text-sm text-amber-300 mt-0.5"><%= mhs.nim %></p>
+            </div>
+        </div>
+        <div class="pt-2 border-t border-blue-800/60">
+            <p class="text-blue-300/80 font-medium text-[11px] uppercase tracking-wider">Judul Skripsi / Tugas Akhir</p>
+            <p class="font-bold text-xs text-slate-100 mt-1 leading-relaxed"><%= (mhs.judul_ta && mhs.judul_ta !== '-') ? mhs.judul_ta : 'Belum Ada Judul Disetujui (Silakan ajukan judul di menu Pengajuan Judul TA)' %></p>
+        </div>
+    </div>
+
+    <!-- Main Form -->
     <form action="/mahasiswa/buat-surat" method="POST" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-xl">
+        
         <!-- Select Jenis Surat -->
         <div>
             <label for="jenis_surat_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Pilih Jenis Surat / SK Resmimu *</label>
@@ -53,11 +80,6 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Alamat / Lokasi Instansi *</label>
                     <input type="text" name="alamat_instansi" placeholder="Contoh: Jl. Sultan Dayanu Ikhsanuddin No. 124, Baubau"
                         class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Judul Skripsi / Penelitian *</label>
-                    <input type="text" name="judul_penelitian" value="<%= (mhs && mhs.judul_ta) ? mhs.judul_ta : '' %>" placeholder="Judul Tugas Akhir Mahasiswa..."
-                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -100,10 +122,6 @@
             <!-- 3. Fields for SK-PEMBIMBING-PENGUJI & KARTU-BIMBINGAN -->
             <div id="field-sk-bimbingan" class="space-y-4 dynamic-section hidden">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Judul Skripsi / Tugas Akhir *</label>
-                    <textarea name="judul_ta_sk" rows="2" placeholder="Judul Tugas Akhir Mahasiswa..." class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"><%= (mhs && mhs.judul_ta) ? mhs.judul_ta : '' %></textarea>
-                </div>
-                <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik / Semester</label>
                     <input type="text" name="tahun_akademik" placeholder="Contoh: 2025/2026 (Genap)" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
                 </div>
@@ -141,14 +159,14 @@
             </div>
         </div>
 
-        <!-- File Upload to GDrive -->
-        <div class="pt-4 border-t border-slate-200">
-            <label for="file_lampiran" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Berkas Lampiran / Dokumen Syarat (PDF) *</label>
+        <!-- File Upload Area (ONLY VISIBLE FOR UNDANGAN SEMINAR PROPOSAL, HASIL, & SIDANG) -->
+        <div id="file-upload-container" class="pt-4 border-t border-slate-200 hidden">
+            <label for="file_lampiran" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Berkas Lampiran / Naskah Draft Skripsi (PDF) *</label>
             <div class="p-6 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center hover:border-blue-500 transition">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600 mb-2"></i>
-                <p class="text-xs text-slate-800 font-bold">Pilih file PDF (Draft Skripsi, Lembar Penilaian Ujian, atau Transkrip Nilai)</p>
-                <p class="text-[10px] text-slate-500 mt-1">Otomatis di-upload dan tersimpan di Google Drive Cloud FTI UNIDAYAN. Max 10MB.</p>
-                <input type="file" id="file_lampiran" name="file_lampiran" accept=".pdf,.doc,.docx" class="mt-4 text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white hover:file:bg-blue-600 cursor-pointer">
+                <p class="text-xs text-slate-800 font-bold">Pilih File PDF Draft Naskah Skripsi / Proposal Ujian</p>
+                <p class="text-[10px] text-slate-500 mt-1">Berkas khusus untuk Undangan Seminar/Sidang. Otomatis tersimpan di Google Drive FTI UNIDAYAN. Max 10MB.</p>
+                <input type="file" id="file_lampiran" name="file_lampiran" accept=".pdf" class="mt-4 text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white hover:file:bg-blue-600 cursor-pointer">
             </div>
         </div>
 
@@ -162,10 +180,21 @@
     function toggleFormFields(selectEl) {
         const selectedOption = selectEl.options[selectEl.selectedIndex];
         const kode = selectedOption ? selectedOption.getAttribute('data-kode') : '';
-        
+        const uploadContainer = document.getElementById('file-upload-container');
+        const fileInput = document.getElementById('file_lampiran');
+
         // Hide all dynamic sections
         document.querySelectorAll('.dynamic-section').forEach(el => el.classList.add('hidden'));
         document.getElementById('field-default-info').classList.add('hidden');
+
+        // Check if file upload is required (Only for UND-SEMPRO, UND-SEMHAS, UND-SIDANG)
+        if (kode.startsWith('UND-')) {
+            uploadContainer.classList.remove('hidden');
+            fileInput.required = true;
+        } else {
+            uploadContainer.classList.add('hidden');
+            fileInput.required = false;
+        }
 
         if (kode === 'SRT-IZIN-PENELITIAN') {
             document.getElementById('field-srt-izin-penelitian').classList.remove('hidden');

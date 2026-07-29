@@ -23,6 +23,12 @@ router.get('/dashboard', isAuthenticated, (req, res) => {
     return res.redirect('/profile');
 });
 
+// Admin & Legacy Route Aliases (Prevent 404)
+router.get('/admin', isAuthenticated, (req, res) => res.redirect('/tu/dashboard'));
+router.get('/admin/dashboard', isAuthenticated, (req, res) => res.redirect('/tu/dashboard'));
+router.get('/sekprodi/ploting', isAuthenticated, (req, res) => res.redirect('/sekprodi/dashboard'));
+router.get('/kaprodi/approval', isAuthenticated, (req, res) => res.redirect('/kaprodi/dashboard'));
+
 // 2. Public Document Verification & Live PDF Preview
 router.get('/verify-doc/:uuid', PublicVerifyController.verifyDocument);
 router.get('/surat/preview/:id', isAuthenticated, PublicVerifyController.previewSuratPdf);

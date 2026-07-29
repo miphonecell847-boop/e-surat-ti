@@ -283,7 +283,6 @@ function seedData(database) {
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SEMHAS', 'Surat Undangan Seminar Hasil (Semhas)', 'undangan_semhas', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('UND-SIDANG', 'Surat Undangan Sidang Akhir / Munaqasyah', 'undangan_sidang', 1);");
-        database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan', 1);");
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian', 1);");
     } else {
         const checkAndInsert = (kode, nama, tmpl) => {
@@ -298,11 +297,10 @@ function seedData(database) {
         checkAndInsert('SK-PEMBIMBING-PENGUJI', 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA', 'sk_pembimbing_penguji');
         checkAndInsert('KARTU-BIMBINGAN', 'Kartu Bimbingan Tugas Akhir / Skripsi', 'kartu_bimbingan');
         checkAndInsert('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu');
-        checkAndInsert('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan');
     }
 
     // Guaranteed cleanup of removed jenis_surat records
-    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN');");
+    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN', 'LMBR-PENGESAHAN');");
 
     // Migration: Remove admin role and migrate any existing admin users to staff_tu
     database.run("UPDATE users SET role = 'staff_tu' WHERE role = 'admin'");

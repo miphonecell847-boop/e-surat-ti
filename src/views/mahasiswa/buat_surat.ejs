@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-xl font-extrabold text-slate-900">Form Pengajuan Surat & SK Administrasi TA</h2>
-            <p class="text-xs text-slate-500 mt-1">Pilih jenis surat. Data identitas dan judul Skripsi Anda terisi otomatis dari sistem.</p>
+            <p class="text-xs text-slate-500 mt-1">Pilih jenis surat yang ingin diajukan. Identitas dan Perihal otomatis terisi oleh sistem.</p>
         </div>
         <a href="/mahasiswa/daftar-surat" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition shadow-sm">
             <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Daftar Surat
@@ -54,13 +54,6 @@
                     <option value="<%= jenis.id %>" data-kode="<%= jenis.kode_surat %>"><%= jenis.nama_surat %> (<%= jenis.kode_surat %>)</option>
                 <% }); %>
             </select>
-        </div>
-
-        <!-- Perihal Surat -->
-        <div>
-            <label for="perihal" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Perihal Surat / SK *</label>
-            <input type="text" id="perihal" name="perihal" required placeholder="Contoh: Permohonan Surat Izin Penelitian Tugas Akhir / Permohonan SK Dekan Pembimbing"
-                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-sm text-slate-900 placeholder-slate-400 font-semibold transition">
         </div>
 
         <!-- Dynamic Fields Container -->

@@ -96,9 +96,14 @@ class MahasiswaController {
                 return res.status(400).send('Profil mahasiswa tidak valid.');
             }
 
-            const { jenis_surat_id, perihal, ...dataDinamis } = req.body;
+            let { jenis_surat_id, perihal, ...dataDinamis } = req.body;
             const fileUpload = req.file;
             const uuidSurat = uuidv4();
+
+            const jenisSuratObj = await SuratModel.getJenisSuratById(jenis_surat_id);
+            if (!perihal || perihal.trim() === '') {
+                perihal = jenisSuratObj ? jenisSuratObj.nama_surat : 'Pengajuan Surat Administrasi TA';
+            }
 
             // 1. Simpan Transaksi Pengajuan Surat di DB
             const pengajuan = await SuratModel.createPengajuan({

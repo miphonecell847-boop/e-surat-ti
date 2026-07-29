@@ -33,6 +33,9 @@ class PdfGeneratorService {
         if (kode.includes('LMBR-PERSETUJUAN-WKT') || nama.includes('persetujuan waktu') || nama.includes('lembar persetujuan waktu')) {
             return this.generateLembarPersetujuanWaktuPdf(opts);
         }
+        if (kode.includes('KARTU-BIMBINGAN') || nama.includes('kartu bimbingan')) {
+            return this.generateKartuBimbinganPdf(opts);
+        }
 
         return this.generateSuratIzinPenelitianPdf(opts);
     }
@@ -691,6 +694,188 @@ class PdfGeneratorService {
                 doc.end();
             } catch (err) {
                 console.error('Error generating Lembar Persetujuan Waktu PDF:', err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * PDF Template Resmi: Kartu Bimbingan Tugas Akhir / Skripsi (2 Halaman)
+     */
+    static generateKartuBimbinganPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 35 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 70
+                });
+
+                // ==================== HALAMAN 1 ====================
+                // 1. KOP SURAT UNIDAYAN
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 28, { width: 55 });
+                }
+
+                doc.fontSize(11).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 26, { align: 'center' });
+                doc.fontSize(12).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 40, { align: 'center' });
+                doc.fontSize(11).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 54, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Terakreditasi (S-1) No. 3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 68, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Kampus Palagimata : Jl. Sultan Dayanu Ikhsanuddin No.124 Telp.(0402)2821327 Baubau', 110, 79, { align: 'center' });
+                doc.fontSize(8).font('Helvetica-Oblique').text('Website : fatek.unidayan.ac.id', 110, 90, { align: 'center' });
+
+                // Kop Line
+                doc.moveTo(35, 102).lineTo(560, 102).lineWidth(1.8).stroke('#000000');
+                doc.moveTo(35, 104.5).lineTo(560, 104.5).lineWidth(0.8).stroke('#000000');
+
+                // 2. IDENTITAS KARTU BIMBINGAN
+                let curY = 114;
+                const labelX = 45;
+                const colonX = 160;
+                const valX = 170;
+
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta : (pengajuan.perihal ? pengajuan.perihal : 'Aplikasi Mobile Terintegrasi untuk Manajemen Donor Darah Di PMI Kota Baubau');
+
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
+
+                let p1Name = 'Helson Hamid, S.T., M.T.';
+                let p2Name = 'Fithriah Musadat, S.Si., M.T.';
+                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
+                    if (p1) p1Name = p1.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
+                    if (p2) p2Name = p2.nama_dosen;
+                }
+
+                const addRow = (label, val, isBold = false) => {
+                    doc.fontSize(10).font('Helvetica-Bold').text(label, labelX, curY);
+                    doc.font('Helvetica-Bold').text(':', colonX, curY);
+                    if (isBold) {
+                        doc.font('Helvetica-Bold').text(val, valX, curY, { width: 380 });
+                    } else {
+                        doc.font('Helvetica').text(val, valX, curY, { width: 380 });
+                    }
+                    curY = doc.y + 3.5;
+                };
+
+                addRow('Nama / NIM', `${namaMhs} / ${nimMhs}`, true);
+                addRow('Fakultas/ Prodi', 'Teknik / Teknik Informatika', true);
+                addRow('Jenjang Program', 'Strata Satu ( S-1)', true);
+                addRow('Judul Tugas Akhir', judulTa, true);
+                addRow('Mata Kuliah', 'Tugas Akhir / Skripsi', true);
+
+                // Dosen Pembimbing
+                doc.fontSize(10).font('Helvetica-Bold').text('Dosen Pembimbing', labelX, curY);
+                doc.text(':', colonX, curY);
+                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, valX, curY);
+                doc.font('Helvetica-Bold').text('(Utama)', valX + 260, curY);
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, valX, curY);
+                doc.font('Helvetica-Bold').text('(Pendamping)', valX + 260, curY);
+                curY = doc.y + 10;
+
+                // 3. TABEL ASISTENSI (PAGE 1)
+                const tableX = 35;
+                const colWidths = [30, 115, 230, 80, 70]; // Total = 525
+                const headerH = 26;
+                const rowH = 24;
+                const numRowsP1 = 18; // 18 rows on Page 1
+
+                let tableTopY = curY;
+                doc.lineWidth(0.8).strokeColor('#000000');
+
+                // Header Box
+                doc.rect(tableX, tableTopY, 525, headerH).stroke();
+
+                // Vertical Dividers Header
+                let xAcc = tableX;
+                doc.moveTo(xAcc + colWidths[0], tableTopY).lineTo(xAcc + colWidths[0], tableTopY + headerH).stroke(); xAcc += colWidths[0];
+                doc.moveTo(xAcc + colWidths[1], tableTopY).lineTo(xAcc + colWidths[1], tableTopY + headerH).stroke(); xAcc += colWidths[1];
+                doc.moveTo(xAcc + colWidths[2], tableTopY).lineTo(xAcc + colWidths[2], tableTopY + headerH).stroke(); xAcc += colWidths[2];
+                doc.moveTo(xAcc + colWidths[3], tableTopY).lineTo(xAcc + colWidths[3], tableTopY + headerH).stroke();
+
+                // Header Titles
+                doc.fontSize(9).font('Helvetica-Bold');
+                doc.text('No.', tableX, tableTopY + 8, { width: colWidths[0], align: 'center' });
+                doc.text('Tanggal Asistensi', tableX + colWidths[0], tableTopY + 8, { width: colWidths[1], align: 'center' });
+                doc.text('Koreksi / Keterangan', tableX + colWidths[0] + colWidths[1], tableTopY + 8, { width: colWidths[2], align: 'center' });
+                doc.text('Paraf Dosen\nPembimbing', tableX + colWidths[0] + colWidths[1] + colWidths[2], tableTopY + 3, { width: colWidths[3], align: 'center' });
+                doc.text('Paraf\nMahasiswa', tableX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], tableTopY + 3, { width: colWidths[4], align: 'center' });
+
+                let rY = tableTopY + headerH;
+                for (let i = 1; i <= numRowsP1; i++) {
+                    doc.rect(tableX, rY, 525, rowH).stroke();
+                    let xPos = tableX;
+                    colWidths.forEach(w => {
+                        doc.moveTo(xPos + w, rY).lineTo(xPos + w, rY + rowH).stroke();
+                        xPos += w;
+                    });
+                    doc.fontSize(8.5).font('Helvetica').text(`${i}.`, tableX + 2, rY + 7, { width: colWidths[0] - 4, align: 'center' });
+                    rY += rowH;
+                }
+
+                // ==================== HALAMAN 2 ====================
+                doc.addPage({ size: 'A4', margin: 35 });
+
+                let rY2 = 40;
+                const numRowsP2 = 24; // 24 rows on Page 2
+
+                // Header Page 2
+                doc.rect(tableX, rY2, 525, headerH).stroke();
+                let xAcc2 = tableX;
+                doc.moveTo(xAcc2 + colWidths[0], rY2).lineTo(xAcc2 + colWidths[0], rY2 + headerH).stroke(); xAcc2 += colWidths[0];
+                doc.moveTo(xAcc2 + colWidths[1], rY2).lineTo(xAcc2 + colWidths[1], rY2 + headerH).stroke(); xAcc2 += colWidths[1];
+                doc.moveTo(xAcc2 + colWidths[2], rY2).lineTo(xAcc2 + colWidths[2], rY2 + headerH).stroke(); xAcc2 += colWidths[2];
+                doc.moveTo(xAcc2 + colWidths[3], rY2).lineTo(xAcc2 + colWidths[3], rY2 + headerH).stroke();
+
+                doc.fontSize(9).font('Helvetica-Bold');
+                doc.text('No.', tableX, rY2 + 8, { width: colWidths[0], align: 'center' });
+                doc.text('Tanggal Asistensi', tableX + colWidths[0], rY2 + 8, { width: colWidths[1], align: 'center' });
+                doc.text('Koreksi / Keterangan', tableX + colWidths[0] + colWidths[1], rY2 + 8, { width: colWidths[2], align: 'center' });
+                doc.text('Paraf Dosen\nPembimbing', tableX + colWidths[0] + colWidths[1] + colWidths[2], rY2 + 3, { width: colWidths[3], align: 'center' });
+                doc.text('Paraf\nMahasiswa', tableX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], rY2 + 3, { width: colWidths[4], align: 'center' });
+
+                rY2 += headerH;
+                for (let i = numRowsP1 + 1; i <= numRowsP1 + numRowsP2; i++) {
+                    doc.rect(tableX, rY2, 525, rowH).stroke();
+                    let xPos = tableX;
+                    colWidths.forEach(w => {
+                        doc.moveTo(xPos + w, rY2).lineTo(xPos + w, rY2 + rowH).stroke();
+                        xPos += w;
+                    });
+                    doc.fontSize(8.5).font('Helvetica').text(`${i}.`, tableX + 2, rY2 + 7, { width: colWidths[0] - 4, align: 'center' });
+                    rY2 += rowH;
+                }
+
+                // Footer Keterangan Cetak (Bottom Left Page 2)
+                let ketY = rY2 + 15;
+                doc.fontSize(9).font('Helvetica').text('Keterangan :', 45, ketY);
+                ketY += 12;
+                doc.fontSize(9.5).font('Helvetica-Bold').text('Kartu diatas dicetak 2 sisi dalam 1 Lembar kertas jilid warna putih', 45, ketY, { underline: true });
+
+                // Footer Digital Verification
+                const footerY = 790;
+                doc.moveTo(35, footerY).lineTo(560, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#555555')
+                    .text('Dokumen Resmi Kartu Bimbingan TA FT UNIDAYAN sah diterbitkan secara digital & dilindungi E-Signature QR Code.', 35, footerY + 4, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Publik: ${verifyUrl}`, 35, footerY + 13, { align: 'center' });
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating Kartu Bimbingan PDF:', err);
                 reject(err);
             }
         });

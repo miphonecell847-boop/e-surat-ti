@@ -16,13 +16,14 @@ function checkRole(allowedRoles = []) {
             normalizedAllowed.add('staff_tu');
             normalizedAllowed.add('stafftu');
             normalizedAllowed.add('tu');
+            normalizedAllowed.add('admin');
         }
         if (normalizedAllowed.has('mahasiswa') || normalizedAllowed.has('mhs')) {
             normalizedAllowed.add('mahasiswa');
             normalizedAllowed.add('mhs');
         }
 
-        if (normalizedAllowed.has(userRole) || userRole === 'admin') {
+        if (normalizedAllowed.has(userRole) || (userRole === 'admin' && normalizedAllowed.has('staff_tu'))) {
             return next();
         }
 

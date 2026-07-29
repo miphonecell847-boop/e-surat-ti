@@ -283,13 +283,15 @@ function seedData(database) {
         checkAndInsert('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan');
     }
 
+    // Migration: Remove admin role and migrate any existing admin users to staff_tu
+    database.run("UPDATE users SET role = 'staff_tu' WHERE role = 'admin'");
+    database.run("DELETE FROM users WHERE username = 'admin'");
+
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");
     const countUser = checkUser.length > 0 ? checkUser[0].values[0][0] : 0;
 
     if (countUser === 0) {
         const passHash = (plain) => bcrypt.hashSync(plain, 10);
-
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['admin', 'admin@univ.ac.id', passHash('admin123'), 'admin']);
 
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['mahasiswa', 'mahasiswa@univ.ac.id', passHash('mhs123'), 'mahasiswa']);
         const mhsUserRes = database.exec("SELECT id FROM users WHERE username = 'mahasiswa'");

@@ -19,7 +19,7 @@ router.get('/dashboard', isAuthenticated, (req, res) => {
     if (role === 'dosen') return res.redirect('/dosen/dashboard');
     if (role === 'sekretaris_prodi') return res.redirect('/sekprodi/dashboard');
     if (role === 'kaprodi') return res.redirect('/kaprodi/dashboard');
-    if (role === 'staff_tu') return res.redirect('/tu/dashboard');
+    if (role === 'staff_tu' || role === 'admin') return res.redirect('/tu/dashboard');
     return res.redirect('/profile');
 });
 

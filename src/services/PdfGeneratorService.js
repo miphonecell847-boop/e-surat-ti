@@ -262,17 +262,17 @@ class PdfGeneratorService {
                 doc.fontSize(11).font('Helvetica-Bold').text('SURAT KEPUTUSAN', 40, doc.y, { align: 'center' });
                 doc.fontSize(10.5).font('Helvetica-Bold').text('DEKAN FAKULTAS TEKNIK UNIVERSITAS DAYANU IKHSANUDDIN', 40, doc.y + 2, { align: 'center' });
 
-                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : '012/Q.18/FT-UND/II/2026';
+                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : '024/Q.21/FT-UND/II/2026';
                 doc.fontSize(10).font('Helvetica').text(`NOMOR : ${nomorResmi}`, 40, doc.y + 2, { align: 'center' });
 
                 doc.moveDown(0.4);
                 doc.fontSize(10).font('Helvetica-Bold').text('TENTANG', { align: 'center' });
-                doc.fontSize(10.5).font('Helvetica-Bold').text('PENETAPAN DOSEN PENGUJI UJIAN SKRIPSI / TUGAS AKHIR MAHASISWA', { align: 'center' });
+                doc.fontSize(10.5).font('Helvetica-Bold').text('PENETAPAN PENGUJI TUGAS AKHIR MAHASISWA PROGRAM STRATA SATU', { align: 'center' });
 
                 const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
                 const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
 
-                doc.fontSize(10).font('Helvetica-Bold').text(`A.N : ${namaMhs}  NOMOR INDUK : ${nimMhs}`, { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text(`A.N : ${namaMhs}  NOMOR INDUK: ${nimMhs}`, { align: 'center' });
                 doc.fontSize(10).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', { align: 'center' });
 
                 doc.moveDown(0.5);
@@ -286,9 +286,9 @@ class PdfGeneratorService {
                     dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
                 } catch (e) {}
 
-                let penguji1Name = 'Dr. Agus Setiawan, M.Sc.';
-                let penguji2Name = 'Dian Lestari, M.T.';
-                let penguji3Name = 'Eko Prasetyo, M.Comp.';
+                let penguji1Name = 'MUHAMMAD MUKMIN, S.Kom., M.T.';
+                let penguji2Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
+                let penguji3Name = 'Ir. ASNIATI, S.T., M.T.';
 
                 if (dataDinamis && dataDinamis.penguji_1_id) {
                     const p1 = await DosenModel.findById(dataDinamis.penguji_1_id);
@@ -316,7 +316,7 @@ class PdfGeneratorService {
                 // Menimbang
                 doc.fontSize(9.5).font('Helvetica-Bold').text('Menimbang', colHeaderX, curY);
                 doc.text(':', colColonX, curY);
-                doc.font('Helvetica').text(`a. Bahwa dalam rangka pelaksanaan Ujian Skripsi / Tugas Akhir bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Mahasiswa Program Studi Teknik Informatika, perlu dibentuk Tim Dosen Penguji Ujian Skripsi.`, colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
+                doc.font('Helvetica').text(`a. Bahwa dalam rangka pelaksanaan Pengujian Tugas Akhir (Skripsi) bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Mahasiswa Program Studi Teknik Informatika, maka dipandang perlu mengangkat Penguji.`, colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
 
                 curY = doc.y + 3;
                 doc.font('Helvetica').text('b. Bahwa berdasarkan pada huruf (a) diatas, perlu ditetapkan dalam Surat Keputusan Dekan Fakultas Teknik Universitas Dayanu Ikhsanuddin..', colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
@@ -327,15 +327,17 @@ class PdfGeneratorService {
                 doc.text(':', colColonX, curY);
                 doc.font('Helvetica').text('1. Peraturan Pemerintah Republik Indonesia Nomor 37 Tahun 2009, tentang Dosen', colContentX, curY, { width: contentWidth });
                 curY = doc.y + 2.5;
-                doc.text('2. Keputusan Rektor Nomor : 4/Q.13/UND/I/2022, tentang Peraturan Akademik Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
+                doc.text('2. Keputusan Rektor Nomor : 96/Q.13/UND/XII/2016, tentang Peraturan Akademik Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
                 curY = doc.y + 2.5;
                 doc.text('3. Keputusan Rektor Nomor : 48/Q/UND/VII/2017, tentang Beban Kerja Tri Dharma dan Tugas Tambahan Dosen Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
+                curY = doc.y + 2.5;
+                doc.text('4. Keputusan Rektor Nomor : 52/KEP/Q/UND/VIII/2025, tentang Kalender Akademik Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
 
                 curY = doc.y + 6;
                 // Memperhatikan
                 doc.font('Helvetica-Bold').text('Memperhatikan', colHeaderX, curY);
                 doc.text(':', colColonX, curY);
-                doc.font('Helvetica').text('Surat Ketua Program Studi Teknik Informatika Nomor : 238.1/Q.18/TI-UND/II/2026 tentang Usulan Tim Dosen Penguji Ujian Skripsi mahasiswa.', colContentX, curY, { width: contentWidth, align: 'justify' });
+                doc.font('Helvetica').text('Surat Ketua Program Studi Teknik Informatika Nomor : 230/Q.18/TI-UND/II/2026 tentang Usulan Dosen Penguji Tugas Akhir Mahasiswa.', colContentX, curY, { width: contentWidth, align: 'justify' });
 
                 curY = doc.y + 8;
                 doc.font('Helvetica-Bold').text('MEMUTUSKAN', 40, curY, { align: 'center' });
@@ -346,13 +348,13 @@ class PdfGeneratorService {
 
                 doc.font('Helvetica-Bold').text('Pertama', colHeaderX, curY + 10);
                 doc.text(':', colColonX, curY + 10);
-                doc.font('Helvetica').text(`Mengangkat Tim Dosen Penguji Ujian Skripsi / Tugas Akhir bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin.`, colContentX, curY + 10, { width: contentWidth, align: 'justify' });
+                doc.font('Helvetica').text(`Mengangkat Ketua dan Anggota Penguji Tugas Akhir bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin.`, colContentX, curY + 10, { width: contentWidth, align: 'justify' });
 
                 curY = doc.y + 3;
                 doc.font('Helvetica-Bold').text(`Judul Skripsi : ${judulSkripsi}`, colContentX, curY, { width: contentWidth, align: 'justify' });
 
                 curY = doc.y + 3;
-                doc.font('Helvetica').text('dengan susunan Tim Penguji sebagai berikut :', colContentX, curY);
+                doc.font('Helvetica').text('dengan susunan sebagai berikut :', colContentX, curY);
 
                 curY = doc.y + 2.5;
                 doc.font('Helvetica-Bold').text(`1. ${penguji1Name}`, colContentX + 15, curY);
@@ -360,11 +362,11 @@ class PdfGeneratorService {
 
                 curY = doc.y + 2.5;
                 doc.font('Helvetica-Bold').text(`2. ${penguji2Name}`, colContentX + 15, curY);
-                doc.font('Helvetica-Bold').text('( Penguji Anggota 1 )', colContentX + 250, curY);
+                doc.font('Helvetica-Bold').text('( Anggota Penguji )', colContentX + 250, curY);
 
                 curY = doc.y + 2.5;
                 doc.font('Helvetica-Bold').text(`3. ${penguji3Name}`, colContentX + 15, curY);
-                doc.font('Helvetica-Bold').text('( Penguji Anggota 2 )', colContentX + 250, curY);
+                doc.font('Helvetica-Bold').text('( Anggota Penguji )', colContentX + 250, curY);
 
                 curY = doc.y + 6;
                 doc.font('Helvetica-Bold').text('Kedua', colHeaderX, curY);
@@ -394,10 +396,11 @@ class PdfGeneratorService {
                 }
                 doc.image(qrBuffer, rightX + 105, ttdY + sigOffset - 5, { width: 65, height: 65 });
 
-                const namaDekan = 'B. Ir. HILDA SULAIMAN NUR, S.T., M.T.';
+                const namaDekan = 'Ir. HILDA SULAIMAN NUR, S.T., M.T.';
                 const nidnDekan = '0916076602';
 
                 doc.fontSize(9.5).font('Helvetica-Bold').text(namaDekan, rightX, ttdY + 88, { underline: true });
+                doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY + 101);
                 doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY + 101);
 
                 // Tembusan

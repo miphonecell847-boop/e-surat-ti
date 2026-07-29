@@ -119,31 +119,15 @@ class AuthController {
 
             const token = uuidv4();
 
-            if (role === 'mahasiswa') {
-                if (!nim || !nama_lengkap || !angkatan) {
-                    return res.render('auth/register', {
-                        title: 'Pendaftaran Akun Baru',
-                        error: 'Data NIM, Nama Lengkap, dan Angkatan wajib diisi!',
-                        layout: 'layouts/auth'
-                    });
-                }
-                await UserModel.registerMahasiswa({ username, email, password, nim, nama_lengkap, angkatan, no_hp, token });
-            } else if (role === 'dosen') {
-                if (!nip_nidn || !nama_dosen) {
-                    return res.render('auth/register', {
-                        title: 'Pendaftaran Akun Baru',
-                        error: 'Data NIP/NIDN dan Nama Dosen wajib diisi!',
-                        layout: 'layouts/auth'
-                    });
-                }
-                await UserModel.registerDosen({ username, email, password, nip_nidn, nama_dosen, jabatan, token });
-            } else {
+            if (!nim || !nama_lengkap || !angkatan) {
                 return res.render('auth/register', {
-                    title: 'Pendaftaran Akun Baru',
-                    error: 'Pilihan peran tidak valid. Registrasi publik hanya untuk Mahasiswa dan Dosen.',
+                    title: 'Pendaftaran Akun Mahasiswa',
+                    error: 'Data NIM, Nama Lengkap, dan Angkatan wajib diisi!',
                     layout: 'layouts/auth'
                 });
             }
+
+            await UserModel.registerMahasiswa({ username, email, password, nim, nama_lengkap, angkatan, no_hp, token });
 
             return res.render('auth/login', {
                 title: 'Login - E-Surat Administrasi TA',

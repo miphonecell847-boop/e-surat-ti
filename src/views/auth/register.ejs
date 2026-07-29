@@ -1,10 +1,16 @@
 <div class="w-full max-w-lg bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl my-8">
     <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/30 mb-3 shadow-lg shadow-purple-500/20">
-            <i class="fa-solid fa-user-plus text-2xl"></i>
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mb-3 shadow-lg shadow-blue-500/20">
+            <i class="fa-solid fa-user-graduate text-2xl"></i>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-white">Pendaftaran Akun Baru</h1>
-        <p class="text-xs text-slate-400 mt-1">Sistem E-Surat Administrasi TA Teknik Informatika</p>
+        <h1 class="text-2xl font-bold tracking-tight text-white">Pendaftaran Akun Mahasiswa</h1>
+        <p class="text-xs text-slate-400 mt-1">Sistem E-Surat Administrasi TA UNIDAYAN Baubau</p>
+    </div>
+
+    <!-- Info Box: Akun Dosen dibuat oleh Staff TU -->
+    <div class="mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
+        <i class="fa-solid fa-circle-info text-base shrink-0 mt-0.5"></i>
+        <span>Pendaftaran publik ini khusus untuk <strong>Mahasiswa</strong>. Akun Dosen dan Pengajar dibuat secara resmi oleh <strong>Staff TU Kampus</strong>.</span>
     </div>
 
     <% if (error) { %>
@@ -14,124 +20,66 @@
         </div>
     <% } %>
 
-    <!-- Role Switcher Tabs -->
-    <div class="flex bg-slate-950 p-1.5 rounded-2xl mb-6 border border-slate-800">
-        <button id="tab-mhs" type="button" onclick="switchRole('mahasiswa')" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow">
-            <i class="fa-solid fa-user-graduate mr-1"></i> Mahasiswa
-        </button>
-        <button id="tab-dosen" type="button" onclick="switchRole('dosen')" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-            <i class="fa-solid fa-chalkboard-user mr-1"></i> Dosen
-        </button>
-    </div>
-
     <form action="/register" method="POST" class="space-y-4 text-xs">
-        <input type="hidden" id="role-input" name="role" value="mahasiswa">
-
-        <!-- Common Fields -->
-        <div>
-            <label for="username" class="block font-semibold text-slate-300 uppercase mb-1">Username *</label>
-            <input type="text" id="username" name="username" required placeholder="Contoh: mhs_fauzi"
-                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
-        </div>
+        <input type="hidden" name="role" value="mahasiswa">
 
         <div>
-            <label for="email" class="block font-semibold text-slate-300 uppercase mb-1">Email Aktif (Verifikasi Email) *</label>
-            <input type="email" id="email" name="email" required placeholder="nama@univ.ac.id"
-                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
+            <label for="nama_lengkap" class="block font-semibold text-slate-300 uppercase mb-1">Nama Lengkap Mahasiswa *</label>
+            <input type="text" id="nama_lengkap" name="nama_lengkap" required placeholder="Contoh: Ahmad Fauzi"
+                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
         </div>
 
-        <!-- Mahasiswa Specific Fields -->
-        <div id="mhs-fields" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
             <div>
-                <label for="nama_lengkap" class="block font-semibold text-slate-300 uppercase mb-1">Nama Lengkap Mahasiswa *</label>
-                <input type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Contoh: Ahmad Fauzi"
-                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
+                <label for="nim" class="block font-semibold text-slate-300 uppercase mb-1">NIM Mahasiswa *</label>
+                <input type="text" id="nim" name="nim" required placeholder="21081010001"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 font-mono placeholder-slate-500">
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label for="nim" class="block font-semibold text-slate-300 uppercase mb-1">NIM *</label>
-                    <input type="text" id="nim" name="nim" placeholder="21081010001"
-                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 font-mono placeholder-slate-500">
-                </div>
-                <div>
-                    <label for="angkatan" class="block font-semibold text-slate-300 uppercase mb-1">Angkatan *</label>
-                    <input type="number" id="angkatan" name="angkatan" value="2021" placeholder="2021"
-                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100">
-                </div>
-            </div>
-
             <div>
-                <label for="no_hp" class="block font-semibold text-slate-300 uppercase mb-1">No. HP / Whatsapp</label>
-                <input type="text" id="no_hp" name="no_hp" placeholder="081234567890"
-                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
+                <label for="angkatan" class="block font-semibold text-slate-300 uppercase mb-1">Angkatan *</label>
+                <input type="number" id="angkatan" name="angkatan" required value="2021" placeholder="2021"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100">
             </div>
         </div>
 
-        <!-- Dosen Specific Fields -->
-        <div id="dosen-fields" class="space-y-4 hidden">
-            <div>
-                <label for="nama_dosen" class="block font-semibold text-slate-300 uppercase mb-1">Nama Lengkap & Gelar Dosen *</label>
-                <input type="text" id="nama_dosen" name="nama_dosen" placeholder="Contoh: Dr. Budi Santoso, M.Kom."
-                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
-            </div>
+        <div>
+            <label for="no_hp" class="block font-semibold text-slate-300 uppercase mb-1">No. HP / WhatsApp</label>
+            <input type="text" id="no_hp" name="no_hp" placeholder="081234567890"
+                class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
+        </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label for="nip_nidn" class="block font-semibold text-slate-300 uppercase mb-1">NIP / NIDN *</label>
-                    <input type="text" id="nip_nidn" name="nip_nidn" placeholder="197805122005011002"
-                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100 font-mono placeholder-slate-500">
-                </div>
-                <div>
-                    <label for="jabatan" class="block font-semibold text-slate-300 uppercase mb-1">Jabatan Akademik</label>
-                    <input type="text" id="jabatan" name="jabatan" placeholder="Lektor Kepala"
-                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100">
-                </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label for="username" class="block font-semibold text-slate-300 uppercase mb-1">Username Login *</label>
+                <input type="text" id="username" name="username" required placeholder="Contoh: mhs_fauzi"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
+            </div>
+            <div>
+                <label for="email" class="block font-semibold text-slate-300 uppercase mb-1">Email Aktif *</label>
+                <input type="email" id="email" name="email" required placeholder="nama@univ.ac.id"
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
             </div>
         </div>
 
-        <!-- Passwords -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
                 <label for="password" class="block font-semibold text-slate-300 uppercase mb-1">Password *</label>
                 <input type="password" id="password" name="password" required placeholder="••••••••"
-                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100">
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100">
             </div>
             <div>
                 <label for="confirm_password" class="block font-semibold text-slate-300 uppercase mb-1">Konfirmasi Password *</label>
                 <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••••"
-                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-purple-500 text-slate-100">
+                    class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100">
             </div>
         </div>
 
-        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-0.5 mt-2">
-            <i class="fa-solid fa-paper-plane mr-2"></i> Daftar Akun & Kirim Verifikasi Email
+        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 mt-2">
+            <i class="fa-solid fa-user-plus mr-2"></i> Daftar Akun Mahasiswa (Kirim Ke Validasi Staff TU)
         </button>
     </form>
 
     <div class="mt-6 pt-4 border-t border-slate-800 text-center text-xs text-slate-400">
-        Sudah memiliki akun? <a href="/login" class="text-purple-400 hover:underline font-bold">Masuk ke Sistem</a>
+        Sudah memiliki akun? <a href="/login" class="text-amber-400 hover:underline font-bold">Masuk ke Sistem</a>
     </div>
 </div>
-
-<script>
-    function switchRole(role) {
-        document.getElementById('role-input').value = role;
-        const tabMhs = document.getElementById('tab-mhs');
-        const tabDosen = document.getElementById('tab-dosen');
-        const mhsFields = document.getElementById('mhs-fields');
-        const dosenFields = document.getElementById('dosen-fields');
-
-        if (role === 'mahasiswa') {
-            tabMhs.className = "flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow";
-            tabDosen.className = "flex-1 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white";
-            mhsFields.classList.remove('hidden');
-            dosenFields.classList.add('hidden');
-        } else {
-            tabDosen.className = "flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-purple-600 text-white shadow";
-            tabMhs.className = "flex-1 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white";
-            dosenFields.classList.remove('hidden');
-            mhsFields.classList.add('hidden');
-        }
-    }
-</script>

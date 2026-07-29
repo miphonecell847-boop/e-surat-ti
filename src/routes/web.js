@@ -90,7 +90,7 @@ router.get('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu', 'staf
 router.post('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), JudulTaController.processTuVerifikasi);
 
 // Staff TU: Manajemen & Validasi Akun Pengguna
-router.get('/tu/kelola-akun', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.renderKelolaAkun);
+router.get('/tu/kelola-akun', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'mahasiswa', 'dosen']), TuController.renderKelolaAkun);
 router.post('/tu/approve-user/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processApproveUser);
 router.post('/tu/reject-user/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processRejectUser);
 router.post('/tu/buat-akun-dosen', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processBuatAkunDosen);

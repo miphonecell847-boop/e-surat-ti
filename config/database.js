@@ -273,7 +273,7 @@ function seedData(database) {
     const countJenis = checkJenis.length > 0 ? checkJenis[0].values[0][0] : 0;
 
     // Cleanup removed jenis_surat records if existing
-    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN');");
+    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN', 'LMBR-PENGESAHAN');");
 
     if (countJenis === 0) {
         database.run("INSERT INTO jenis_surat (kode_surat, nama_surat, template_path, butuh_approval_pembimbing) VALUES ('SRT-IZIN-PENELITIAN', 'Surat Izin Penelitian Instansi / Perusahaan', 'surat_izin_penelitian', 1);");

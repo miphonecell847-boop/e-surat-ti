@@ -1,11 +1,11 @@
 <div class="max-w-3xl mx-auto space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-xl font-bold text-slate-900">Form Pengajuan Surat & Berita Acara Ujian TA</h2>
-            <p class="text-xs text-slate-500 mt-1">Isi formulir dan sertakan berkas dokumen lampiran pendukung dalam format PDF.</p>
+            <h2 class="text-xl font-extrabold text-slate-900">Form Pengajuan Surat & SK Administrasi TA</h2>
+            <p class="text-xs text-slate-500 mt-1">Pilih jenis surat dan lengkapi detail informasi sesuai kebutuhan dokumen yang diajukan.</p>
         </div>
-        <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition shadow-sm">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+        <a href="/mahasiswa/daftar-surat" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Daftar Surat
         </a>
     </div>
 
@@ -19,10 +19,10 @@
     <form action="/mahasiswa/buat-surat" method="POST" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-3xl p-8 space-y-6 shadow-xl">
         <!-- Select Jenis Surat -->
         <div>
-            <label for="jenis_surat_id" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Pilih Jenis Surat / Berita Acara Ujian *</label>
+            <label for="jenis_surat_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Pilih Jenis Surat / SK Resmimu *</label>
             <select id="jenis_surat_id" name="jenis_surat_id" required onchange="toggleFormFields(this)"
                 class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 font-bold text-sm text-slate-900 transition">
-                <option value="" disabled selected>-- Pilih Jenis Surat / Berita Acara --</option>
+                <option value="" disabled selected>-- Pilih Jenis Surat / SK --</option>
                 <% jenisList.forEach(jenis => { %>
                     <option value="<%= jenis.id %>" data-kode="<%= jenis.kode_surat %>"><%= jenis.nama_surat %> (<%= jenis.kode_surat %>)</option>
                 <% }); %>
@@ -31,72 +31,129 @@
 
         <!-- Perihal Surat -->
         <div>
-            <label for="perihal" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Perihal Surat / Berita Acara *</label>
-            <input type="text" id="perihal" name="perihal" required placeholder="Contoh: Pengajuan Berita Acara Ujian Skripsi / Permohonan SK Pembimbing"
+            <label for="perihal" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Perihal Surat / SK *</label>
+            <input type="text" id="perihal" name="perihal" required placeholder="Contoh: Permohonan Surat Izin Penelitian Tugas Akhir / Permohonan SK Dekan Pembimbing"
                 class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-sm text-slate-900 placeholder-slate-400 font-semibold transition">
         </div>
 
         <!-- Dynamic Fields Container -->
         <div id="dynamic-fields-container" class="space-y-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-blue-600"></i> Detail Informasi Spesifik Surat
+            <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-blue-600"></i> Detail Spesifikasi Informasi Surat
             </h4>
 
-            <!-- Fields for BA-UJIAN (Berita Acara Ujian) -->
-            <div id="ba-ujian-fields" class="space-y-4">
+            <!-- 1. Fields for SRT-IZIN-PENELITIAN -->
+            <div id="field-srt-izin-penelitian" class="space-y-4 dynamic-section hidden">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Ujian *</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Instansi / Perusahaan Tujuan *</label>
+                    <input type="text" name="tujuan_instansi" placeholder="Contoh: Kepala Dinas Komunikasi dan Informatika Kota Baubau"
+                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Alamat / Lokasi Instansi *</label>
+                    <input type="text" name="alamat_instansi" placeholder="Contoh: Jl. Sultan Dayanu Ikhsanuddin No. 124, Baubau"
+                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Judul Skripsi / Penelitian *</label>
+                    <input type="text" name="judul_penelitian" value="<%= (mhs && mhs.judul_ta) ? mhs.judul_ta : '' %>" placeholder="Judul Tugas Akhir Mahasiswa..."
+                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Mulai Penelitian</label>
+                        <input type="date" name="tgl_mulai_penelitian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Selesai Penelitian</label>
+                        <input type="date" name="tgl_selesai_penelitian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Fields for LMBR-PERSETUJUAN-WKT & UND- (Undangan Seminar / Ujian) -->
+            <div id="field-seminar-jadwal" class="space-y-4 dynamic-section hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Seminar / Ujian *</label>
+                    <select name="jenis_seminar" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                        <option value="Seminar Proposal (Sempro)">Seminar Proposal (Sempro)</option>
+                        <option value="Seminar Hasil (Semhas)">Seminar Hasil (Semhas)</option>
+                        <option value="Sidang Akhir / Munaqasyah Skripsi">Sidang Akhir / Munaqasyah Skripsi</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Hari / Tanggal Ujian *</label>
+                        <input type="text" name="hari_tanggal" placeholder="Contoh: Jum'at, 19 Juni 2026" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Waktu / Jam Pelaksanaan *</label>
+                        <input type="text" name="pukul" placeholder="Contoh: 15:00 WITA s/d Selesai" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
+                    <input type="text" name="bertempat_di" placeholder="Contoh: R. Teknik Informatika / Ruang Seminar FTI" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                </div>
+            </div>
+
+            <!-- 3. Fields for SK-PEMBIMBING-PENGUJI & KARTU-BIMBINGAN -->
+            <div id="field-sk-bimbingan" class="space-y-4 dynamic-section hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Judul Skripsi / Tugas Akhir *</label>
+                    <textarea name="judul_ta_sk" rows="2" placeholder="Judul Tugas Akhir Mahasiswa..." class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"><%= (mhs && mhs.judul_ta) ? mhs.judul_ta : '' %></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik / Semester</label>
+                    <input type="text" name="tahun_akademik" placeholder="Contoh: 2025/2026 (Genap)" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                </div>
+            </div>
+
+            <!-- 4. Fields for BA-UJIAN (Berita Acara Ujian) -->
+            <div id="field-ba-ujian" class="space-y-4 dynamic-section hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Ujian *</label>
                     <select name="kategori_ujian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
                         <option value="Ujian Seminar Proposal (Sempro)">Ujian Seminar Proposal (Sempro)</option>
                         <option value="Ujian Seminar Hasil (Semhas)">Ujian Seminar Hasil (Semhas)</option>
                         <option value="Ujian Sidang Akhir / Munaqasyah Skripsi">Ujian Sidang Akhir / Munaqasyah Skripsi</option>
                     </select>
-
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Ujian *</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Ujian *</label>
                         <input type="date" name="tanggal_ujian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Waktu / Jam Ujian *</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Waktu / Jam Ujian *</label>
                         <input type="text" name="waktu_ujian" placeholder="09:00 - 11:00 WITA" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
-                    <input type="text" name="ruang_ujian" placeholder="Ruang Seminar FTI UNIDAYAN / Lab Komputer" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
+                    <input type="text" name="ruang_ujian" placeholder="Ruang Seminar FTI UNIDAYAN" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
                 </div>
             </div>
 
-            <!-- Fields for General Riset / Instansi -->
-            <div id="riset-fields" class="space-y-4 hidden">
-                <div>
-                    <label for="tujuan_instansi" class="block text-xs font-semibold text-slate-700 mb-1">Tujuan Instansi / Perusahaan Mitra</label>
-                    <input type="text" id="tujuan_instansi" name="tujuan_instansi" placeholder="Contoh: Dinas Kominfo Kota Baubau"
-                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                </div>
-                <div>
-                    <label for="tanggal_kegiatan" class="block text-xs font-semibold text-slate-700 mb-1">Rencana Tanggal Pelaksanaan</label>
-                    <input type="date" id="tanggal_kegiatan" name="tanggal_kegiatan"
-                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                </div>
+            <!-- Default Info text if none selected -->
+            <div id="field-default-info" class="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-500 italic">
+                Pilih jenis surat pada dropdown di atas untuk menampilkan detail isian informasi yang relevan.
             </div>
         </div>
 
         <!-- File Upload to GDrive -->
         <div class="pt-4 border-t border-slate-200">
-            <label for="file_lampiran" class="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Upload Berkas Lampiran / Dokumen Syarat (PDF) *</label>
+            <label for="file_lampiran" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Berkas Lampiran / Dokumen Syarat (PDF) *</label>
             <div class="p-6 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center hover:border-blue-500 transition">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600 mb-2"></i>
                 <p class="text-xs text-slate-800 font-bold">Pilih file PDF (Draft Skripsi, Lembar Penilaian Ujian, atau Transkrip Nilai)</p>
-                <p class="text-[10px] text-slate-500 mt-1">Otomatis di-upload dan tersimpan di Google Drive Prodi UNIDAYAN. Max size 10MB.</p>
+                <p class="text-[10px] text-slate-500 mt-1">Otomatis di-upload dan tersimpan di Google Drive Cloud FTI UNIDAYAN. Max 10MB.</p>
                 <input type="file" id="file_lampiran" name="file_lampiran" accept=".pdf,.doc,.docx" class="mt-4 text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white hover:file:bg-blue-600 cursor-pointer">
             </div>
         </div>
 
         <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-sm shadow-lg shadow-blue-700/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-paper-plane text-amber-400"></i> Kirim Pengajuan Surat / Berita Acara
+            <i class="fa-solid fa-paper-plane text-amber-400"></i> Kirim Pengajuan Surat / SK
         </button>
     </form>
 </div>
@@ -105,15 +162,21 @@
     function toggleFormFields(selectEl) {
         const selectedOption = selectEl.options[selectEl.selectedIndex];
         const kode = selectedOption ? selectedOption.getAttribute('data-kode') : '';
-        const baFields = document.getElementById('ba-ujian-fields');
-        const risetFields = document.getElementById('riset-fields');
+        
+        // Hide all dynamic sections
+        document.querySelectorAll('.dynamic-section').forEach(el => el.classList.add('hidden'));
+        document.getElementById('field-default-info').classList.add('hidden');
 
-        if (kode === 'BA-UJIAN') {
-            baFields.classList.remove('hidden');
-            risetFields.classList.add('hidden');
+        if (kode === 'SRT-IZIN-PENELITIAN') {
+            document.getElementById('field-srt-izin-penelitian').classList.remove('hidden');
+        } else if (kode === 'LMBR-PERSETUJUAN-WKT' || kode.startsWith('UND-')) {
+            document.getElementById('field-seminar-jadwal').classList.remove('hidden');
+        } else if (kode === 'SK-PEMBIMBING-PENGUJI' || kode === 'KARTU-BIMBINGAN') {
+            document.getElementById('field-sk-bimbingan').classList.remove('hidden');
+        } else if (kode === 'BA-UJIAN') {
+            document.getElementById('field-ba-ujian').classList.remove('hidden');
         } else {
-            baFields.classList.add('hidden');
-            risetFields.classList.remove('hidden');
+            document.getElementById('field-default-info').classList.remove('hidden');
         }
     }
 </script>

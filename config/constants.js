@@ -54,11 +54,6 @@ module.exports = {
             nama: 'Surat Undangan Sidang Akhir / Munaqasyah',
             template: 'undangan_sidang'
         },
-        LMBR_PENGESAHAN: {
-            kode: 'LMBR-PENGESAHAN',
-            nama: 'Lembar Pengesahan Skripsi / Tugas Akhir',
-            template: 'lembar_pengesahan'
-        },
         BA_UJIAN: {
             kode: 'BA-UJIAN',
             nama: 'Berita Acara Ujian / Seminar Tugas Akhir',

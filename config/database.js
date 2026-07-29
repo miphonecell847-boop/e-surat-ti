@@ -183,6 +183,25 @@ function initTables(database) {
         );
     `);
 
+    // 10. Table jadwal_ujian
+    database.run(`
+        CREATE TABLE IF NOT EXISTS jadwal_ujian (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pengajuan_surat_id INTEGER REFERENCES pengajuan_surat(id) ON DELETE CASCADE,
+            mahasiswa_id INTEGER NOT NULL REFERENCES mahasiswa(id) ON DELETE CASCADE,
+            jenis_ujian TEXT NOT NULL,
+            tanggal_ujian DATE NOT NULL,
+            jam_mulai TEXT NOT NULL,
+            jam_selesai TEXT NOT NULL,
+            ruangan TEXT NOT NULL,
+            judul_ta TEXT,
+            pembimbing_1_id INTEGER REFERENCES dosen(id),
+            pembimbing_2_id INTEGER REFERENCES dosen(id),
+            status_ujian TEXT DEFAULT 'terjadwal',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
     // 9. Table pengajuan_judul_ta [BARU]
     database.run(`
         CREATE TABLE IF NOT EXISTS pengajuan_judul_ta (

@@ -1,0 +1,139 @@
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-2">
+                <i class="fa-solid fa-calendar-days"></i> Kalender Ujian Akademis
+            </span>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white">Jadwal Ujian & Seminar TA</h1>
+            <p class="text-sm text-slate-400 mt-1">Daftar pelaksanaan ujian/seminar Tugas Akhir yang telah divalidasi dan diterbitkan surat undangannya oleh Staff TU.</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold text-xs transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
+    <!-- Empty State or Schedule Cards -->
+    <% if (!listJadwal || listJadwal.length === 0) { %>
+        <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4 shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-3xl mx-auto">
+                <i class="fa-solid fa-calendar-xmark"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Belum Ada Jadwal Ujian / Seminar Terbit</h3>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+                Jadwal Ujian atau Seminar akan otomatis muncul di sini setelah permohonan surat undangan Anda diverifikasi dan penerbitan surat selesai dilakukan oleh Staff TU.
+            </p>
+            <a href="/mahasiswa/buat-surat" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition">
+                <i class="fa-solid fa-paper-plane"></i> Buat Permohonan Surat Undangan
+            </a>
+        </div>
+    <% } else { %>
+        <div class="space-y-4">
+            <% listJadwal.forEach(j => { %>
+                <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 uppercase tracking-wider">
+                                    <%= j.jenis_ujian %>
+                                </span>
+                                <h3 class="text-base font-extrabold text-slate-900 mt-1"><%= j.judul_ta || 'Judul Tugas Akhir' %></h3>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 self-end md:self-auto">
+                            <% if (j.uuid_surat) { %>
+                                <button onclick="openPdfPreview('<%= j.pengajuan_surat_id %>', '<%= j.jenis_ujian %>')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-pdf"></i> Lihat Surat Undangan
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold shrink-0">
+                                <i class="fa-regular fa-calendar font-bold"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Ujian</p>
+                                <p class="font-extrabold text-slate-900 text-sm mt-0.5">
+                                    <%= new Date(j.tanggal_ujian).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-sm font-bold shrink-0">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Waktu Pelaksanaan</p>
+                                <p class="font-extrabold text-slate-900 text-sm mt-0.5">
+                                    <%= j.jam_mulai %> - <%= j.jam_selesai %> WITA
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold shrink-0">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ruangan / Tempat</p>
+                                <p class="font-extrabold text-slate-900 text-sm mt-0.5">
+                                    <%= j.ruangan %>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tim Dosen -->
+                    <div class="pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs text-slate-600 gap-2 border-t border-slate-100">
+                        <div class="flex items-center gap-4">
+                            <span><strong class="text-slate-800">Pembimbing I:</strong> <%= j.p1_nama || 'Prof. Dr. Ir. Budi Santoso, M.Kom.' %></span>
+                            <span><strong class="text-slate-800">Pembimbing II:</strong> <%= j.p2_nama || 'Siti Rahmawati, S.T., M.T.' %></span>
+                        </div>
+                        <% if (j.nomor_surat) { %>
+                            <span class="font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">No. Surat: <%= j.nomor_surat %></span>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</div>
+
+<!-- Modal PDF Preview Interaktif -->
+<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
+                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
+            </div>
+            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
+                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
+            </button>
+        </div>
+        <div class="flex-1 bg-slate-100 relative">
+            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPdfPreview(suratId, title) {
+        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
+        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
+        document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+    function closePdfPreview() {
+        document.getElementById('pdf-preview-modal').classList.add('hidden');
+        document.getElementById('pdf-preview-iframe').src = '';
+    }
+</script>

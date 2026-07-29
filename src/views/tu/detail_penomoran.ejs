@@ -21,6 +21,32 @@
             <p class="text-[11px] text-slate-400 mt-1.5">Format standar prodi: <span class="font-mono text-slate-300">B/123/UN.1/TI/TA/2026</span></p>
         </div>
 
+        <!-- Automatic Exam Schedule Fields for Staff TU -->
+        <div class="p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-4">
+            <h4 class="text-xs font-bold text-amber-300 uppercase flex items-center gap-2">
+                <i class="fa-solid fa-calendar-check"></i> Pengaturan Jadwal Ujian & Seminar Otomatis
+            </h4>
+            <p class="text-xs text-slate-300">Surat undangan ini secara otomatis akan menerbitkan Jadwal Ujian ke akun Mahasiswa dan Dosen Pembimbing/Penguji.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Tanggal Ujian / Seminar *</label>
+                    <input type="date" name="tanggal_ujian" required value="<%= dinamisObj.tanggal_ujian || new Date().toISOString().split('T')[0] %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Ruangan / Tempat Ujian *</label>
+                    <input type="text" name="ruangan" required value="<%= dinamisObj.ruangan || 'Ruang Ujian & Seminar TI' %>" placeholder="Contoh: Ruang Seminar Lantai 2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Jam Mulai Ujian *</label>
+                    <input type="time" name="jam_mulai" required value="<%= dinamisObj.jam_mulai || '09:00' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Jam Selesai Ujian *</label>
+                    <input type="time" name="jam_selesai" required value="<%= dinamisObj.jam_selesai || '11:00' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+        </div>
+
         <div class="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl space-y-2">
             <h4 class="text-xs font-bold text-indigo-300 uppercase flex items-center gap-2">
                 <i class="fa-solid fa-gears"></i> PDF Engine & GDrive Auto Archiving Process

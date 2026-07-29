@@ -43,6 +43,9 @@ router.get('/mahasiswa/surat/:id', isAuthenticated, checkRole(['mahasiswa', 'mhs
 router.get('/mahasiswa/pengajuan-judul', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin']), JudulTaController.renderMahasiswaJudul);
 router.post('/mahasiswa/pengajuan-judul', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin']), upload.single('file_proposal'), JudulTaController.processSubmitJudul);
 
+// Mahasiswa: Jadwal Ujian & Seminar TA
+router.get('/mahasiswa/jadwal-ujian', isAuthenticated, checkRole(['mahasiswa', 'mhs', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'staff_tu', 'admin', 'dosen']), MahasiswaController.renderJadwalUjian);
+
 // 4. Dosen Pembimbing Routes
 router.get('/dosen/dashboard', isAuthenticated, checkRole(['dosen']), DosenController.dashboard);
 router.get('/dosen/review/:id', isAuthenticated, checkRole(['dosen']), DosenController.renderReview);

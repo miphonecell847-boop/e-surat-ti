@@ -58,6 +58,9 @@
                     <a href="/mahasiswa/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-paper-plane w-5 text-center text-blue-400"></i> Pengajuan Surat
                     </a>
+                    <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-calendar-days w-5 text-center text-amber-400"></i> Jadwal Ujian & Seminar
+                    </a>
                 <% } %>
 
                 <% if (user && user.role === 'dosen') { %>
@@ -66,6 +69,9 @@
                     </a>
                     <a href="/dosen/konfirmasi-bimbingan" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-bell w-5 text-center text-amber-400"></i> Konfirmasi Bimbingan
+                    </a>
+                    <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-calendar-days w-5 text-center text-purple-400"></i> Jadwal Ujian Mahasiswa
                     </a>
                 <% } %>
 

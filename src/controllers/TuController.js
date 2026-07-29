@@ -116,13 +116,39 @@ class TuController {
             // 5. Update Status -> SELESAI
             await SuratModel.updateStatus(id, 'selesai');
 
+            // 6. Terbitkan Jadwal Ujian & Seminar Otomatis
+            const { tanggal_ujian, jam_mulai, jam_selesai, ruangan } = req.body;
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch (e) {}
+
+            const JadwalUjianModel = require('../models/JadwalUjianModel');
+            const tglUjian = tanggal_ujian || dinamisObj.tanggal_ujian || new Date().toISOString().split('T')[0];
+            const jMulai = jam_mulai || dinamisObj.jam_mulai || '09:00';
+            const jSelesai = jam_selesai || dinamisObj.jam_selesai || '11:00';
+            const tempatRuangan = ruangan || dinamisObj.ruangan || 'Ruang Ujian & Seminar TI';
+
+            await JadwalUjianModel.createOrUpdateJadwal({
+                pengajuan_surat_id: id,
+                mahasiswa_id: pengajuan.mahasiswa_id,
+                jenis_ujian: pengajuan.nama_surat,
+                tanggal_ujian: tglUjian,
+                jam_mulai: jMulai,
+                jam_selesai: jSelesai,
+                ruangan: tempatRuangan,
+                judul_ta: pengajuan.mhs_judul_ta || pengajuan.perihal,
+                pembimbing_1_id: dinamisObj.pembimbing_1_id || null,
+                pembimbing_2_id: dinamisObj.pembimbing_2_id || null
+            });
+
             await DisposisiModel.addLog({
                 pengajuan_surat_id: id,
                 actor_user_id: user.id,
                 actor_role: 'staff_tu',
                 status_sebelumnya: 'pending_tu',
                 status_sesudahnya: 'selesai',
-                catatan_revisi: `Surat Resmi diterbitkan dengan Nomor: ${nomor_surat}. Dokumen PDF tersimpan otomatis di Google Drive Arsip.`
+                catatan_revisi: `Surat Resmi diterbitkan dengan Nomor: ${nomor_surat}. Jadwal Ujian otomatis diterbitkan ke Mahasiswa dan Dosen.`
             });
 
             return res.redirect('/tu/dashboard');

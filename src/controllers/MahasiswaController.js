@@ -4,6 +4,7 @@ const GDriveDocModel = require('../models/GDriveDocModel');
 const DisposisiModel = require('../models/DisposisiModel');
 const MahasiswaModel = require('../models/MahasiswaModel');
 const PlottingModel = require('../models/PlottingModel');
+const JadwalUjianModel = require('../models/JadwalUjianModel');
 const gdriveService = require('../services/GDriveStorageService');
 const appConfig = require('../../config/app');
 
@@ -150,6 +151,29 @@ class MahasiswaController {
         } catch (err) {
             console.error('Detail surat error:', err);
             return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async renderJadwalUjian(req, res) {
+        try {
+            const user = req.session.user;
+            let mhs = await MahasiswaModel.findByUserId(user.id);
+            if (!mhs) {
+                const allMhs = await MahasiswaModel.getAll();
+                mhs = (allMhs && allMhs.length > 0) ? allMhs[0] : { id: 1, nim: '21081010001', nama_lengkap: user.username, angkatan: 2021 };
+            }
+
+            const listJadwal = await JadwalUjianModel.getByMahasiswaId(mhs.id);
+
+            return res.render('mahasiswa/jadwal_ujian', {
+                title: 'Jadwal Ujian & Seminar TA',
+                user: req.session.user,
+                mhs,
+                listJadwal
+            });
+        } catch (err) {
+            console.error('Mahasiswa renderJadwalUjian error:', err);
+            return res.status(500).send('Internal Server Error: ' + err.message);
         }
     }
 }

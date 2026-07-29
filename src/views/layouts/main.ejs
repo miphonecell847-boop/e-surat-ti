@@ -218,6 +218,39 @@
                 sidebar.classList.toggle('flex');
             });
         }
+
+        // Automatic Client-side Active Sidebar Menu Highlighter
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (!href || href === '#') return;
+
+                let isActive = false;
+                if (href === '/') {
+                    isActive = (currentPath === '/');
+                } else if (href === '/dashboard') {
+                    isActive = (currentPath === '/dashboard' || currentPath.endsWith('/dashboard'));
+                } else {
+                    isActive = (currentPath === href || (href !== '/' && currentPath.startsWith(href)));
+                }
+
+                if (isActive) {
+                    link.className = "flex items-center justify-between px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-lg shadow-blue-600/30 border border-blue-400/40 scale-[1.02]";
+                    if (!link.querySelector('.active-dot-indicator')) {
+                        const dot = document.createElement('span');
+                        dot.className = "w-2.5 h-2.5 rounded-full bg-amber-300 shadow-md shadow-amber-300 active-dot-indicator";
+                        link.appendChild(dot);
+                    }
+                } else {
+                    link.className = "flex items-center justify-between px-4 py-3 rounded-2xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-all duration-200";
+                    const dot = link.querySelector('.active-dot-indicator');
+                    if (dot) dot.remove();
+                }
+            });
+        });
     </script>
 </body>
 </html>

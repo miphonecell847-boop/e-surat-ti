@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Pass Session User & Current Path to All Views
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
-    res.locals.currentPath = req.path || '';
+    res.locals.currentPath = req.originalUrl || req.path || '';
     next();
 });
 

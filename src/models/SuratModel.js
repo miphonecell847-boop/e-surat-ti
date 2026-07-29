@@ -107,8 +107,7 @@ class SuratModel {
             SELECT * FROM jenis_surat 
             ORDER BY CASE kode_surat
                 WHEN 'SRT-IZIN-PENELITIAN' THEN 1
-                WHEN 'SRT-SELESAI-PENELITIAN' THEN 2
-                WHEN 'SK-PEMBIMBING-PENGUJI' THEN 3
+                WHEN 'SK-PEMBIMBING-PENGUJI' THEN 2
                 WHEN 'KARTU-BIMBINGAN' THEN 4
                 WHEN 'UND-SEMPRO' THEN 5
                 WHEN 'UND-SEMHAS' THEN 6

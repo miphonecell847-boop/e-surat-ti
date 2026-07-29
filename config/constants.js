@@ -24,11 +24,6 @@ module.exports = {
             nama: 'Surat Izin Penelitian Instansi / Perusahaan',
             template: 'surat_izin_penelitian'
         },
-        SRT_SELESAI_PENELITIAN: {
-            kode: 'SRT-SELESAI-PENELITIAN',
-            nama: 'Surat Keterangan Telah Melakukan Penelitian',
-            template: 'surat_selesai_penelitian'
-        },
         SK_PEMBIMBING_PENGUJI: {
             kode: 'SK-PEMBIMBING-PENGUJI',
             nama: 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA',

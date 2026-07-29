@@ -36,6 +36,9 @@ class PdfGeneratorService {
         if (kode.includes('KARTU-BIMBINGAN') || nama.includes('kartu bimbingan')) {
             return this.generateKartuBimbinganPdf(opts);
         }
+        if (kode.includes('UND-') || nama.includes('undangan')) {
+            return this.generateSuratUndanganSeminarPdf(opts);
+        }
 
         return this.generateSuratIzinPenelitianPdf(opts);
     }
@@ -876,6 +879,216 @@ class PdfGeneratorService {
                 doc.end();
             } catch (err) {
                 console.error('Error generating Kartu Bimbingan PDF:', err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * PDF Template Resmi: Surat Undangan Seminar (Sempro / Semhas / Sidang Akhir)
+     */
+    static generateSuratUndanganSeminarPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 40 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 75
+                });
+
+                // 1. KOP SURAT UNIDAYAN
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 30, { width: 58 });
+                }
+
+                doc.fontSize(12).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 28, { align: 'center' });
+                doc.fontSize(13).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 43, { align: 'center' });
+                doc.fontSize(12).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 58, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica').text('Terakreditasi (S-1) No. 3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 73, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica').text('Kampus Palagimata: Jl. Sultan Dayanu Ikhsanuddin No.124 Telp(0402) 2821327 Baubau', 110, 85, { align: 'center' });
+
+                // Kop Line
+                doc.moveTo(40, 98).lineTo(555, 98).lineWidth(2).stroke('#000000');
+                doc.moveTo(40, 101).lineTo(555, 101).lineWidth(0.8).stroke('#000000');
+
+                // Determine Category Title
+                const kode = pengajuan ? (pengajuan.kode_surat || '') : '';
+                const namaSurat = pengajuan ? (pengajuan.nama_surat || '').toLowerCase() : '';
+
+                let halLabel = 'UNDANGAN SEMINAR HASIL';
+                let jenisKategoriText = 'Seminar Hasil';
+
+                if (kode.includes('SEMPRO') || namaSurat.includes('proposal') || namaSurat.includes('sempro')) {
+                    halLabel = 'UNDANGAN SEMINAR PROPOSAL';
+                    jenisKategoriText = 'Seminar Proposal';
+                } else if (kode.includes('SIDANG') || namaSurat.includes('sidang') || namaSurat.includes('munaqasyah')) {
+                    halLabel = 'UNDANGAN SIDANG AKHIR / MUNAQASYAH';
+                    jenisKategoriText = 'Sidang Akhir / Munaqasyah';
+                }
+
+                // 2. NOMOR & HAL SURAT
+                let curY = 114;
+                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : '633/Q20/TI-UND/VI/2026';
+
+                doc.fontSize(10.5).font('Helvetica').text('Nomor', 40, curY);
+                doc.text(':', 100, curY);
+                doc.text(nomorResmi, 110, curY);
+
+                curY += 14;
+                doc.text('Lampiran', 40, curY);
+                doc.text(':', 100, curY);
+                doc.text('--', 110, curY);
+
+                curY += 14;
+                doc.text('Hal', 40, curY);
+                doc.text(':', 100, curY);
+                doc.font('Helvetica-Bold').text(halLabel, 110, curY, { underline: true });
+
+                curY += 26;
+
+                // 3. MAJELIS PENGUJI ALAMAT TUJUAN
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
+
+                let penguji1Name = 'WA ODE RAHMA A.U.M., S.T., M.Kom.';
+                let penguji2Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
+                let penguji3Name = 'Ir. HENNY HAMSINAR, S.Kom., M.T., M.M.';
+                let p1Name = 'FITHRIAH MUSADAT, S.Si., M.T.';
+                let p2Name = 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.';
+
+                if (dataDinamis && dataDinamis.penguji_1_id) {
+                    const pg1 = await DosenModel.findById(dataDinamis.penguji_1_id);
+                    if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.penguji_2_id) {
+                    const pg2 = await DosenModel.findById(dataDinamis.penguji_2_id);
+                    if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.penguji_3_id) {
+                    const pg3 = await DosenModel.findById(dataDinamis.penguji_3_id);
+                    if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                }
+
+                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
+                    if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                }
+                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
+                    if (p2) p2Name = p2.nama_dosen.toUpperCase();
+                }
+
+                doc.fontSize(10.5).font('Helvetica').text('Kepada Yth Majelis Penguji,', 40, curY);
+                curY += 15;
+                doc.fontSize(10.5).font('Helvetica-Bold').text(`1. ${penguji1Name}`, 40, curY);
+                curY += 14;
+                doc.text(`2. ${penguji2Name}`, 40, curY);
+                curY += 14;
+                doc.text(`3. ${penguji3Name}`, 40, curY);
+
+                curY += 26;
+
+                // 4. PARAGRAF PEMBUKA
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMAD ADRIAN');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22 650 119');
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'IMPLEMENTASI ALGORITMA K-NEAREST NEIGHBOR UNTUK KLASIFIKASI TINGKAT FEAR OF MISSING OUT BERDASARKAN AKTIVITAS MEDIA SOSIAL');
+
+                doc.fontSize(10.5).font('Helvetica').text('Dengan Hormat,', 40, curY);
+                curY += 16;
+                doc.fontSize(10.5).font('Helvetica').text(`Kami mengundang Bapak/Ibu, Saudara (i) untuk menghadiri ${jenisKategoriText} bagi saudara (i) `, 40, curY, { continued: true });
+                doc.font('Helvetica-Bold').text(namaMhs, { continued: true });
+                doc.font('Helvetica').text(' No. Stambuk ', { continued: true });
+                doc.font('Helvetica-Bold').text(nimMhs, { continued: true });
+                doc.font('Helvetica').text(' Program Studi Teknik Informatika, yang akan dilaksanakan pada :', { align: 'justify', lineGap: 3 });
+
+                curY = doc.y + 14;
+
+                // 5. DETAIL PELAKSANAAN
+                const hariTanggal = (dataDinamis && dataDinamis.hari_tanggal) ? dataDinamis.hari_tanggal : "Jum'at, 19 June 2026";
+                const pukul = (dataDinamis && dataDinamis.pukul) ? dataDinamis.pukul : '15:00 Wita s/d Selesai';
+                const bertempatDi = (dataDinamis && dataDinamis.bertempat_di) ? dataDinamis.bertempat_di : 'R. Teknik Informatika';
+
+                const labelColX = 40;
+                const colonColX = 145;
+                const valColX = 155;
+
+                const addDetailRow = (lbl, val, isBold = false) => {
+                    doc.fontSize(10.5).font('Helvetica').text(lbl, labelColX, curY);
+                    doc.text(':', colonColX, curY);
+                    if (isBold) {
+                        doc.font('Helvetica-Bold').text(val, valColX, curY, { width: 400, align: 'justify', lineGap: 2 });
+                    } else {
+                        doc.font('Helvetica').text(val, valColX, curY, { width: 400, align: 'justify' });
+                    }
+                    curY = doc.y + 5;
+                };
+
+                addDetailRow('Hari/Tanggal', hariTanggal);
+                addDetailRow('Pukul', pukul);
+                addDetailRow('Bertempat di', bertempatDi);
+                addDetailRow('Judul Seminar', judulTa, true);
+
+                // Dosen Pembimbing Row
+                doc.fontSize(10.5).font('Helvetica').text('Dosen Pembimbing', labelColX, curY);
+                doc.text(':', colonColX, curY);
+
+                curY += 13;
+                doc.fontSize(10.5).font('Helvetica').text('Utama', labelColX, curY);
+                doc.text(':', colonColX, curY);
+                doc.font('Helvetica-Bold').text(p1Name, valColX, curY);
+
+                curY += 13;
+                doc.fontSize(10.5).font('Helvetica').text('Pendamping', labelColX, curY);
+                doc.text(':', colonColX, curY);
+                doc.font('Helvetica-Bold').text(p2Name, valColX, curY);
+
+                curY += 24;
+
+                // 6. PARAGRAF PENUTUP
+                doc.fontSize(10.5).font('Helvetica').text('Atas perhatian dan kehadirannya, disampaikan terima kasih.', 40, curY);
+
+                // 7. BLOK TANDA TANGAN KAPRODI
+                const rightX = 330;
+                const ttdY = curY + 35;
+                const dateStr = this.formatDateIndonesian(new Date());
+
+                doc.fontSize(10.5).font('Helvetica').text(`Baubau, ${dateStr}`, rightX, ttdY);
+                doc.font('Helvetica-Bold').text('Plt. KaprodiTeknikInformatika,', rightX, ttdY + 14);
+
+                let sigOffset = 30;
+                if (pengajuan && pengajuan.ttd_kaprodi_path) {
+                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
+                    if (fs.existsSync(kaprodiTtdPath)) {
+                        doc.image(kaprodiTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
+                    }
+                }
+                doc.image(qrBuffer, rightX + 110, ttdY + sigOffset - 4, { width: 68, height: 68 });
+
+                const namaKaprodi = (kaprodi && kaprodi.nama_dosen) ? kaprodi.nama_dosen : 'Prof. Dr. Rasmuin, S.Pd., M.Pd.';
+                const nidnKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '0031126803';
+
+                const nameY = ttdY + 95;
+                doc.fontSize(10.5).font('Helvetica-Bold').text(namaKaprodi, rightX, nameY, { underline: true });
+                doc.fontSize(10).font('Helvetica-Bold').text(`NIDN. ${nidnKaprodi}`, rightX, nameY + 15);
+
+                // 8. FOOTER DIGITAL VERIFICATION
+                const footerY = 780;
+                doc.moveTo(40, footerY).lineTo(555, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#555555')
+                    .text('Dokumen Resmi Surat Undangan Seminar FT UNIDAYAN sah diterbitkan secara digital & dilindungi E-Signature QR Code.', 40, footerY + 4, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Publik: ${verifyUrl}`, 40, footerY + 13, { align: 'center' });
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating Surat Undangan Seminar PDF:', err);
                 reject(err);
             }
         });

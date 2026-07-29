@@ -302,8 +302,8 @@ function seedData(database) {
     // Guaranteed cleanup of removed jenis_surat records
     database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN', 'LMBR-PENGESAHAN');");
 
-    // Migration: Remove admin role and migrate any existing admin users to staff_tu
-    database.run("UPDATE users SET role = 'staff_tu' WHERE role = 'admin'");
+    // Migration: Consolidate roles into exactly 3 roles (mahasiswa, dosen, staff_tu)
+    database.run("UPDATE users SET role = 'staff_tu' WHERE role IN ('admin', 'sekretaris_prodi', 'kaprodi', 'sekprodi')");
     database.run("DELETE FROM users WHERE username = 'admin'");
 
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");

@@ -62,7 +62,7 @@
 
                 <% if (user && user.role === 'dosen') { %>
                     <a href="/dosen/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-inbox w-5 text-center text-emerald-400"></i> Inbox Approval
+                        <i class="fa-solid fa-inbox w-5 text-center text-emerald-400"></i> Inbox Approval & SK
                     </a>
                     <a href="/dosen/konfirmasi-bimbingan" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-bell w-5 text-center text-amber-400"></i> Konfirmasi Bimbingan
@@ -72,45 +72,21 @@
                     </a>
                 <% } %>
 
-                <% if (user && user.role === 'sekretaris_prodi') { %>
-                    <a href="/sekprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-user-check w-5 text-center text-amber-400"></i> Dashboard Validasi & Ploting
-                    </a>
-                    <a href="/sekprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
-                    </a>
-                    <a href="/sekprodi/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-book-bookmark w-5 text-center text-blue-400"></i> Validasi Judul TA
-                    </a>
-                <% } %>
-
-                <% if (user && user.role === 'kaprodi') { %>
-                    <a href="/kaprodi/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-signature w-5 text-center text-emerald-400"></i> Dashboard Otorisasi Kaprodi
-                    </a>
-                    <a href="/kaprodi/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-list-check w-5 text-center text-purple-400"></i> Daftar Menu Surat (10 Kategori)
-                    </a>
-                    <a href="/kaprodi/persetujuan-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-gavel w-5 text-center text-amber-400"></i> Persetujuan Judul TA
-                    </a>
-                <% } %>
-
-                <% if (user && (user.role === 'staff_tu' || user.role === 'stafftu')) { %>
+                <% if (user && (user.role === 'staff_tu' || user.role === 'stafftu' || user.role === 'admin' || user.role === 'sekretaris_prodi' || user.role === 'kaprodi')) { %>
                     <a href="/tu/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Dashboard TU & Output PDF
-                    </a>
-                    <a href="/tu/kelola-akun" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-user-gear w-5 text-center text-amber-400"></i> Kelola & Validasi Akun
+                        <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Dashboard Staff TU
                     </a>
                     <a href="/tu/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
+                        <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Permohonan Surat
                     </a>
                     <a href="/tu/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-file-circle-plus w-5 text-center text-blue-400"></i> Buat Surat Permintaan
                     </a>
                     <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-file-check w-5 text-center text-purple-400"></i> Verifikasi Judul TA
+                    </a>
+                    <a href="/tu/kelola-akun" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-user-gear w-5 text-center text-amber-400"></i> Kelola & Validasi Akun
                     </a>
                 <% } %>
 

@@ -1,18 +1,13 @@
 module.exports = {
     ROLES: {
         MAHASISWA: 'mahasiswa',
-        SEKRETARIS_PRODI: 'sekretaris_prodi',
-        KAPRODI: 'kaprodi',
         STAFF_TU: 'staff_tu',
-        DOSEN: 'dosen',
-        ADMIN: 'admin'
+        DOSEN: 'dosen'
     },
     STATUS_DISPOSISI: {
         DRAFT: 'draft',
         PENDING_PEMBIMBING_1: 'pending_pembimbing_1',
         PENDING_PEMBIMBING_2: 'pending_pembimbing_2',
-        PENDING_SEKPRODI: 'pending_sekprodi',
-        PENDING_KAPRODI: 'pending_kaprodi',
         PENDING_TU: 'pending_tu',
         SELESAI: 'selesai',
         DITOLAK: 'ditolak',

@@ -30,6 +30,9 @@ class PdfGeneratorService {
         if (kode.includes('SK-PENGUJI') || nama.includes('penguji') || nama.includes('sk penguji')) {
             return this.generateSkPengujiPdf(opts);
         }
+        if (kode.includes('LMBR-PERSETUJUAN-WKT') || nama.includes('persetujuan waktu') || nama.includes('lembar persetujuan waktu')) {
+            return this.generateLembarPersetujuanWaktuPdf(opts);
+        }
 
         return this.generateSuratIzinPenelitianPdf(opts);
     }
@@ -424,6 +427,270 @@ class PdfGeneratorService {
                 doc.end();
             } catch (err) {
                 console.error('Error generating SK Penguji PDF:', err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * PDF Template Resmi: Lembar Persetujuan Waktu Seminar / Ujian Akhir
+     */
+    static generateLembarPersetujuanWaktuPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 35 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 75
+                });
+
+                // 1. KOP SURAT UNIDAYAN
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 30, { width: 55 });
+                }
+
+                doc.fontSize(11).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 28, { align: 'center' });
+                doc.fontSize(12).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 42, { align: 'center' });
+                doc.fontSize(11).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 56, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('SK Akreditasi No. 3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 70, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Kampus Palagimata : Jl. Sultan Hasanuddin No. 124 Telp (0402) 2821327 Baubau', 110, 81, { align: 'center' });
+
+                // Kop Line
+                doc.moveTo(35, 94).lineTo(560, 94).lineWidth(1.8).stroke('#000000');
+                doc.moveTo(35, 96.5).lineTo(560, 96.5).lineWidth(0.8).stroke('#000000');
+
+                // 2. JUDUL DOKUMEN
+                doc.y = 106;
+                doc.fontSize(11.5).font('Helvetica-Bold').text('Permohonan Persetujuan Seminar Ujian Akhir', 35, doc.y, { align: 'center' });
+
+                // 3. IDENTITAS MAHASISWA & PEMBIMBING
+                let curY = doc.y + 14;
+                const labelX = 45;
+                const colonX = 160;
+                const valX = 170;
+
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
+                const hpMhs = (mahasiswa && mahasiswa.no_hp) ? mahasiswa.no_hp : '085210423612';
+
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
+
+                let p1Name = 'Helson Hamid, S.T., M.T.';
+                let p2Name = 'Fithriah Musadat, S.Si., M.T.';
+                let penguji1Name = 'Muhammad Mukmin, S.Kom., M.T.';
+                let penguji2Name = 'LM. Fajar Israwan, S.Kom., M.Kom., M.M.';
+                let penguji3Name = 'Asniati, S.T., M.T.';
+
+                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
+                    if (p1) p1Name = p1.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
+                    if (p2) p2Name = p2.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.penguji_1_id) {
+                    const pg1 = await DosenModel.findById(dataDinamis.penguji_1_id);
+                    if (pg1) penguji1Name = pg1.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.penguji_2_id) {
+                    const pg2 = await DosenModel.findById(dataDinamis.penguji_2_id);
+                    if (pg2) penguji2Name = pg2.nama_dosen;
+                }
+                if (dataDinamis && dataDinamis.penguji_3_id) {
+                    const pg3 = await DosenModel.findById(dataDinamis.penguji_3_id);
+                    if (pg3) penguji3Name = pg3.nama_dosen;
+                }
+
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta : (pengajuan.perihal ? pengajuan.perihal : 'Aplikasi Mobile Terintegrasi untuk Manajemen Donor Darah Di PMI Kota Baubau');
+
+                const addRow = (label, val, isBold = false, customY = null) => {
+                    const yPos = customY || curY;
+                    doc.fontSize(10).font('Helvetica').text(label, labelX, yPos);
+                    doc.text(':', colonX, yPos);
+                    if (isBold) {
+                        doc.font('Helvetica-Bold').text(val, valX, yPos, { width: 380 });
+                    } else {
+                        doc.font('Helvetica').text(val, valX, yPos, { width: 380 });
+                    }
+                    curY = doc.y + 4;
+                };
+
+                addRow('Nama Mahasiswa', namaMhs, true);
+                addRow('No.Stambuk', nimMhs, true);
+                addRow('No.Handphone', hpMhs, true);
+                addRow('Program Studi', 'TEKNIK INFORMATIKA', true);
+
+                // Dosen Pembimbing Row
+                doc.fontSize(10).font('Helvetica').text('Dosen Pembimbing', labelX, curY);
+                doc.text(':', colonX, curY);
+                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, valX, curY);
+                doc.font('Helvetica-Bold').text('(Utama)', valX + 260, curY);
+                curY = doc.y + 3;
+                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, valX, curY);
+                doc.font('Helvetica-Bold').text('(Pendamping)', valX + 260, curY);
+                curY = doc.y + 6;
+
+                // Judul Tugas Akhir
+                doc.fontSize(10).font('Helvetica').text('Judul Tugas Akhir', labelX, curY);
+                doc.text(':', colonX, curY);
+                doc.font('Helvetica-BoldOblique').text(judulTa, valX, curY, { width: 380, align: 'justify', lineGap: 2 });
+                curY = doc.y + 8;
+
+                // Paragraf Permohonan
+                doc.fontSize(9.5).font('Helvetica').text('Mengajukan Permohonan untuk diselenggarakan Seminar Proposal/Hasil/Ujian Akhir. untuk itu, bersama ini terlampir naskah Proposal yang telah disetujui Dosen Pembimbing.', labelX, curY, { width: 510, align: 'justify', lineGap: 2 });
+
+                curY = doc.y + 10;
+                // Blok Mahasiswa Sign (Right side)
+                const mhsSignRightX = 360;
+                doc.fontSize(9.5).font('Helvetica').text('Baubau, ....................', mhsSignRightX, curY);
+                curY += 38;
+                doc.fontSize(10).font('Helvetica-Bold').text(namaMhs, mhsSignRightX, curY, { underline: true });
+
+                curY += 18;
+                // 4. TABEL PERSETUJUAN PENILAIAN
+                doc.fontSize(9.5).font('Helvetica').text('Persetujuan Penilaian   :', labelX, curY);
+                curY += 12;
+
+                const tableX = 35;
+                const colWidths = [185, 95, 110, 135]; // Total = 525
+                const rowHeight = 22;
+
+                const tableTopY = curY;
+                const headerHeight = 32;
+
+                // Table Outer Box & Grid Lines
+                doc.lineWidth(0.8).strokeColor('#000000');
+
+                // Header Top Box
+                doc.rect(tableX, tableTopY, 525, headerHeight).stroke();
+
+                // Vertical Column Dividers in Header
+                let xAcc = tableX;
+                doc.moveTo(xAcc + colWidths[0], tableTopY).lineTo(xAcc + colWidths[0], tableTopY + headerHeight).stroke();
+                xAcc += colWidths[0];
+
+                doc.moveTo(xAcc + colWidths[1], tableTopY).lineTo(xAcc + colWidths[1], tableTopY + headerHeight).stroke();
+                xAcc += colWidths[1];
+
+                doc.moveTo(xAcc + colWidths[2], tableTopY).lineTo(xAcc + colWidths[2], tableTopY + headerHeight).stroke();
+                xAcc += colWidths[2];
+
+                // Sub-headers horizontal line inside Col 3 & 4
+                doc.moveTo(tableX + colWidths[0] + colWidths[1], tableTopY + 16).lineTo(tableX + 525, tableTopY + 16).stroke();
+
+                // Sub-header vertical dividers for Col 3 (Penerimaan Naskah)
+                const col3X = tableX + colWidths[0] + colWidths[1];
+                doc.moveTo(col3X + 60, tableTopY + 16).lineTo(col3X + 60, tableTopY + headerHeight).stroke();
+
+                // Sub-header vertical dividers for Col 4 (Persetujuan Waktu Seminar)
+                const col4X = col3X + colWidths[2];
+                doc.moveTo(col4X + 45, tableTopY + 16).lineTo(col4X + 45, tableTopY + headerHeight).stroke();
+                doc.moveTo(col4X + 85, tableTopY + 16).lineTo(col4X + 85, tableTopY + headerHeight).stroke();
+
+                // Header Texts
+                doc.fontSize(9.5).font('Helvetica-Bold');
+                doc.text('Nama', tableX + 5, tableTopY + 10, { width: colWidths[0] - 10, align: 'center' });
+                doc.text('Jabatan', tableX + colWidths[0] + 5, tableTopY + 10, { width: colWidths[1] - 10, align: 'center' });
+                doc.text('Penerimaan Naskah', col3X + 2, tableTopY + 3, { width: colWidths[2] - 4, align: 'center' });
+                doc.text('Persetujuan Waktu Seminar', col4X + 2, tableTopY + 3, { width: colWidths[3] - 4, align: 'center' });
+
+                doc.fontSize(8.5).font('Helvetica-Bold');
+                doc.text('Tanggal', col3X + 2, tableTopY + 19, { width: 56, align: 'center' });
+                doc.text('Paraf', col3X + 62, tableTopY + 19, { width: 46, align: 'center' });
+
+                doc.text('Tanggal', col4X + 2, tableTopY + 19, { width: 41, align: 'center' });
+                doc.text('Jam', col4X + 47, tableTopY + 19, { width: 36, align: 'center' });
+                doc.text('Tanda Tangan', col4X + 87, tableTopY + 19, { width: 46, align: 'center' });
+
+                // Rows Content
+                const tableRows = [
+                    { nama: p1Name, jabatan: 'Pembimbing I' },
+                    { nama: p2Name, jabatan: 'Pembimbing II' },
+                    { nama: penguji1Name, jabatan: 'Penguji I' },
+                    { nama: penguji2Name, jabatan: 'Penguji II' },
+                    { nama: penguji3Name, jabatan: 'Penguji III' }
+                ];
+
+                let rowY = tableTopY + headerHeight;
+
+                tableRows.forEach(r => {
+                    const currRowH = (r.nama.length > 32) ? 26 : rowHeight;
+                    doc.rect(tableX, rowY, 525, currRowH).stroke();
+
+                    // Vertical Dividers
+                    doc.moveTo(tableX + colWidths[0], rowY).lineTo(tableX + colWidths[0], rowY + currRowH).stroke();
+                    doc.moveTo(col3X, rowY).lineTo(col3X, rowY + currRowH).stroke();
+                    doc.moveTo(col3X + 60, rowY).lineTo(col3X + 60, rowY + currRowH).stroke();
+                    doc.moveTo(col4X, rowY).lineTo(col4X, rowY + currRowH).stroke();
+                    doc.moveTo(col4X + 45, rowY).lineTo(col4X + 45, rowY + currRowH).stroke();
+                    doc.moveTo(col4X + 85, rowY).lineTo(col4X + 85, rowY + currRowH).stroke();
+
+                    // Text Content
+                    doc.fontSize(9).font('Helvetica-Bold').text(r.nama, tableX + 6, rowY + 5, { width: colWidths[0] - 12 });
+                    doc.fontSize(9).font('Helvetica').text(r.jabatan, tableX + colWidths[0] + 6, rowY + 5, { width: colWidths[1] - 12, align: 'center' });
+
+                    rowY += currRowH;
+                });
+
+                curY = rowY + 12;
+
+                // 5. TEMPAT UJIAN / WAKTU
+                doc.fontSize(9.5).font('Helvetica').text('Tempat Ujian / Waktu   : ....................................................................................................................................', labelX, curY);
+
+                curY += 24;
+
+                // 6. BOTTOM CATATAN & KAPRODI SIGNATURE BLOCK
+                const catatanLeftX = 45;
+                const kaprodiRightX = 360;
+
+                // Left Catatan
+                doc.fontSize(8.5).font('Helvetica-Bold').text('Catatan :', catatanLeftX, curY);
+                let catY = curY + 12;
+                doc.fontSize(8).font('Helvetica');
+                doc.text('*  Proposal Telah disetujui oleh Dosen Pembimbing', catatanLeftX, catY); catY += 11;
+                doc.text('*  Tanggal Penyelenggaraan Seminar 7 s/d 15 Hari Setelah Naskah diterima', catatanLeftX, catY); catY += 11;
+                doc.text('*  Aktif mengikuti seminar yang diselenggarakan oleh Fakultas Teknik Prodi Teknik Informatika', catatanLeftX, catY); catY += 11;
+                doc.text('*  Telah Melunasi SPP', catatanLeftX, catY);
+
+                // Right Kaprodi
+                doc.fontSize(9.5).font('Helvetica').text('Deketahui :', kaprodiRightX, curY);
+                doc.text('Plt. Ketua Program Studi,', kaprodiRightX, curY + 12);
+
+                let sigOffset = 24;
+                if (pengajuan && pengajuan.ttd_kaprodi_path) {
+                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
+                    if (fs.existsSync(kaprodiTtdPath)) {
+                        doc.image(kaprodiTtdPath, kaprodiRightX, curY + sigOffset, { width: 90, height: 42 });
+                    }
+                }
+                doc.image(qrBuffer, kaprodiRightX + 98, curY + sigOffset - 4, { width: 60, height: 60 });
+
+                const namaKaprodi = (kaprodi && kaprodi.nama_dosen) ? kaprodi.nama_dosen : 'Prof. Dr. RASMUIN, S.Pd., M.Pd.';
+                const nipKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '196812311994031012';
+
+                doc.fontSize(9.5).font('Helvetica-Bold').text(namaKaprodi, kaprodiRightX, curY + 75, { underline: true });
+                doc.fontSize(9).font('Helvetica').text(`NIP. ${nipKaprodi}`, kaprodiRightX, curY + 88);
+
+                // Footer Digital Verification
+                const footerY = 790;
+                doc.moveTo(35, footerY).lineTo(560, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#555555')
+                    .text('Dokumen Lembar Persetujuan Waktu Seminar Ujian Akhir FT UNIDAYAN sah diterbitkan secara digital & dilindungi E-Signature QR Code.', 35, footerY + 4, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Publik: ${verifyUrl}`, 35, footerY + 13, { align: 'center' });
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating Lembar Persetujuan Waktu PDF:', err);
                 reject(err);
             }
         });

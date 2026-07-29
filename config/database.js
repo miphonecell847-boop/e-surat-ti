@@ -293,7 +293,6 @@ function seedData(database) {
             }
         };
         checkAndInsert('SRT-IZIN-PENELITIAN', 'Surat Izin Penelitian Instansi / Perusahaan', 'surat_izin_penelitian');
-        checkAndInsert('SRT-SELESAI-PENELITIAN', 'Surat Keterangan Telah Melakukan Penelitian', 'surat_selesai_penelitian');
         checkAndInsert('UND-SEMHAS', 'Surat Undangan Seminar Hasil (Semhas)', 'undangan_semhas');
         checkAndInsert('BA-UJIAN', 'Berita Acara Ujian / Seminar Tugas Akhir', 'berita_acara_ujian');
         checkAndInsert('SK-PEMBIMBING-PENGUJI', 'Surat Keputusan (SK) Dosen Pembimbing & Penguji TA', 'sk_pembimbing_penguji');
@@ -301,6 +300,9 @@ function seedData(database) {
         checkAndInsert('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu');
         checkAndInsert('LMBR-PENGESAHAN', 'Lembar Pengesahan Skripsi / Tugas Akhir', 'lembar_pengesahan');
     }
+
+    // Guaranteed cleanup of removed jenis_surat records
+    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN');");
 
     // Migration: Remove admin role and migrate any existing admin users to staff_tu
     database.run("UPDATE users SET role = 'staff_tu' WHERE role = 'admin'");

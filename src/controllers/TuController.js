@@ -1,6 +1,7 @@
 const SuratModel = require('../models/SuratModel');
 const MahasiswaModel = require('../models/MahasiswaModel');
 const DosenModel = require('../models/DosenModel');
+const UserModel = require('../models/UserModel');
 const GDriveDocModel = require('../models/GDriveDocModel');
 const DisposisiModel = require('../models/DisposisiModel');
 const PdfGeneratorService = require('../services/PdfGeneratorService');
@@ -388,6 +389,102 @@ class TuController {
         } catch (err) {
             console.error('TU processDeleteSurat error:', err);
             return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal menghapus surat: ' + err.message));
+        }
+    }
+
+    // --- MANAJEMEN & VALIDASI AKUN (STAFF TU) ---
+    static async renderKelolaAkun(req, res) {
+        try {
+            const user = req.session.user;
+            const pendingList = await UserModel.getPendingMahasiswa();
+            const allUsers = await UserModel.getAllUsersWithProfile();
+
+            return res.render('tu/kelola_akun', {
+                title: 'Manajemen & Validasi Akun Pengguna',
+                user,
+                pendingList,
+                allUsers,
+                error: req.query.error || null,
+                success: req.query.success || null
+            });
+        } catch (err) {
+            console.error('TU renderKelolaAkun error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async processApproveUser(req, res) {
+        try {
+            const { id } = req.params;
+            await UserModel.approveUser(id);
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent('Akun Mahasiswa berhasil divalidasi & diaktifkan.'));
+        } catch (err) {
+            console.error('TU processApproveUser error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processRejectUser(req, res) {
+        try {
+            const { id } = req.params;
+            await UserModel.deleteUser(id);
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent('Permohonan registrasi akun telah ditolak/dihapus.'));
+        } catch (err) {
+            console.error('TU processRejectUser error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processBuatAkunDosen(req, res) {
+        try {
+            const { username, email, password, nip_nidn, nama_dosen, jabatan } = req.body;
+
+            const existingUser = await UserModel.findByUsername(username);
+            if (existingUser) {
+                return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(`Username "${username}" sudah terdaftar.`));
+            }
+            const existingEmail = await UserModel.findByEmail(email);
+            if (existingEmail) {
+                return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(`Email "${email}" sudah terdaftar.`));
+            }
+
+            await UserModel.createDosenByTu({ username, email, password, nip_nidn, nama_dosen, jabatan });
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent(`Akun Dosen (${nama_dosen}) berhasil dibuat dan langsung aktif.`));
+        } catch (err) {
+            console.error('TU processBuatAkunDosen error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processBuatAkunMahasiswa(req, res) {
+        try {
+            const { username, email, password, nim, nama_lengkap, angkatan, no_hp } = req.body;
+
+            const existingUser = await UserModel.findByUsername(username);
+            if (existingUser) {
+                return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(`Username "${username}" sudah terdaftar.`));
+            }
+            const existingEmail = await UserModel.findByEmail(email);
+            if (existingEmail) {
+                return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(`Email "${email}" sudah terdaftar.`));
+            }
+
+            await UserModel.createMahasiswaByTu({ username, email, password, nim, nama_lengkap, angkatan, no_hp });
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent(`Akun Mahasiswa (${nama_lengkap}) berhasil dibuat dan langsung aktif.`));
+        } catch (err) {
+            console.error('TU processBuatAkunMahasiswa error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processHapusUser(req, res) {
+        try {
+            const { id } = req.params;
+            await UserModel.deleteUser(id);
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent('Akun pengguna berhasil dihapus dari sistem.'));
+        } catch (err) {
+            console.error('TU processHapusUser error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
         }
     }
 }

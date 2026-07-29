@@ -36,12 +36,12 @@ class UserModel {
 
     static async registerMahasiswa({ username, email, password, nim, nama_lengkap, angkatan, no_hp, token }) {
         const passHash = bcrypt.hashSync(password, 10);
-        // Create user with is_email_verified = 0, is_active = 0
+        // Self-registered Mahasiswa requires Staff TU approval (status = 'pending_approval', is_active = 0)
         const userSql = `
-            INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, email_verification_token)
-            VALUES (?, ?, ?, 'mahasiswa', 0, 0, ?)
+            INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, status)
+            VALUES (?, ?, ?, 'mahasiswa', 0, 1, 'pending_approval')
         `;
-        await db.run(userSql, [username, email, passHash, token]);
+        await db.run(userSql, [username, email, passHash]);
         const user = await this.findByUsername(username);
 
         const mhsSql = `
@@ -52,13 +52,13 @@ class UserModel {
         return user;
     }
 
-    static async registerDosen({ username, email, password, nip_nidn, nama_dosen, jabatan, token }) {
+    static async createDosenByTu({ username, email, password, nip_nidn, nama_dosen, jabatan }) {
         const passHash = bcrypt.hashSync(password, 10);
         const userSql = `
-            INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, email_verification_token)
-            VALUES (?, ?, ?, 'dosen', 0, 0, ?)
+            INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, status)
+            VALUES (?, ?, ?, 'dosen', 1, 1, 'active')
         `;
-        await db.run(userSql, [username, email, passHash, token]);
+        await db.run(userSql, [username, email, passHash]);
         const user = await this.findByUsername(username);
 
         const dosenSql = `
@@ -69,10 +69,67 @@ class UserModel {
         return user;
     }
 
+    static async createMahasiswaByTu({ username, email, password, nim, nama_lengkap, angkatan, no_hp }) {
+        const passHash = bcrypt.hashSync(password, 10);
+        const userSql = `
+            INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, status)
+            VALUES (?, ?, ?, 'mahasiswa', 1, 1, 'active')
+        `;
+        await db.run(userSql, [username, email, passHash]);
+        const user = await this.findByUsername(username);
+
+        const mhsSql = `
+            INSERT INTO mahasiswa (user_id, nim, nama_lengkap, angkatan, no_hp)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        await db.run(mhsSql, [user.id, nim, nama_lengkap, parseInt(angkatan, 10), no_hp || null]);
+        return user;
+    }
+
+    static async getPendingMahasiswa() {
+        const sql = `
+            SELECT u.id AS user_id, u.username, u.email, u.created_at, u.status, u.is_active,
+                   m.id AS mahasiswa_id, m.nim, m.nama_lengkap, m.angkatan, m.no_hp
+            FROM users u
+            JOIN mahasiswa m ON u.id = m.user_id
+            WHERE u.role = 'mahasiswa' AND (u.status = 'pending_approval' OR u.is_active = 0)
+            ORDER BY u.created_at DESC
+        `;
+        return await db.query(sql);
+    }
+
+    static async approveUser(userId) {
+        const sql = `
+            UPDATE users
+            SET status = 'active', is_active = 1, is_email_verified = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+        await db.run(sql, [userId]);
+    }
+
+    static async deleteUser(userId) {
+        // SQLite foreign key cascade will delete corresponding mahasiswa/dosen row
+        await db.run('DELETE FROM mahasiswa WHERE user_id = ?', [userId]);
+        await db.run('DELETE FROM dosen WHERE user_id = ?', [userId]);
+        await db.run('DELETE FROM users WHERE id = ?', [userId]);
+    }
+
+    static async getAllUsersWithProfile() {
+        const users = await db.query('SELECT id, username, email, role, is_active, status, created_at FROM users ORDER BY id DESC');
+        for (const u of users) {
+            if (u.role === 'mahasiswa') {
+                u.profile = await db.get('SELECT nim, nama_lengkap, angkatan, no_hp FROM mahasiswa WHERE user_id = ?', [u.id]);
+            } else if (u.role === 'dosen' || u.role === 'kaprodi') {
+                u.profile = await db.get('SELECT nip_nidn, nama_dosen, jabatan FROM dosen WHERE user_id = ?', [u.id]);
+            }
+        }
+        return users;
+    }
+
     static async markEmailAsVerified(userId) {
         const sql = `
             UPDATE users
-            SET is_email_verified = 1, is_active = 1, email_verification_token = NULL, updated_at = CURRENT_TIMESTAMP
+            SET is_email_verified = 1, is_active = 1, status = 'active', email_verification_token = NULL, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `;
         await db.run(sql, [userId]);

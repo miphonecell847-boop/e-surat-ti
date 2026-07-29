@@ -35,11 +35,11 @@ class AuthController {
                 });
             }
 
-            // Check if email is verified
-            if (user.is_email_verified === 0) {
+            // Check Staff TU Approval & Activation
+            if (user.status === 'pending_approval' || user.is_active === 0) {
                 return res.render('auth/login', {
                     title: 'Login - E-Surat Administrasi TA',
-                    error: 'Akun Anda belum diverifikasi via Email. Silakan periksa inbox/spam email Anda.',
+                    error: 'Akun Anda belum divalidasi & disetujui oleh Staff TU. Silakan hubungi bagian Tata Usaha Kampus untuk aktivasi akun.',
                     success: null,
                     layout: 'layouts/auth'
                 });
@@ -145,14 +145,10 @@ class AuthController {
                 });
             }
 
-            // Send Verification Email
-            const verifyUrl = await EmailService.sendVerificationEmail(email, token, username);
-
-            return res.render('auth/email_verification_notice', {
-                title: 'Verifikasi Email Dikirim',
-                email,
-                username,
-                verifyUrl,
+            return res.render('auth/login', {
+                title: 'Login - E-Surat Administrasi TA',
+                error: null,
+                success: `Pendaftaran berhasil! Akun Anda (${username}) saat ini menunggu validasi dan persetujuan dari Staff TU sebelum dapat digunakan untuk login.`,
                 layout: 'layouts/auth'
             });
         } catch (err) {

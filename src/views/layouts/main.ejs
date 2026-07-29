@@ -93,9 +93,12 @@
                     </a>
                 <% } %>
 
-                <% if (user && user.role === 'staff_tu') { %>
+                <% if (user && (user.role === 'staff_tu' || user.role === 'stafftu')) { %>
+                    <a href="/tu/kelola-akun" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-user-gear w-5 text-center text-amber-400"></i> Kelola & Validasi Akun
+                    </a>
                     <a href="/tu/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-list-check w-5 text-center text-amber-400"></i> Daftar Menu Surat (10 Kategori)
+                        <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Menu Surat (10 Kategori)
                     </a>
                     <a href="/tu/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-file-circle-plus w-5 text-center text-blue-400"></i> Buat Surat Permintaan
@@ -104,7 +107,7 @@
                         <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Penomoran & Output PDF
                     </a>
                     <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-check w-5 text-center text-cyan-400"></i> Verifikasi Judul TA
+                        <i class="fa-solid fa-file-check w-5 text-center text-purple-400"></i> Verifikasi Judul TA
                     </a>
                 <% } %>
 

@@ -83,4 +83,12 @@ router.post('/tu/penomoran/:id', isAuthenticated, checkRole(['staff_tu', 'stafft
 router.get('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), JudulTaController.renderTuVerifikasi);
 router.post('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), JudulTaController.processTuVerifikasi);
 
+// Staff TU: Manajemen & Validasi Akun Pengguna
+router.get('/tu/kelola-akun', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.renderKelolaAkun);
+router.post('/tu/approve-user/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.processApproveUser);
+router.post('/tu/reject-user/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.processRejectUser);
+router.post('/tu/buat-akun-dosen', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.processBuatAkunDosen);
+router.post('/tu/buat-akun-mahasiswa', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.processBuatAkunMahasiswa);
+router.post('/tu/hapus-user/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu']), TuController.processHapusUser);
+
 module.exports = router;

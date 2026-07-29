@@ -54,6 +54,7 @@ function initTables(database) {
     try { database.run("ALTER TABLE users ADD COLUMN email_verification_token TEXT;"); } catch(e){}
     try { database.run("ALTER TABLE users ADD COLUMN password_reset_token TEXT;"); } catch(e){}
     try { database.run("ALTER TABLE users ADD COLUMN password_reset_expires DATETIME;"); } catch(e){}
+    try { database.run("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active';"); } catch(e){}
 
     // 2. Table mahasiswa
     database.run(`

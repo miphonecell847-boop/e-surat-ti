@@ -36,9 +36,9 @@
         <!-- Pilih Jenis Surat (10 Jenis Surat) -->
         <div>
             <label for="jenis_surat_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Kategori Jenis Surat *</label>
-            <select id="jenis_surat_id" name="jenis_surat_id" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
+            <select id="jenis_surat_id" name="jenis_surat_id" required onchange="toggleFormFields(this)" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
                 <% jenisList.forEach(j => { %>
-                    <option value="<%= j.id %>" <%= pengajuan.jenis_surat_id == j.id ? 'selected' : '' %>>
+                    <option value="<%= j.id %>" data-kode="<%= j.kode_surat %>" <%= pengajuan.jenis_surat_id == j.id ? 'selected' : '' %>>
                         <%= j.nama_surat %> (<%= j.kode_surat %>)
                     </option>
                 <% }); %>
@@ -81,34 +81,171 @@
             <input type="text" id="perihal" name="perihal" required value="<%= pengajuan.perihal %>" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
         </div>
 
-        <!-- Data Dinamis Terstruktur -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label for="instansi_tujuan" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Instansi / Perusahaan Tujuan</label>
-                <input type="text" id="instansi_tujuan" name="instansi_tujuan" value="<%= dinamisObj.instansi_tujuan || '' %>" placeholder="Contoh: Dinas Komunikasi dan Informatika" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
+        <!-- Dynamic Fields Container (Adjusts Form Fields Based on Letter Type) -->
+        <div id="dynamic-fields-container" class="space-y-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2 border-b border-slate-200 pb-2">
+                <i class="fa-solid fa-list-check text-blue-600"></i> Detail Isian Spesifik Jenis Surat
+            </h4>
+
+            <!-- 1. Fields for SRT-IZIN-PENELITIAN -->
+            <div id="field-srt-izin-penelitian" class="space-y-4 dynamic-section hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Instansi / Perusahaan Tujuan *</label>
+                        <input type="text" name="tujuan_instansi" value="<%= (dinamisObj && (dinamisObj.tujuan_instansi || dinamisObj.instansi_tujuan)) ? (dinamisObj.tujuan_instansi || dinamisObj.instansi_tujuan) : '' %>" placeholder="Contoh: Kepala Dinas Komunikasi dan Informatika"
+                            class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Durasi / Waktu Penelitian</label>
+                        <input type="text" name="durasi" value="<%= (dinamisObj && dinamisObj.durasi) ? dinamisObj.durasi : '' %>" placeholder="Contoh: 2 Bulan"
+                            class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Alamat / Lokasi Instansi *</label>
+                    <input type="text" name="alamat_instansi" value="<%= (dinamisObj && dinamisObj.alamat_instansi) ? dinamisObj.alamat_instansi : '' %>" placeholder="Contoh: Jl. Sultan Dayanu Ikhsanuddin No. 124"
+                        class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Mulai Penelitian</label>
+                        <input type="date" name="tgl_mulai_penelitian" value="<%= (dinamisObj && dinamisObj.tgl_mulai_penelitian) ? dinamisObj.tgl_mulai_penelitian : '' %>" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Selesai Penelitian</label>
+                        <input type="date" name="tgl_selesai_penelitian" value="<%= (dinamisObj && dinamisObj.tgl_selesai_penelitian) ? dinamisObj.tgl_selesai_penelitian : '' %>" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="durasi" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Durasi / Waktu Penelitian</label>
-                <input type="text" id="durasi" name="durasi" value="<%= dinamisObj.durasi || '' %>" placeholder="Contoh: 2,5 bulan" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
+
+            <!-- 2. Fields for LMBR-PERSETUJUAN-WKT & UND- (Undangan Seminar / Ujian) -->
+            <div id="field-seminar-jadwal" class="space-y-4 dynamic-section hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Seminar / Ujian *</label>
+                    <select name="jenis_seminar" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                        <option value="Seminar Proposal (Sempro)" <%= (dinamisObj && dinamisObj.jenis_seminar === 'Seminar Proposal (Sempro)') ? 'selected' : '' %>>Seminar Proposal (Sempro)</option>
+                        <option value="Seminar Hasil (Semhas)" <%= (dinamisObj && dinamisObj.jenis_seminar === 'Seminar Hasil (Semhas)') ? 'selected' : '' %>>Seminar Hasil (Semhas)</option>
+                        <option value="Sidang Akhir / Munaqasyah Skripsi" <%= (dinamisObj && dinamisObj.jenis_seminar === 'Sidang Akhir / Munaqasyah Skripsi') ? 'selected' : '' %>>Sidang Akhir / Munaqasyah Skripsi</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label for="tu_edit_tanggal_ujian" class="block text-xs font-bold text-slate-700 mb-1">Tanggal Pelaksanaan *</label>
+                        <div class="relative">
+                            <input type="date" id="tu_edit_tanggal_ujian" name="tanggal_ujian" value="<%= (dinamisObj && (dinamisObj.tanggal_ujian || dinamisObj.tgl_ujian)) ? (dinamisObj.tanggal_ujian || dinamisObj.tgl_ujian) : '' %>"
+                                onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer pr-10">
+                            <button type="button" onclick="const el=document.getElementById('tu_edit_tanggal_ujian'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                <i class="fa-solid fa-calendar-days text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="tu_edit_jam_mulai" class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai Ujian *</label>
+                        <div class="relative">
+                            <input type="time" id="tu_edit_jam_mulai" name="jam_mulai" value="<%= (dinamisObj && dinamisObj.jam_mulai) ? dinamisObj.jam_mulai : '09:00' %>"
+                                onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer pr-10">
+                            <button type="button" onclick="const el=document.getElementById('tu_edit_jam_mulai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                <i class="fa-solid fa-clock text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="tu_edit_jam_selesai" class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai Ujian *</label>
+                        <div class="relative">
+                            <input type="time" id="tu_edit_jam_selesai" name="jam_selesai" value="<%= (dinamisObj && dinamisObj.jam_selesai) ? dinamisObj.jam_selesai : '11:00' %>"
+                                onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 cursor-pointer pr-10">
+                            <button type="button" onclick="const el=document.getElementById('tu_edit_jam_selesai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                <i class="fa-solid fa-clock text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
+                    <input type="text" id="tu_edit_ruangan" name="ruangan" value="<%= (dinamisObj && (dinamisObj.ruangan || dinamisObj.bertempat_di)) ? (dinamisObj.ruangan || dinamisObj.bertempat_di) : 'Ruang Ujian & Seminar TI' %>" placeholder="Contoh: R. Teknik Informatika / Ruang Seminar FTI" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                </div>
+            </div>
+
+            <!-- 3. Fields for SK-PEMBIMBING-PENGUJI & KARTU-BIMBINGAN -->
+            <div id="field-sk-bimbingan" class="space-y-4 dynamic-section hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik / Semester</label>
+                    <input type="text" name="tahun_akademik" value="<%= (dinamisObj && dinamisObj.tahun_akademik) ? dinamisObj.tahun_akademik : '' %>" placeholder="Contoh: 2025/2026 (Genap)" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                </div>
+            </div>
+
+            <!-- Default Info text -->
+            <div id="field-default-info" class="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-500 italic">
+                Form isian spesifik untuk kategori surat ini siap diperbarui.
             </div>
         </div>
 
         <div>
             <label for="catatan" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Catatan Tambahan Surat</label>
-            <textarea id="catatan" name="catatan" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-semibold text-slate-800"><%= dinamisObj.catatan || '' %></textarea>
+            <textarea id="catatan" name="catatan" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-semibold text-slate-800"><%= (dinamisObj && dinamisObj.catatan) ? dinamisObj.catatan : '' %></textarea>
         </div>
 
-        <!-- Upload TTD Digital Staff TU -->
-        <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-            <label for="ttd_tu" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider">Unggah Ulang Spesimen Tanda Tangan Digital Staff TU (Opsional)</label>
-            <input type="file" id="ttd_tu" name="ttd_tu" accept="image/png, image/jpeg, image/jpg" class="text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white cursor-pointer">
-            <% if (pengajuan.ttd_tu_path) { %>
-                <p class="text-[11px] text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> TTD Digital TU sebelumnya telah tersimpan.</p>
-            <% } %>
-        </div>
 
         <button type="submit" class="w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Surat
         </button>
     </form>
 </div>
+
+<script>
+    function setTuEditDateOption(offsetDays) {
+        const d = new Date();
+        if (offsetDays === 'next_monday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day === 0 ? 1 : 8 - day);
+            d.setDate(diff);
+        } else if (offsetDays === 'next_friday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day <= 5 ? 5 - day : 12 - day);
+            d.setDate(diff);
+        } else {
+            d.setDate(d.getDate() + parseInt(offsetDays, 10));
+        }
+        if (document.getElementById('tu_edit_tanggal_ujian')) {
+            document.getElementById('tu_edit_tanggal_ujian').value = d.toISOString().split('T')[0];
+        }
+    }
+
+    function setTuEditTimeSession(start, end) {
+        if (document.getElementById('tu_edit_jam_mulai')) document.getElementById('tu_edit_jam_mulai').value = start;
+        if (document.getElementById('tu_edit_jam_selesai')) document.getElementById('tu_edit_jam_selesai').value = end;
+    }
+
+    function setTuEditRoomOption(roomName) {
+        if (document.getElementById('tu_edit_ruangan')) document.getElementById('tu_edit_ruangan').value = roomName;
+    }
+
+    function toggleFormFields(selectEl) {
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+        const kode = selectedOption ? selectedOption.getAttribute('data-kode') : '';
+
+        document.querySelectorAll('.dynamic-section').forEach(el => el.classList.add('hidden'));
+        document.getElementById('field-default-info').classList.add('hidden');
+
+        if (kode === 'SRT-IZIN-PENELITIAN') {
+            document.getElementById('field-srt-izin-penelitian').classList.remove('hidden');
+        } else if (kode === 'LMBR-PERSETUJUAN-WKT' || (kode && kode.startsWith('UND-'))) {
+            document.getElementById('field-seminar-jadwal').classList.remove('hidden');
+        } else if (kode === 'SK-PEMBIMBING-PENGUJI' || kode === 'KARTU-BIMBINGAN') {
+            document.getElementById('field-sk-bimbingan').classList.remove('hidden');
+        } else {
+            document.getElementById('field-default-info').classList.remove('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectEl = document.getElementById('jenis_surat_id');
+        if (selectEl) {
+            toggleFormFields(selectEl);
+        }
+    });
+</script>

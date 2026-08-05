@@ -17,8 +17,8 @@ class SuratModel {
             SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, m.angkatan AS mhs_angkatan, m.judul_ta AS mhs_judul_ta,
                    j.nama_surat, j.kode_surat, j.template_path
             FROM pengajuan_surat s
-            JOIN mahasiswa m ON s.mahasiswa_id = m.id
-            JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            LEFT JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            LEFT JOIN jenis_surat j ON s.jenis_surat_id = j.id
             WHERE s.id = ?
         `;
         return await db.get(sql, [id]);
@@ -29,8 +29,8 @@ class SuratModel {
             SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, m.angkatan AS mhs_angkatan, m.judul_ta AS mhs_judul_ta,
                    j.nama_surat, j.kode_surat, j.template_path
             FROM pengajuan_surat s
-            JOIN mahasiswa m ON s.mahasiswa_id = m.id
-            JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            LEFT JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            LEFT JOIN jenis_surat j ON s.jenis_surat_id = j.id
             WHERE s.uuid_surat = ?
         `;
         return await db.get(sql, [uuid_surat]);
@@ -147,10 +147,14 @@ class SuratModel {
 
     static async getByFilter({ jenis_surat_id, statusList }) {
         let sql = `
-            SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, j.nama_surat, j.kode_surat
+            SELECT s.*, 
+                   COALESCE(m.nama_lengkap, 'Mahasiswa') AS mhs_nama, 
+                   COALESCE(m.nim, '-') AS mhs_nim, 
+                   COALESCE(j.nama_surat, 'Surat Resmi') AS nama_surat, 
+                   COALESCE(j.kode_surat, 'SURAT') AS kode_surat
             FROM pengajuan_surat s
-            JOIN mahasiswa m ON s.mahasiswa_id = m.id
-            JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            LEFT JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            LEFT JOIN jenis_surat j ON s.jenis_surat_id = j.id
             WHERE 1=1
         `;
         const params = [];
@@ -167,28 +171,90 @@ class SuratModel {
         return await db.query(sql, params);
     }
 
+    static async getPendingForDosen(dosenId) {
+        const sql = `
+            SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, m.angkatan AS mhs_angkatan,
+                   j.nama_surat, j.kode_surat, j.template_path,
+                   p.dosen_pembimbing_1_id, p.dosen_pembimbing_2_id
+            FROM pengajuan_surat s
+            LEFT JOIN mahasiswa m ON s.mahasiswa_id = m.id
+            LEFT JOIN jenis_surat j ON s.jenis_surat_id = j.id
+            LEFT JOIN plotting_tugas_akhir p ON s.mahasiswa_id = p.mahasiswa_id
+            WHERE s.status IN ('pending_pembimbing_1', 'pending_pembimbing_2', 'pending_pembimbing')
+            ORDER BY s.tgl_pengajuan DESC
+        `;
+        const list = await db.query(sql);
+        if (!list || list.length === 0) return [];
+
+        return list.filter(surat => {
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof surat.data_dinamis === 'string' ? JSON.parse(surat.data_dinamis) : (surat.data_dinamis || {});
+            } catch (e) {}
+
+            const p1Id = dinamisObj.pembimbing_1_id || surat.dosen_pembimbing_1_id;
+            const p2Id = dinamisObj.pembimbing_2_id || surat.dosen_pembimbing_2_id;
+
+            if (surat.status === 'pending_pembimbing_1') {
+                if (p1Id) return p1Id == dosenId;
+                return true;
+            }
+
+            if (surat.status === 'pending_pembimbing_2') {
+                if (p2Id) return p2Id == dosenId;
+                return true;
+            }
+
+            if (surat.status === 'pending_pembimbing') {
+                if (p1Id == dosenId || p2Id == dosenId) return true;
+                return true;
+            }
+
+            return true;
+        });
+    }
+
     static async getByDosenPembimbing(dosenId) {
         const allSurat = await db.query(`
-            SELECT s.*, m.nama_lengkap as mhs_nama, m.nim as mhs_nim, j.nama_surat, j.kode_surat
+            SELECT s.*, m.nama_lengkap as mhs_nama, m.nim as mhs_nim, j.nama_surat, j.kode_surat, j.template_path
             FROM pengajuan_surat s
             JOIN mahasiswa m ON s.mahasiswa_id = m.id
             JOIN jenis_surat j ON s.jenis_surat_id = j.id
-            WHERE s.status = 'selesai'
+            WHERE s.status IN ('selesai', 'approved')
+              AND j.kode_surat NOT IN ('KARTU-BIMBINGAN')
+              AND j.template_path NOT IN ('kartu_bimbingan')
             ORDER BY s.tgl_pengajuan DESC
         `);
-        return allSurat.filter(s => {
+
+        const results = [];
+        for (const s of allSurat) {
             let dataDinamis = {};
             try {
                 dataDinamis = typeof s.data_dinamis === 'string' ? JSON.parse(s.data_dinamis) : s.data_dinamis;
             } catch(e){}
-            return (dataDinamis && (
+
+            let matched = (dataDinamis && (
                 dataDinamis.pembimbing_1_id == dosenId || 
                 dataDinamis.pembimbing_2_id == dosenId ||
+                dataDinamis.pembimbing_id == dosenId ||
                 dataDinamis.penguji_1_id == dosenId ||
                 dataDinamis.penguji_2_id == dosenId ||
                 dataDinamis.penguji_3_id == dosenId
             ));
-        });
+
+            if (!matched && s.mahasiswa_id) {
+                const prop = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [s.mahasiswa_id]);
+                const plt = await db.get("SELECT * FROM plotting_tugas_akhir WHERE mahasiswa_id = ? ORDER BY id DESC LIMIT 1", [s.mahasiswa_id]);
+
+                if ((prop && (prop.dosen_pembimbing_1_id == dosenId || prop.dosen_pembimbing_2_id == dosenId)) ||
+                    (plt && (plt.dosen_pembimbing_1_id == dosenId || plt.dosen_pembimbing_2_id == dosenId || plt.dosen_penguji_1_id == dosenId || plt.dosen_penguji_2_id == dosenId || plt.dosen_penguji_3_id == dosenId))) {
+                    matched = true;
+                }
+            }
+
+            if (matched) results.push(s);
+        }
+        return results;
     }
 
     static async updateSuratByTu(id, { mahasiswa_id, jenis_surat_id, perihal, data_dinamis, ttd_tu_path }) {

@@ -8,6 +8,7 @@ router.get('/login', isGuest, AuthController.renderLogin);
 router.post('/login', isGuest, AuthController.processLogin);
 router.get('/logout', AuthController.logout);
 router.get('/profile', isAuthenticated, AuthController.renderProfile);
+router.post('/profile', isAuthenticated, AuthController.processUpdateProfile);
 
 // Registration & Email Verification
 router.get('/register', isGuest, AuthController.renderRegister);

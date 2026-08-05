@@ -23,7 +23,14 @@ class PdfGeneratorService {
         const { pengajuan } = opts || {};
         const kode = pengajuan ? (pengajuan.kode_surat || '') : '';
         const nama = pengajuan ? (pengajuan.nama_surat || '').toLowerCase() : '';
+        const tPath = pengajuan ? (pengajuan.template_path || '') : '';
 
+        if (kode.includes('SRT-IZIN-PENELITIAN') || nama.includes('izin penelitian')) {
+            return this.generateSuratIzinPenelitianResmiPdf(opts);
+        }
+        if (kode.includes('SK-PEMBIMBING-PENGUJI') || tPath === 'sk_pembimbing_penguji' || nama.includes('pembimbing & penguji') || nama.includes('pembimbing dan penguji')) {
+            return this.generateSkPembimbingDanPengujiPdf(opts);
+        }
         if (kode.includes('SK-PEMBIMBING') || nama.includes('pembimbing') || nama.includes('sk pembimbing')) {
             return this.generateSkPembimbingPdf(opts);
         }
@@ -43,7 +50,423 @@ class PdfGeneratorService {
             return this.generateBeritaAcaraUjianPdf(opts);
         }
 
-        return this.generateSuratIzinPenelitianPdf(opts);
+        return this.generateSuratIzinPenelitianResmiPdf(opts);
+    }
+
+    /**
+     * PDF Template Resmi UNIDAYAN: Surat Izin Penelitian Instansi / Perusahaan
+     */
+    static generateSuratIzinPenelitianResmiPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 40 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 75
+                });
+
+                // 1. KOP SURAT UNIDAYAN
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 45, 32, { width: 60 });
+                }
+
+                doc.fontSize(12).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 30, { align: 'center' });
+                doc.fontSize(13).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 45, { align: 'center' });
+                doc.fontSize(11).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', 110, 60, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('SK Akreditasi No. 3084/SK/BAN-PT/Ak-PPJ/S/V/2020', 110, 74, { align: 'center' });
+                doc.fontSize(8).font('Helvetica').text('Jalan Sultan Dayanu Ikhsanuddin No. 124 Baubau Telp. (0402) 2821327 Baubau 93724', 110, 85, { align: 'center' });
+
+                // Kop Line Ganda
+                doc.moveTo(40, 98).lineTo(555, 98).lineWidth(2).stroke('#000000');
+                doc.moveTo(40, 101).lineTo(555, 101).lineWidth(0.8).stroke('#000000');
+
+                // 2. HEADER TANGGAL & NOMOR SURAT
+                let curY = 115;
+                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : 'B/345/UN.1/TI/TA/2026';
+                const dateStr = this.formatDateIndonesian(new Date());
+
+                // Tanggal Surat di Kanan
+                doc.fontSize(10).font('Helvetica').text(`Baubau, ${dateStr}`, 380, curY, { align: 'right' });
+
+                // Nomor, Lampiran, Perihal di Kiri
+                doc.fontSize(10).font('Helvetica').text('Nomor', 40, curY);
+                doc.text(':', 100, curY);
+                doc.font('Helvetica-Bold').text(nomorResmi, 110, curY);
+
+                curY += 14;
+                doc.font('Helvetica').text('Lampiran', 40, curY);
+                doc.text(':', 100, curY);
+                doc.text('1 (Satu) Berkas Proposal', 110, curY);
+
+                curY += 14;
+                doc.font('Helvetica').text('Perihal', 40, curY);
+                doc.text(':', 100, curY);
+                doc.font('Helvetica-Bold').text('Izin Penelitian Tugas Akhir / Skripsi', 110, curY);
+
+                // 3. TUJUAN SURAT
+                curY += 28;
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+                } catch (e) {}
+
+                const instansiTujuan = dataDinamis.instansi_tujuan || dataDinamis.tujuan_instansi || 'Pimpinan / Kepala Instansi Terkait';
+                const durasi = dataDinamis.durasi || '3 (Tiga) Bulan';
+
+                doc.font('Helvetica').text('Kepada Yth.', 40, curY);
+                curY += 14;
+                doc.font('Helvetica-Bold').text(instansiTujuan, 40, curY);
+                curY += 14;
+                doc.font('Helvetica').text('di -', 40, curY);
+                curY += 14;
+                doc.font('Helvetica-Bold').text('    Tempat', 40, curY);
+
+                // 4. PARAGRAF PEMBUKA
+                curY += 24;
+                doc.font('Helvetica').fontSize(10).text('Dengan hormat,', 40, curY);
+                curY += 16;
+                const p1 = 'Dalam rangka penyelesaian Tugas Akhir / Skripsi sebagai syarat utama kelulusan mahasiswa Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin (UNIDAYAN) Baubau, bersama ini kami memohon kesediaan Bapak/Ibu untuk berkenan memberikan izin penelitian kepada mahasiswa kami:';
+                doc.font('Helvetica').fontSize(10).text(p1, 40, curY, { width: 515, align: 'justify', lineGap: 3 });
+
+                // 5. DATA IDENTITAS MAHASISWA & SKRIPSI
+                curY = doc.y + 14;
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'AHMAD FAUZI');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '21081010001');
+                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta : (pengajuan.perihal || 'Rancang Bangun Sistem Informasi Pengolahan Data UNIDAYAN');
+
+                const labelX = 60;
+                const colonX = 175;
+                const valX = 185;
+
+                const addDetailRow = (label, val, isBold = false) => {
+                    doc.font('Helvetica').fontSize(9.5).text(label, labelX, curY);
+                    doc.text(':', colonX, curY);
+                    if (isBold) {
+                        doc.font('Helvetica-Bold').text(val, valX, curY, { width: 360, align: 'justify', lineGap: 2 });
+                    } else {
+                        doc.font('Helvetica').text(val, valX, curY, { width: 360, align: 'justify', lineGap: 2 });
+                    }
+                    curY = doc.y + 4;
+                };
+
+                addDetailRow('Nama Mahasiswa', namaMhs, true);
+                addDetailRow('Nomor Stambuk / NIM', nimMhs, true);
+                addDetailRow('Program Studi', 'Teknik Informatika (S-1)', true);
+                addDetailRow('Judul Skripsi / TA', `"${judulTa}"`, true);
+                addDetailRow('Jangka Waktu Penelitian', durasi, false);
+
+                // 6. PARAGRAF PENUTUP
+                curY = doc.y + 14;
+                const p2 = 'Demikian surat permohonan izin penelitian ini kami sampaikan. Atas bantuan, perhatian, dan kerja sama yang baik dari Bapak/Ibu, kami ucapkan terima kasih.';
+                doc.font('Helvetica').fontSize(10).text(p2, 40, curY, { width: 515, align: 'justify', lineGap: 3 });
+
+                // 7. BLOK TANDA TANGAN & QR E-SIGNATURE
+                curY = doc.y + 24;
+                const ttdRightX = 350;
+
+                doc.fontSize(10).font('Helvetica').text('Baubau, ' + dateStr, ttdRightX, curY);
+                curY += 14;
+                doc.font('Helvetica-Bold').text('Ketua Program Studi Teknik Informatika,', ttdRightX, curY, { width: 200 });
+
+                let sigOffset = 24;
+                const defaultKaprodiTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_kaprodi_default.png');
+                const customKaprodiTtd = (pengajuan && pengajuan.ttd_kaprodi_path) ? path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path) : null;
+                const kaprodiTtdPath = (customKaprodiTtd && fs.existsSync(customKaprodiTtd)) ? customKaprodiTtd : (fs.existsSync(defaultKaprodiTtd) ? defaultKaprodiTtd : null);
+                if (kaprodiTtdPath) {
+                    doc.image(kaprodiTtdPath, ttdRightX, curY + sigOffset, { width: 90, height: 42 });
+                }
+                doc.image(qrBuffer, ttdRightX + 100, curY + sigOffset - 4, { width: 62, height: 62 });
+
+                const namaKaprodi = (kaprodi && kaprodi.nama_dosen) ? kaprodi.nama_dosen : 'Prof. Dr. RASMUIN, S.Pd., M.Pd.';
+                const nipKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '196812311994031012';
+
+                doc.fontSize(10).font('Helvetica-Bold').text(namaKaprodi, ttdRightX, curY + 75, { underline: true });
+                doc.fontSize(9.5).font('Helvetica').text(`NIP / NIDN. ${nipKaprodi}`, ttdRightX, curY + 89);
+
+                // 8. FOOTER DOKUMEN DIGITAL SAH
+                const footerY = 780;
+                doc.moveTo(40, footerY).lineTo(555, footerY).lineWidth(0.5).stroke('#A0A0A0');
+                doc.fontSize(7.5).font('Helvetica-Oblique').fillColor('#444444')
+                    .text('Dokumen Surat Izin Penelitian Fakultas Teknik UNIDAYAN sah diterbitkan secara digital & dilindungi QR E-Signature.', 40, footerY + 4, { align: 'center' });
+                doc.text(`Verifikasi Keaslian Dokumen: ${verifyUrl}`, 40, footerY + 13, { align: 'center' });
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating Surat Izin Penelitian Resmi PDF:', err);
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * PDF Template Resmi SK Dekan UNIDAYAN: Gabungan SK Dosen Pembimbing & SK Dosen Penguji TA
+     */
+    static generateSkPembimbingDanPengujiPdf({ pengajuan, mahasiswa, kaprodi, verifyUrl, signatureHash }) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const doc = new PDFDocument({ size: 'A4', margin: 40 });
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+                const qrBuffer = await QRCode.toBuffer(verifyUrl, {
+                    errorCorrectionLevel: 'H',
+                    margin: 1,
+                    width: 85
+                });
+
+                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                const db = require('../../config/database');
+
+                // Dynamic values lookup from DB
+                let dataDinamis = {};
+                try {
+                    dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
+                } catch (e) {}
+
+                let p1Name = '';
+                let p2Name = '';
+                let penguji1Name = '';
+                let penguji2Name = '';
+                let penguji3Name = '';
+                let approvedTitle = '';
+
+                if (mahasiswa && mahasiswa.id) {
+                    const approvedProp = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+                    const plotting = await db.get("SELECT * FROM plotting_tugas_akhir WHERE mahasiswa_id = ? ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+
+                    if (approvedProp && approvedProp.judul_ta) approvedTitle = approvedProp.judul_ta.toUpperCase();
+
+                    const p1Id = (dataDinamis && dataDinamis.pembimbing_1_id) || (approvedProp ? approvedProp.dosen_pembimbing_1_id : (plotting ? plotting.dosen_pembimbing_1_id : null));
+                    const p2Id = (dataDinamis && dataDinamis.pembimbing_2_id) || (approvedProp ? approvedProp.dosen_pembimbing_2_id : (plotting ? plotting.dosen_pembimbing_2_id : null));
+
+                    const pg1Id = (dataDinamis && dataDinamis.penguji_1_id) || (plotting ? plotting.dosen_penguji_1_id : null);
+                    const pg2Id = (dataDinamis && dataDinamis.penguji_2_id) || (plotting ? plotting.dosen_penguji_2_id : null);
+                    const pg3Id = (dataDinamis && dataDinamis.penguji_3_id) || (plotting ? plotting.dosen_penguji_3_id : null);
+
+                    if (p1Id) {
+                        const p1 = await DosenModel.findById(p1Id);
+                        if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                    }
+                    if (p2Id) {
+                        const p2 = await DosenModel.findById(p2Id);
+                        if (p2) p2Name = p2.nama_dosen.toUpperCase();
+                    }
+                    if (pg1Id) {
+                        const pg1 = await DosenModel.findById(pg1Id);
+                        if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
+                    }
+                    if (pg2Id) {
+                        const pg2 = await DosenModel.findById(pg2Id);
+                        if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
+                    }
+                    if (pg3Id) {
+                        const pg3 = await DosenModel.findById(pg3Id);
+                        if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                    }
+                }
+
+                if (!p1Name) p1Name = 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.';
+                if (!p2Name) p2Name = 'Ir. ASNIATI, S.T., M.T.';
+                if (!penguji1Name) penguji1Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
+                if (!penguji2Name) penguji2Name = 'NURUL HIDAYAH, S.Kom., M.Kom.';
+                if (!penguji3Name) penguji3Name = 'Ir. JABAL NUR, S.Kom., M.T.';
+
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
+                const judulSkripsi = approvedTitle || ((mahasiswa && mahasiswa.judul_ta && mahasiswa.judul_ta !== 'null' && mahasiswa.judul_ta !== '-') ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'APLIKASI MOBILE TERINTEGRASI UNTUK MANAJEMEN DONOR DARAH DI PMI KOTA BAUBAU'));
+                const nomorResmi = pengajuan.nomor_surat ? pengajuan.nomor_surat : '005/Q.18/FT-UND/II/2026';
+                const dateStr = this.formatDateIndonesian(new Date());
+
+                // ==================== BAGIAN 1: SK DOSEN PEMBIMBING ====================
+                if (fs.existsSync(logoPath)) doc.image(logoPath, 40, 36, { width: 62 });
+                doc.fontSize(12).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 35, { align: 'center' });
+                doc.fontSize(14).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 50, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica').text('Jl. Sultan Dayanu Ikhsanuddin No. 124 Baubau Telp (0402) 2821327, Fax(0402) 2826682 Baubau 93724', 110, 68, { align: 'center' });
+
+                doc.moveTo(40, 82).lineTo(555, 82).lineWidth(2).stroke('#000000');
+                doc.moveTo(40, 85).lineTo(555, 85).lineWidth(0.8).stroke('#000000');
+
+                doc.y = 95;
+                doc.fontSize(11).font('Helvetica-Bold').text('SURAT KEPUTUSAN', 40, doc.y, { align: 'center' });
+                doc.fontSize(10.5).font('Helvetica-Bold').text('DEKAN FAKULTAS TEKNIK UNIVERSITAS DAYANU IKHSANUDDIN', 40, doc.y + 2, { align: 'center' });
+                doc.fontSize(10).font('Helvetica').text(`NOMOR : ${nomorResmi}`, 40, doc.y + 2, { align: 'center' });
+
+                doc.moveDown(0.4);
+                doc.fontSize(10).font('Helvetica-Bold').text('TENTANG', { align: 'center' });
+                doc.fontSize(10.5).font('Helvetica-Bold').text('PENETAPAN PEMBIMBING TUGAS AKHIR MAHASISWA PROGRAM STRATA SATU', { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text(`A.N : ${namaMhs}  NOMOR INDUK : ${nimMhs}`, { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', { align: 'center' });
+
+                doc.moveDown(0.4);
+                doc.fontSize(9.5).font('Helvetica-Oblique').text('Dengan Rahmat Tuhan Yang Maha Esa', { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text('DEKAN FAKULTAS TEKNIK UNIVERSITAS DAYANU IKHSANUDDIN', { align: 'center' });
+
+                const colHeaderX = 40;
+                const colColonX = 120;
+                const colContentX = 130;
+                const contentWidth = 425;
+                let curY = doc.y + 4;
+
+                doc.fontSize(9.5).font('Helvetica-Bold').text('Menimbang', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text(`a. Bahwa dalam rangka pelaksanaan Bimbingan Tugas Akhir (Skripsi) bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Mahasiswa Program Studi Teknik Informatika, maka dipandang perlu mengangkat Pembimbing Utama dan Pembimbing Pendamping.`, colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica').text('b. Bahwa berdasarkan pada huruf (a) diatas, perlu ditetapkan dalam Surat Keputusan Dekan Fakultas Teknik Universitas Dayanu Ikhsanuddin..', colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Mengingat', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('1. Peraturan Pemerintah Republik Indonesia Nomor 37 Tahun 2009, tentang Dosen', colContentX, curY, { width: contentWidth });
+                curY = doc.y + 2.5;
+                doc.text('2. Keputusan Rektor Nomor : 4/Q.13/UND/I/2022, tentang Peraturan Akademik Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Memperhatikan', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('Surat Ketua Program Studi Teknik Informatika Nomor : 235.1/Q.18/TI-UND/II/2026 tentang Usulan Dosen Pembimbing Tugas Akhir mahasiswa.', colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 6;
+                doc.font('Helvetica-Bold').text('MEMUTUSKAN', 40, curY, { align: 'center' });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Menetapkan', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+
+                doc.font('Helvetica-Bold').text('Pertama', colHeaderX, curY + 10);
+                doc.text(':', colColonX, curY + 10);
+                doc.font('Helvetica').text(`Mengangkat Pembimbing Utama dan Pembimbing Pendamping Tugas Akhir bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin.`, colContentX, curY + 10, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica-Bold').text(`Judul Skripsi : ${judulSkripsi}`, colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica').text('dengan susunan sebagai berikut :', colContentX, curY);
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, colContentX + 15, curY); doc.font('Helvetica-Bold').text('( Pembimbing Utama )', colContentX + 250, curY);
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, colContentX + 15, curY); doc.font('Helvetica-Bold').text('( Pembimbing Pendamping )', colContentX + 250, curY);
+
+                const rightX = 350;
+                const ttdY = doc.y + 10;
+                doc.fontSize(9.5).font('Helvetica').text('Ditetapkan di : Baubau', rightX, ttdY);
+                doc.text(`Pada tanggal : ${dateStr}`, rightX, ttdY + 11);
+                doc.font('Helvetica-Bold').text('Dekan,', rightX, ttdY + 22);
+
+                const defaultDekanTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_dekan_default.png');
+                const customDekanTtd = (pengajuan && pengajuan.ttd_dekan_path) ? path.join(__dirname, '../../public', pengajuan.ttd_dekan_path) : null;
+                const dekanTtdPath = (customDekanTtd && fs.existsSync(customDekanTtd)) ? customDekanTtd : (fs.existsSync(defaultDekanTtd) ? defaultDekanTtd : null);
+                if (dekanTtdPath) doc.image(dekanTtdPath, rightX, ttdY + 34, { width: 95, height: 45 });
+                doc.image(qrBuffer, rightX + 105, ttdY + 29, { width: 65, height: 65 });
+
+                const namaDekan = 'Ir. HILDA SULAIMAN NUR, S.T., M.T.';
+                const nidnDekan = '0916076602';
+                doc.fontSize(9.5).font('Helvetica-Bold').text(namaDekan, rightX, ttdY + 88, { underline: true });
+                doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY + 101);
+
+                // ==================== BAGIAN 2: SK DOSEN PENGUJI (PAGE BARU) ====================
+                doc.addPage();
+
+                if (fs.existsSync(logoPath)) doc.image(logoPath, 40, 36, { width: 62 });
+                doc.fontSize(12).font('Helvetica-Bold').text('UNIVERSITAS DAYANU IKHSANUDDIN', 110, 35, { align: 'center' });
+                doc.fontSize(14).font('Helvetica-Bold').text('FAKULTAS TEKNIK', 110, 50, { align: 'center' });
+                doc.fontSize(8.5).font('Helvetica').text('Jl. Sultan Dayanu Ikhsanuddin No. 124 Baubau Telp (0402) 2821327, Fax(0402) 2826682 Baubau 93724', 110, 68, { align: 'center' });
+
+                doc.moveTo(40, 82).lineTo(555, 82).lineWidth(2).stroke('#000000');
+                doc.moveTo(40, 85).lineTo(555, 85).lineWidth(0.8).stroke('#000000');
+
+                doc.y = 95;
+                doc.fontSize(11).font('Helvetica-Bold').text('SURAT KEPUTUSAN', 40, doc.y, { align: 'center' });
+                doc.fontSize(10.5).font('Helvetica-Bold').text('DEKAN FAKULTAS TEKNIK UNIVERSITAS DAYANU IKHSANUDDIN', 40, doc.y + 2, { align: 'center' });
+                doc.fontSize(10).font('Helvetica').text(`NOMOR : ${nomorResmi}`, 40, doc.y + 2, { align: 'center' });
+
+                doc.moveDown(0.4);
+                doc.fontSize(10).font('Helvetica-Bold').text('TENTANG', { align: 'center' });
+                doc.fontSize(10.5).font('Helvetica-Bold').text('PENETAPAN PENGUJI TUGAS AKHIR MAHASISWA PROGRAM STRATA SATU', { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text(`A.N : ${namaMhs}  NOMOR INDUK: ${nimMhs}`, { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text('PROGRAM STUDI TEKNIK INFORMATIKA', { align: 'center' });
+
+                doc.moveDown(0.4);
+                doc.fontSize(9.5).font('Helvetica-Oblique').text('Dengan Rahmat Tuhan Yang Maha Esa', { align: 'center' });
+                doc.fontSize(10).font('Helvetica-Bold').text('DEKAN FAKULTAS TEKNIK UNIVERSITAS DAYANU IKHSANUDDIN', { align: 'center' });
+
+                curY = doc.y + 4;
+                doc.fontSize(9.5).font('Helvetica-Bold').text('Menimbang', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text(`a. Bahwa dalam rangka pelaksanaan Pengujian Tugas Akhir (Skripsi) bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Mahasiswa Program Studi Teknik Informatika, maka dipandang perlu mengangkat Penguji.`, colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica').text('b. Bahwa berdasarkan pada huruf (a) diatas, perlu ditetapkan dalam Surat Keputusan Dekan Fakultas Teknik Universitas Dayanu Ikhsanuddin..', colContentX, curY, { width: contentWidth, align: 'justify', lineGap: 2 });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Mengingat', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('1. Peraturan Pemerintah Republik Indonesia Nomor 37 Tahun 2009, tentang Dosen', colContentX, curY, { width: contentWidth });
+                curY = doc.y + 2.5;
+                doc.text('2. Keputusan Rektor Nomor : 96/Q.13/UND/XII/2016, tentang Peraturan Akademik Universitas Dayanu Ikhsanuddin', colContentX, curY, { width: contentWidth });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Memperhatikan', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('Surat Ketua Program Studi Teknik Informatika Nomor : 230/Q.18/TI-UND/II/2026 tentang Usulan Dosen Penguji Tugas Akhir Mahasiswa.', colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 6;
+                doc.font('Helvetica-Bold').text('MEMUTUSKAN', 40, curY, { align: 'center' });
+
+                curY = doc.y + 5;
+                doc.font('Helvetica-Bold').text('Menetapkan', colHeaderX, curY);
+                doc.text(':', colColonX, curY);
+
+                doc.font('Helvetica-Bold').text('Pertama', colHeaderX, curY + 10);
+                doc.text(':', colColonX, curY + 10);
+                doc.font('Helvetica').text(`Mengangkat Ketua dan Anggota Penguji Tugas Akhir bagi Sdr. ${namaMhs} Nomor Induk ${nimMhs} Program Studi Teknik Informatika Fakultas Teknik Universitas Dayanu Ikhsanuddin.`, colContentX, curY + 10, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica-Bold').text(`Judul Skripsi : ${judulSkripsi}`, colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 3;
+                doc.font('Helvetica').text('dengan susunan sebagai berikut :', colContentX, curY);
+
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`1. ${penguji1Name}`, colContentX + 15, curY); doc.font('Helvetica-Bold').text('( Ketua Penguji )', colContentX + 250, curY);
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`2. ${penguji2Name}`, colContentX + 15, curY); doc.font('Helvetica-Bold').text('( Anggota Penguji )', colContentX + 250, curY);
+                curY = doc.y + 2.5;
+                doc.font('Helvetica-Bold').text(`3. ${penguji3Name}`, colContentX + 15, curY); doc.font('Helvetica-Bold').text('( Anggota Penguji )', colContentX + 250, curY);
+
+                curY = doc.y + 6;
+                doc.font('Helvetica-Bold').text('Kedua', colHeaderX, curY); doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('Segala Biaya yang timbul sehubungan dengan Surat keputusan ini di bebankan pada Anggaran Rutin Universitas Dayanu Ikhsanuddin Baubau;', colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                curY = doc.y + 4;
+                doc.font('Helvetica-Bold').text('Ketiga', colHeaderX, curY); doc.text(':', colColonX, curY);
+                doc.font('Helvetica').text('Surat Keputusan ini berlaku sejak tanggal ditetapkan, dan apabila terdapat kekeliruan didalamnya akan di tinjau kembali dan diperbaiki sebagaimana mestinya.', colContentX, curY, { width: contentWidth, align: 'justify' });
+
+                const ttdY2 = doc.y + 10;
+                doc.fontSize(9.5).font('Helvetica').text('Ditetapkan di : Baubau', rightX, ttdY2);
+                doc.text(`Pada tanggal : ${dateStr}`, rightX, ttdY2 + 11);
+                doc.font('Helvetica-Bold').text('Dekan,', rightX, ttdY2 + 22);
+
+                const dekanTtdPath2 = (customDekanTtd && fs.existsSync(customDekanTtd)) ? customDekanTtd : (fs.existsSync(defaultDekanTtd) ? defaultDekanTtd : null);
+                if (dekanTtdPath2) doc.image(dekanTtdPath2, rightX, ttdY2 + 34, { width: 95, height: 45 });
+                doc.image(qrBuffer, rightX + 105, ttdY2 + 29, { width: 65, height: 65 });
+
+                doc.fontSize(9.5).font('Helvetica-Bold').text(namaDekan, rightX, ttdY2 + 88, { underline: true });
+                doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY2 + 101);
+
+                doc.end();
+            } catch (err) {
+                console.error('Error generating SK Pembimbing & Penguji PDF:', err);
+                reject(err);
+            }
+        });
     }
 
     /**
@@ -198,15 +621,15 @@ class PdfGeneratorService {
                 doc.font('Helvetica-Bold').text('Dekan,', rightX, ttdY + 22);
 
                 let sigOffset = 34;
-                if (pengajuan && pengajuan.ttd_kaprodi_path) {
-                    const dekanTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
-                    if (fs.existsSync(dekanTtdPath)) {
-                        doc.image(dekanTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
-                    }
+                const defaultDekanTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_dekan_default.png');
+                const customDekanTtd = (pengajuan && pengajuan.ttd_dekan_path) ? path.join(__dirname, '../../public', pengajuan.ttd_dekan_path) : null;
+                const dekanTtdPath = (customDekanTtd && fs.existsSync(customDekanTtd)) ? customDekanTtd : (fs.existsSync(defaultDekanTtd) ? defaultDekanTtd : null);
+                if (dekanTtdPath) {
+                    doc.image(dekanTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
                 }
                 doc.image(qrBuffer, rightX + 105, ttdY + sigOffset - 5, { width: 65, height: 65 });
 
-                const namaDekan = 'B. Ir. HILDA SULAIMAN NUR, S.T., M.T.';
+                const namaDekan = 'Ir. HILDA SULAIMAN NUR, S.T., M.T.';
                 const nidnDekan = '0916076602';
 
                 doc.fontSize(9.5).font('Helvetica-Bold').text(namaDekan, rightX, ttdY + 88, { underline: true });
@@ -400,11 +823,11 @@ class PdfGeneratorService {
                 doc.font('Helvetica-Bold').text('Dekan,', rightX, ttdY + 22);
 
                 let sigOffset = 34;
-                if (pengajuan && pengajuan.ttd_kaprodi_path) {
-                    const dekanTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
-                    if (fs.existsSync(dekanTtdPath)) {
-                        doc.image(dekanTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
-                    }
+                const defaultDekanTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_dekan_default.png');
+                const customDekanTtd = (pengajuan && pengajuan.ttd_dekan_path) ? path.join(__dirname, '../../public', pengajuan.ttd_dekan_path) : null;
+                const dekanTtdPath = (customDekanTtd && fs.existsSync(customDekanTtd)) ? customDekanTtd : (fs.existsSync(defaultDekanTtd) ? defaultDekanTtd : null);
+                if (dekanTtdPath) {
+                    doc.image(dekanTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
                 }
                 doc.image(qrBuffer, rightX + 105, ttdY + sigOffset - 5, { width: 65, height: 65 });
 
@@ -412,7 +835,6 @@ class PdfGeneratorService {
                 const nidnDekan = '0916076602';
 
                 doc.fontSize(9.5).font('Helvetica-Bold').text(namaDekan, rightX, ttdY + 88, { underline: true });
-                doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY + 101);
                 doc.fontSize(9).font('Helvetica').text(`NIDN. ${nidnDekan}`, rightX, ttdY + 101);
 
                 // Tembusan
@@ -746,25 +1168,52 @@ class PdfGeneratorService {
                 const colonX = 160;
                 const valX = 170;
 
-                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
-                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
-                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta : (pengajuan.perihal ? pengajuan.perihal : 'Aplikasi Mobile Terintegrasi untuk Manajemen Donor Darah Di PMI Kota Baubau');
-
                 let dataDinamis = {};
                 try {
                     dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
                 } catch (e) {}
 
-                let p1Name = 'Helson Hamid, S.T., M.T.';
-                let p2Name = 'Fithriah Musadat, S.Si., M.T.';
-                if (dataDinamis && dataDinamis.pembimbing_1_id) {
+                const db = require('../../config/database');
+                const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMMAD FARIS PRATAMA');
+                const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650025');
+                
+                let judulTa = dataDinamis.judul_ta || (mahasiswa && mahasiswa.judul_ta && mahasiswa.judul_ta !== 'null' && mahasiswa.judul_ta !== '-' ? mahasiswa.judul_ta : '');
+                
+                let p1Name = dataDinamis.pembimbing_1_nama || '';
+                let p2Name = dataDinamis.pembimbing_2_nama || '';
+
+                if (dataDinamis && dataDinamis.pembimbing_1_id && !p1Name) {
                     const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
                     if (p1) p1Name = p1.nama_dosen;
                 }
-                if (dataDinamis && dataDinamis.pembimbing_2_id) {
+                if (dataDinamis && dataDinamis.pembimbing_2_id && !p2Name) {
                     const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
                     if (p2) p2Name = p2.nama_dosen;
                 }
+
+                // Fallback search from database if details are empty
+                if (mahasiswa && mahasiswa.id && (!judulTa || !p1Name || !p2Name)) {
+                    const approvedProp = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+                    const plotting = await db.get("SELECT * FROM plotting_tugas_akhir WHERE mahasiswa_id = ? ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+
+                    if (!judulTa && approvedProp && approvedProp.judul_ta) judulTa = approvedProp.judul_ta;
+
+                    const p1Id = approvedProp ? approvedProp.dosen_pembimbing_1_id : (plotting ? plotting.dosen_pembimbing_1_id : null);
+                    const p2Id = approvedProp ? approvedProp.dosen_pembimbing_2_id : (plotting ? plotting.dosen_pembimbing_2_id : null);
+
+                    if (!p1Name && p1Id) {
+                        const p1 = await DosenModel.findById(p1Id);
+                        if (p1) p1Name = p1.nama_dosen;
+                    }
+                    if (!p2Name && p2Id) {
+                        const p2 = await DosenModel.findById(p2Id);
+                        if (p2) p2Name = p2.nama_dosen;
+                    }
+                }
+
+                if (!judulTa) judulTa = pengajuan.perihal || 'Tugas Akhir / Skripsi';
+                if (!p1Name) p1Name = 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.';
+                if (!p2Name) p2Name = 'Ir. ASNIATI, S.T., M.T.';
 
                 const addRow = (label, val, isBold = false) => {
                     doc.fontSize(10).font('Helvetica-Bold').text(label, labelX, curY);
@@ -777,21 +1226,26 @@ class PdfGeneratorService {
                     curY = doc.y + 3.5;
                 };
 
-                addRow('Nama / NIM', `${namaMhs} / ${nimMhs}`, true);
+                const pembimbingRole = dataDinamis && dataDinamis.pembimbing_role ? parseInt(dataDinamis.pembimbing_role, 10) : 1;
+
+                let targetDosenName = '';
+                if (pembimbingRole === 2) {
+                    targetDosenName = (dataDinamis && dataDinamis.pembimbing_nama) ? dataDinamis.pembimbing_nama : ((dataDinamis && dataDinamis.pembimbing_2_nama) ? dataDinamis.pembimbing_2_nama : p2Name);
+                    targetDosenName += ' (Pendamping)';
+                } else {
+                    targetDosenName = (dataDinamis && dataDinamis.pembimbing_nama) ? dataDinamis.pembimbing_nama : ((dataDinamis && dataDinamis.pembimbing_1_nama) ? dataDinamis.pembimbing_1_nama : p1Name);
+                    targetDosenName += ' (Utama)';
+                }
+
+                addRow('Nama Mahasiswa', namaMhs, true);
+                addRow('NIM', nimMhs, true);
                 addRow('Fakultas/ Prodi', 'Teknik / Teknik Informatika', true);
                 addRow('Jenjang Program', 'Strata Satu ( S-1)', true);
                 addRow('Judul Tugas Akhir', judulTa, true);
                 addRow('Mata Kuliah', 'Tugas Akhir / Skripsi', true);
+                addRow('Dosen Pembimbing', targetDosenName, true);
 
-                // Dosen Pembimbing
-                doc.fontSize(10).font('Helvetica-Bold').text('Dosen Pembimbing', labelX, curY);
-                doc.text(':', colonX, curY);
-                doc.font('Helvetica-Bold').text(`1. ${p1Name}`, valX, curY);
-                doc.font('Helvetica-Bold').text('(Utama)', valX + 260, curY);
-                curY = doc.y + 2.5;
-                doc.font('Helvetica-Bold').text(`2. ${p2Name}`, valX, curY);
-                doc.font('Helvetica-Bold').text('(Pendamping)', valX + 260, curY);
-                curY = doc.y + 10;
+                curY += 6;
 
                 // 3. TABEL ASISTENSI (PAGE 1)
                 const tableX = 35;
@@ -961,33 +1415,54 @@ class PdfGeneratorService {
                     dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : pengajuan.data_dinamis;
                 } catch (e) {}
 
-                let penguji1Name = 'WA ODE RAHMA A.U.M., S.T., M.Kom.';
-                let penguji2Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
-                let penguji3Name = 'Ir. HENNY HAMSINAR, S.Kom., M.T., M.M.';
-                let p1Name = 'FITHRIAH MUSADAT, S.Si., M.T.';
-                let p2Name = 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.';
+                const db = require('../../config/database');
+                let p1Name = '';
+                let p2Name = '';
+                let penguji1Name = '';
+                let penguji2Name = '';
+                let penguji3Name = '';
+                let approvedTitle = '';
 
-                if (dataDinamis && dataDinamis.penguji_1_id) {
-                    const pg1 = await DosenModel.findById(dataDinamis.penguji_1_id);
-                    if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.penguji_2_id) {
-                    const pg2 = await DosenModel.findById(dataDinamis.penguji_2_id);
-                    if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.penguji_3_id) {
-                    const pg3 = await DosenModel.findById(dataDinamis.penguji_3_id);
-                    if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                if (mahasiswa && mahasiswa.id) {
+                    const approvedProp = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+                    const plotting = await db.get("SELECT * FROM plotting_tugas_akhir WHERE mahasiswa_id = ? ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+
+                    if (approvedProp && approvedProp.judul_ta) approvedTitle = approvedProp.judul_ta.toUpperCase();
+
+                    const p1Id = (dataDinamis && dataDinamis.pembimbing_1_id) || (approvedProp ? approvedProp.dosen_pembimbing_1_id : (plotting ? plotting.dosen_pembimbing_1_id : null));
+                    const p2Id = (dataDinamis && dataDinamis.pembimbing_2_id) || (approvedProp ? approvedProp.dosen_pembimbing_2_id : (plotting ? plotting.dosen_pembimbing_2_id : null));
+
+                    const pg1Id = (dataDinamis && dataDinamis.penguji_1_id) || (plotting ? plotting.dosen_penguji_1_id : null);
+                    const pg2Id = (dataDinamis && dataDinamis.penguji_2_id) || (plotting ? plotting.dosen_penguji_2_id : null);
+                    const pg3Id = (dataDinamis && dataDinamis.penguji_3_id) || (plotting ? plotting.dosen_penguji_3_id : null);
+
+                    if (p1Id) {
+                        const p1 = await DosenModel.findById(p1Id);
+                        if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                    }
+                    if (p2Id) {
+                        const p2 = await DosenModel.findById(p2Id);
+                        if (p2) p2Name = p2.nama_dosen.toUpperCase();
+                    }
+                    if (pg1Id) {
+                        const pg1 = await DosenModel.findById(pg1Id);
+                        if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
+                    }
+                    if (pg2Id) {
+                        const pg2 = await DosenModel.findById(pg2Id);
+                        if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
+                    }
+                    if (pg3Id) {
+                        const pg3 = await DosenModel.findById(pg3Id);
+                        if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                    }
                 }
 
-                if (dataDinamis && dataDinamis.pembimbing_1_id) {
-                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
-                    if (p1) p1Name = p1.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.pembimbing_2_id) {
-                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
-                    if (p2) p2Name = p2.nama_dosen.toUpperCase();
-                }
+                if (!p1Name) p1Name = 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.';
+                if (!p2Name) p2Name = 'Ir. ASNIATI, S.T., M.T.';
+                if (!penguji1Name) penguji1Name = 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.';
+                if (!penguji2Name) penguji2Name = 'NURUL HIDAYAH, S.Kom., M.Kom.';
+                if (!penguji3Name) penguji3Name = 'Ir. JABAL NUR, S.Kom., M.T.';
 
                 doc.fontSize(10.5).font('Helvetica').text('Kepada Yth Majelis Penguji,', 40, curY);
                 curY += 15;
@@ -1002,7 +1477,7 @@ class PdfGeneratorService {
                 // 4. PARAGRAF PEMBUKA
                 const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'MUHAMAD ADRIAN');
                 const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22 650 119');
-                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'IMPLEMENTASI ALGORITMA K-NEAREST NEIGHBOR UNTUK KLASIFIKASI TINGKAT FEAR OF MISSING OUT BERDASARKAN AKTIVITAS MEDIA SOSIAL');
+                const judulTa = approvedTitle || ((mahasiswa && mahasiswa.judul_ta && mahasiswa.judul_ta !== 'null' && mahasiswa.judul_ta !== '-') ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'TUGAS AKHIR / SKRIPSI'));
 
                 doc.fontSize(10.5).font('Helvetica').text('Dengan Hormat,', 40, curY);
                 curY += 16;
@@ -1015,9 +1490,9 @@ class PdfGeneratorService {
                 curY = doc.y + 14;
 
                 // 5. DETAIL PELAKSANAAN
-                const hariTanggal = (dataDinamis && dataDinamis.hari_tanggal) ? dataDinamis.hari_tanggal : "Jum'at, 19 June 2026";
-                const pukul = (dataDinamis && dataDinamis.pukul) ? dataDinamis.pukul : '15:00 Wita s/d Selesai';
-                const bertempatDi = (dataDinamis && dataDinamis.bertempat_di) ? dataDinamis.bertempat_di : 'R. Teknik Informatika';
+                const hariTanggal = (dataDinamis && (dataDinamis.hari_tanggal || dataDinamis.tanggal_ujian)) ? (dataDinamis.hari_tanggal || dataDinamis.tanggal_ujian) : "Jum'at, 19 June 2026";
+                const pukul = (dataDinamis && (dataDinamis.pukul || dataDinamis.waktu_ujian)) ? (dataDinamis.pukul || dataDinamis.waktu_ujian) : ((dataDinamis && dataDinamis.jam_mulai) ? `${dataDinamis.jam_mulai} - ${dataDinamis.jam_selesai || ''} WITA` : '15:00 Wita s/d Selesai');
+                const bertempatDi = (dataDinamis && (dataDinamis.bertempat_di || dataDinamis.ruangan || dataDinamis.ruang_ujian)) ? (dataDinamis.bertempat_di || dataDinamis.ruangan || dataDinamis.ruang_ujian) : 'R. Teknik Informatika';
 
                 const labelColX = 40;
                 const colonColX = 145;
@@ -1064,23 +1539,23 @@ class PdfGeneratorService {
                 const dateStr = this.formatDateIndonesian(new Date());
 
                 doc.fontSize(10.5).font('Helvetica').text(`Baubau, ${dateStr}`, rightX, ttdY);
-                doc.font('Helvetica-Bold').text('Plt. KaprodiTeknikInformatika,', rightX, ttdY + 14);
+                doc.font('Helvetica-Bold').text('Plt. Kaprodi Teknik Informatika,', rightX, ttdY + 14);
 
                 let sigOffset = 30;
-                if (pengajuan && pengajuan.ttd_kaprodi_path) {
-                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
-                    if (fs.existsSync(kaprodiTtdPath)) {
-                        doc.image(kaprodiTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
-                    }
+                const defaultKaprodiTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_kaprodi_default.png');
+                const customKaprodiTtd = (pengajuan && pengajuan.ttd_kaprodi_path) ? path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path) : null;
+                const kaprodiTtdPath = (customKaprodiTtd && fs.existsSync(customKaprodiTtd)) ? customKaprodiTtd : (fs.existsSync(defaultKaprodiTtd) ? defaultKaprodiTtd : null);
+                if (kaprodiTtdPath) {
+                    doc.image(kaprodiTtdPath, rightX, ttdY + sigOffset, { width: 95, height: 45 });
                 }
                 doc.image(qrBuffer, rightX + 110, ttdY + sigOffset - 4, { width: 68, height: 68 });
 
                 const namaKaprodi = (kaprodi && kaprodi.nama_dosen) ? kaprodi.nama_dosen : 'Prof. Dr. Rasmuin, S.Pd., M.Pd.';
-                const nidnKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '0031126803';
+                const nipKaprodi = (kaprodi && kaprodi.nip_nidn) ? kaprodi.nip_nidn : '196812311994031012';
 
                 const nameY = ttdY + 95;
                 doc.fontSize(10.5).font('Helvetica-Bold').text(namaKaprodi, rightX, nameY, { underline: true });
-                doc.fontSize(10).font('Helvetica-Bold').text(`NIDN. ${nidnKaprodi}`, rightX, nameY + 15);
+                doc.fontSize(10).font('Helvetica-Bold').text(`NIP. ${nipKaprodi}`, rightX, nameY + 15);
 
                 // 8. FOOTER DIGITAL VERIFICATION
                 const footerY = 780;
@@ -1119,7 +1594,7 @@ class PdfGeneratorService {
                 // Dynamic values
                 const namaMhs = (mahasiswa && mahasiswa.nama_lengkap) ? mahasiswa.nama_lengkap.toUpperCase() : (pengajuan.mhs_nama ? pengajuan.mhs_nama.toUpperCase() : 'SANJAY PRATAMA TIANLEAN');
                 const nimMhs = (mahasiswa && mahasiswa.nim) ? mahasiswa.nim : (pengajuan.mhs_nim ? pengajuan.mhs_nim : '22650128');
-                const judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'PENERAPAN TEKNOLOGI GLOBAL POSITIONING SYSTEM (GPS) BERBASIS ANDROID PADA APLIKASI ABSENSI DIGITAL');
+                let judulTa = (mahasiswa && mahasiswa.judul_ta) ? mahasiswa.judul_ta.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'PENERAPAN TEKNOLOGI GLOBAL POSITIONING SYSTEM (GPS) BERBASIS ANDROID PADA APLIKASI ABSENSI DIGITAL');
 
                 let dataDinamis = {};
                 try {
@@ -1132,26 +1607,45 @@ class PdfGeneratorService {
                 let penguji2Name = 'Ir. HENNY HAMSINAR, S.Kom., M.T., M.M.';
                 let penguji3Name = 'HELSON HAMID, S.T., M.T.';
 
-                if (dataDinamis && dataDinamis.pembimbing_1_id) {
-                    const p1 = await DosenModel.findById(dataDinamis.pembimbing_1_id);
-                    if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                const db = require('../../config/database');
+                if (mahasiswa && mahasiswa.id) {
+                    const approvedProp = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+                    const plotting = await db.get("SELECT * FROM plotting_tugas_akhir WHERE mahasiswa_id = ? ORDER BY id DESC LIMIT 1", [mahasiswa.id]);
+
+                    if (approvedProp && approvedProp.judul_ta) judulTa = approvedProp.judul_ta.toUpperCase();
+
+                    const p1Id = (dataDinamis && dataDinamis.pembimbing_1_id) || (approvedProp ? approvedProp.dosen_pembimbing_1_id : (plotting ? plotting.dosen_pembimbing_1_id : null));
+                    const p2Id = (dataDinamis && dataDinamis.pembimbing_2_id) || (approvedProp ? approvedProp.dosen_pembimbing_2_id : (plotting ? plotting.dosen_pembimbing_2_id : null));
+
+                    const pg1Id = (dataDinamis && dataDinamis.penguji_1_id) || (plotting ? plotting.dosen_penguji_1_id : null);
+                    const pg2Id = (dataDinamis && dataDinamis.penguji_2_id) || (plotting ? plotting.dosen_penguji_2_id : null);
+                    const pg3Id = (dataDinamis && dataDinamis.penguji_3_id) || (plotting ? plotting.dosen_penguji_3_id : null);
+
+                    if (p1Id) {
+                        const p1 = await DosenModel.findById(p1Id);
+                        if (p1) p1Name = p1.nama_dosen.toUpperCase();
+                    }
+                    if (p2Id) {
+                        const p2 = await DosenModel.findById(p2Id);
+                        if (p2) p2Name = p2.nama_dosen.toUpperCase();
+                    }
+                    if (pg1Id) {
+                        const pg1 = await DosenModel.findById(pg1Id);
+                        if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
+                    }
+                    if (pg2Id) {
+                        const pg2 = await DosenModel.findById(pg2Id);
+                        if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
+                    }
+                    if (pg3Id) {
+                        const pg3 = await DosenModel.findById(pg3Id);
+                        if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
+                    }
                 }
-                if (dataDinamis && dataDinamis.pembimbing_2_id) {
-                    const p2 = await DosenModel.findById(dataDinamis.pembimbing_2_id);
-                    if (p2) p2Name = p2.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.penguji_1_id) {
-                    const pg1 = await DosenModel.findById(dataDinamis.penguji_1_id);
-                    if (pg1) penguji1Name = pg1.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.penguji_2_id) {
-                    const pg2 = await DosenModel.findById(dataDinamis.penguji_2_id);
-                    if (pg2) penguji2Name = pg2.nama_dosen.toUpperCase();
-                }
-                if (dataDinamis && dataDinamis.penguji_3_id) {
-                    const pg3 = await DosenModel.findById(dataDinamis.penguji_3_id);
-                    if (pg3) penguji3Name = pg3.nama_dosen.toUpperCase();
-                }
+
+                let hariTanggalVal = (dataDinamis && (dataDinamis.hari_tanggal || dataDinamis.tanggal_ujian)) ? (dataDinamis.hari_tanggal || dataDinamis.tanggal_ujian) : '...............................................';
+                let jamVal = (dataDinamis && (dataDinamis.pukul || dataDinamis.waktu_ujian)) ? (dataDinamis.pukul || dataDinamis.waktu_ujian) : ((dataDinamis && dataDinamis.jam_mulai) ? `${dataDinamis.jam_mulai} - ${dataDinamis.jam_selesai || ''} WITA` : '............ WITA');
+                let tempatVal = (dataDinamis && (dataDinamis.bertempat_di || dataDinamis.ruangan || dataDinamis.ruang_ujian)) ? (dataDinamis.bertempat_di || dataDinamis.ruangan || dataDinamis.ruang_ujian) : 'Ruang Fakultas Teknik UNIDAYAN';
 
                 // ==================== HALAMAN 1: BERITA ACARA SEMINAR ====================
                 if (fs.existsSync(logoPath)) {
@@ -1169,16 +1663,17 @@ class PdfGeneratorService {
 
                 // Judul Document
                 doc.y = 106;
-                doc.fontSize(11.5).font('Helvetica-Bold').text('BERITA ACARA SEMINAR PROPOSAL', 35, doc.y, { align: 'center', underline: true });
+                const kategoriSeminar = (dataDinamis && dataDinamis.jenis_seminar) ? dataDinamis.jenis_seminar.toUpperCase() : (pengajuan.perihal ? pengajuan.perihal.toUpperCase() : 'BERITA ACARA SEMINAR / UJIAN TA');
+                doc.fontSize(11.5).font('Helvetica-Bold').text(kategoriSeminar.includes('BERITA ACARA') ? kategoriSeminar : `BERITA ACARA ${kategoriSeminar}`, 35, doc.y, { align: 'center', underline: true });
 
                 let curY = doc.y + 14;
                 const labelX = 45;
                 const colonX = 145;
                 const valX = 155;
 
-                doc.fontSize(10).font('Helvetica').text('Pada hari ini', labelX, curY); doc.text(':', colonX, curY); doc.text('...............................................', valX, curY); curY += 13;
-                doc.text('Bertempat', labelX, curY); doc.text(':', colonX, curY); doc.text('Ruang Fakultas Teknik UNIDAYAN', valX, curY); curY += 13;
-                doc.text('J a m', labelX, curY); doc.text(':', colonX, curY); doc.text('............ WITA', valX, curY); curY += 18;
+                doc.fontSize(10).font('Helvetica').text('Pada hari ini', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(hariTanggalVal, valX, curY); curY += 13;
+                doc.font('Helvetica').text('Bertempat', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica').text(tempatVal, valX, curY); curY += 13;
+                doc.font('Helvetica').text('J a m', labelX, curY); doc.text(':', colonX, curY); doc.font('Helvetica-Bold').text(jamVal, valX, curY); curY += 18;
 
                 doc.fontSize(10.5).font('Helvetica-Bold').text('TELAH DISELENGGARAKAN PROPOSAL', 35, curY, { align: 'center' });
                 curY += 18;
@@ -1461,11 +1956,11 @@ class PdfGeneratorService {
                 doc.text('Plt. Ketua Program Studi', rightX, ttdY + 30);
 
                 let signatureOffset = 46;
-                if (pengajuan && pengajuan.ttd_kaprodi_path) {
-                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
-                    if (fs.existsSync(kaprodiTtdPath)) {
-                        doc.image(kaprodiTtdPath, rightX, ttdY + signatureOffset, { width: 95, height: 45 });
-                    }
+                const defaultKaprodiTtd = path.join(__dirname, '../../public/uploads/signatures/ttd_kaprodi_default.png');
+                const customKaprodiTtd = (pengajuan && pengajuan.ttd_kaprodi_path) ? path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path) : null;
+                const kaprodiTtdPath = (customKaprodiTtd && fs.existsSync(customKaprodiTtd)) ? customKaprodiTtd : (fs.existsSync(defaultKaprodiTtd) ? defaultKaprodiTtd : null);
+                if (kaprodiTtdPath) {
+                    doc.image(kaprodiTtdPath, rightX, ttdY + signatureOffset, { width: 95, height: 45 });
                 }
                 doc.image(qrBuffer, rightX + 115, ttdY + signatureOffset - 5, { width: 68, height: 68 });
 

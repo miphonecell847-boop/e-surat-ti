@@ -153,6 +153,73 @@ class UserModel {
         `;
         await db.run(sql, [token, expires, userId]);
     }
+
+    static async updateMahasiswaProfile({ userId, email, nama_lengkap, angkatan, no_hp, newPassword }) {
+        if (email) {
+            await db.run('UPDATE users SET email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [email, userId]);
+        }
+        if (newPassword && newPassword.trim() !== '') {
+            const passHash = bcrypt.hashSync(newPassword, 10);
+            await db.run('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [passHash, userId]);
+        }
+
+        const existingMhs = await db.get('SELECT id, nim FROM mahasiswa WHERE user_id = ?', [userId]);
+        if (existingMhs) {
+            const mhsSql = `
+                UPDATE mahasiswa
+                SET nama_lengkap = ?, angkatan = ?, no_hp = ?
+                WHERE user_id = ?
+            `;
+            await db.run(mhsSql, [nama_lengkap, parseInt(angkatan || 2022, 10), no_hp || null, userId]);
+        } else {
+            const defaultNim = '22650025';
+            const mhsSql = `
+                INSERT INTO mahasiswa (user_id, nim, nama_lengkap, angkatan, no_hp)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+            await db.run(mhsSql, [userId, defaultNim, nama_lengkap, parseInt(angkatan || 2022, 10), no_hp || null]);
+        }
+        return await this.getUserProfile(userId, 'mahasiswa');
+    }
+
+    static async updateUserByAdmin({ userId, username, email, role, status, nama, nomorIdentitas, password }) {
+        const isActive = status === 'active' ? 1 : 0;
+        
+        if (password && password.trim() !== '') {
+            const passHash = bcrypt.hashSync(password, 10);
+            await db.run('UPDATE users SET username = ?, email = ?, role = ?, status = ?, is_active = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [username, email, role, status, isActive, passHash, userId]);
+        } else {
+            await db.run('UPDATE users SET username = ?, email = ?, role = ?, status = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [username, email, role, status, isActive, userId]);
+        }
+
+        if (role === 'mahasiswa') {
+            const targetNim = nomorIdentitas && nomorIdentitas.trim() !== '' ? nomorIdentitas.trim() : '22650000';
+            const existingNim = await db.get('SELECT id FROM mahasiswa WHERE nim = ? AND user_id != ?', [targetNim, userId]);
+            if (existingNim) {
+                await db.run('UPDATE mahasiswa SET user_id = ?, nama_lengkap = ? WHERE id = ?', [userId, nama, existingNim.id]);
+            } else {
+                const mhs = await db.get('SELECT id FROM mahasiswa WHERE user_id = ?', [userId]);
+                if (mhs) {
+                    await db.run('UPDATE mahasiswa SET nama_lengkap = ?, nim = ? WHERE user_id = ?', [nama, targetNim, userId]);
+                } else {
+                    await db.run('INSERT INTO mahasiswa (user_id, nim, nama_lengkap, angkatan) VALUES (?, ?, ?, 2022)', [userId, targetNim, nama]);
+                }
+            }
+        } else if (role === 'dosen' || role === 'kaprodi' || role === 'sekretaris_prodi' || role === 'sekprodi') {
+            const targetNip = nomorIdentitas && nomorIdentitas.trim() !== '' ? nomorIdentitas.trim() : '0900000000';
+            const existingNip = await db.get('SELECT id FROM dosen WHERE nip_nidn = ? AND user_id != ?', [targetNip, userId]);
+            if (existingNip) {
+                await db.run('UPDATE dosen SET user_id = ?, nama_dosen = ? WHERE id = ?', [userId, nama, existingNip.id]);
+            } else {
+                const dsn = await db.get('SELECT id FROM dosen WHERE user_id = ?', [userId]);
+                if (dsn) {
+                    await db.run('UPDATE dosen SET nama_dosen = ?, nip_nidn = ? WHERE user_id = ?', [nama, targetNip, userId]);
+                } else {
+                    await db.run('INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, "LEKTOR")', [userId, targetNip, nama]);
+                }
+            }
+        }
+    }
 }
 
 module.exports = UserModel;

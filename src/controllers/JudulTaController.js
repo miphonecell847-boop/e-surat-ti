@@ -42,13 +42,8 @@ class JudulTaController {
 
             if (!judul_1 || !abstraksi_1 || !tujuan_1 || !manfaat_1 ||
                 !judul_2 || !abstraksi_2 || !tujuan_2 || !manfaat_2 ||
-                !judul_3 || !abstraksi_3 || !tujuan_3 || !manfaat_3 ||
-                !dosen_pembimbing_1_id || !dosen_pembimbing_2_id) {
-                return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Wajib mengisi 3 Usulan Judul lengkap beserta Abstraksi, Tujuan, Manfaat, dan Pilihan Pembimbing 1 & 2!'));
-            }
-
-            if (dosen_pembimbing_1_id === dosen_pembimbing_2_id) {
-                return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Dosen Pembimbing 1 dan Dosen Pembimbing 2 tidak boleh sama!'));
+                !judul_3 || !abstraksi_3 || !tujuan_3 || !manfaat_3) {
+                return res.redirect('/mahasiswa/pengajuan-judul?error=' + encodeURIComponent('Wajib mengisi 3 Usulan Judul lengkap beserta Abstraksi, Tujuan, dan Manfaat!'));
             }
 
             let fileProposalUrl = null;
@@ -61,8 +56,8 @@ class JudulTaController {
                 judul_1, abstraksi_1, tujuan_1, manfaat_1,
                 judul_2, abstraksi_2, tujuan_2, manfaat_2,
                 judul_3, abstraksi_3, tujuan_3, manfaat_3,
-                dosen_pembimbing_1_id,
-                dosen_pembimbing_2_id,
+                dosen_pembimbing_1_id: dosen_pembimbing_1_id || null,
+                dosen_pembimbing_2_id: dosen_pembimbing_2_id || null,
                 file_proposal_url: fileProposalUrl
             });
 
@@ -77,9 +72,11 @@ class JudulTaController {
     static async renderTuVerifikasi(req, res) {
         try {
             const proposals = await JudulTaModel.getAllProposals();
+            const dosenList = await DosenModel.getAll();
             return res.render('tu/verifikasi_judul', {
                 title: 'Verifikasi Berkas Judul TA - Staff TU',
                 proposals,
+                dosenList,
                 error: req.query.error || null,
                 success: req.query.success || null
             });
@@ -91,14 +88,50 @@ class JudulTaController {
 
     static async processTuVerifikasi(req, res) {
         try {
-            const { proposal_id, status_tu, catatan_tu } = req.body;
+            const { 
+                proposal_id, 
+                status_tu, 
+                judul_disetujui_nomor,
+                dosen_pembimbing_1_id,
+                dosen_pembimbing_2_id,
+                dosen_penguji_1_id,
+                dosen_penguji_2_id,
+                dosen_penguji_3_id,
+                catatan_tu 
+            } = req.body;
+            
             const isApproved = status_tu === 'setuju';
 
-            await JudulTaModel.updateStatusTu(proposal_id, isApproved, catatan_tu);
+            await JudulTaModel.approveProposalByTuOrProdi({
+                id: proposal_id,
+                isApproved,
+                judulDisetujuiNomor: judul_disetujui_nomor || 1,
+                pembimbing1Id: dosen_pembimbing_1_id,
+                pembimbing2Id: dosen_pembimbing_2_id,
+                penguji1Id: dosen_penguji_1_id,
+                penguji2Id: dosen_penguji_2_id,
+                penguji3Id: dosen_penguji_3_id,
+                catatan: catatan_tu
+            });
 
-            return res.redirect('/tu/verifikasi-judul?success=' + encodeURIComponent('Verifikasi Administrasi TU berhasil disimpan.'));
+            const msg = isApproved 
+                ? `Judul Pilihan #${judul_disetujui_nomor} berhasil di-ACC! Dosen Pembimbing dan Penguji telah resmi ditetapkan.` 
+                : 'Pengajuan Judul TA ditolak dan dikembalikan ke mahasiswa.';
+
+            return res.redirect('/tu/verifikasi-judul?success=' + encodeURIComponent(msg));
         } catch (err) {
             console.error('Error processTuVerifikasi:', err);
+            return res.redirect('/tu/verifikasi-judul?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processDeleteProposal(req, res) {
+        try {
+            const { id } = req.params;
+            await JudulTaModel.deleteProposal(id);
+            return res.redirect('/tu/verifikasi-judul?success=' + encodeURIComponent('Permohonan usulan judul TA berhasil dihapus!'));
+        } catch (err) {
+            console.error('Error processDeleteProposal:', err);
             return res.redirect('/tu/verifikasi-judul?error=' + encodeURIComponent(err.message));
         }
     }
@@ -172,9 +205,9 @@ class JudulTaController {
             const dosen = await DosenModel.findByUserId(user.id);
             if (!dosen) return res.status(403).send('Profil Dosen tidak ditemukan.');
 
-            const proposals = await JudulTaModel.getProposalsForDosen(dosen.id);
+            const proposals = await JudulTaModel.getAllProposals();
             return res.render('dosen/konfirmasi_bimbingan', {
-                title: 'Konfirmasi Kesediaan Membimbing TA',
+                title: 'Daftar Pengajuan Judul Mahasiswa',
                 dosen,
                 proposals,
                 error: req.query.error || null,

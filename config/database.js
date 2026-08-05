@@ -223,8 +223,8 @@ function initTables(database) {
             judul_disetujui_nomor INTEGER DEFAULT 1,
             judul_ta TEXT,
             abstrak_rumusan TEXT,
-            dosen_pembimbing_1_id INTEGER NOT NULL REFERENCES dosen(id),
-            dosen_pembimbing_2_id INTEGER NOT NULL REFERENCES dosen(id),
+            dosen_pembimbing_1_id INTEGER REFERENCES dosen(id),
+            dosen_pembimbing_2_id INTEGER REFERENCES dosen(id),
             file_proposal_gdrive_id TEXT,
             file_proposal_url TEXT,
             status TEXT DEFAULT 'pending_tu' CHECK (
@@ -263,6 +263,73 @@ function initTables(database) {
     try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN manfaat_3 TEXT;"); } catch(e){}
     try { database.run("ALTER TABLE pengajuan_judul_ta ADD COLUMN judul_disetujui_nomor INTEGER DEFAULT 1;"); } catch(e){}
 
+    // Migration: Ensure dosen_pembimbing_1_id in pengajuan_judul_ta allows NULL
+    try {
+        const schemaRes = database.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='pengajuan_judul_ta'");
+        if (schemaRes && schemaRes.length > 0 && schemaRes[0].values.length > 0) {
+            const tableSql = schemaRes[0].values[0][0];
+            if (tableSql && tableSql.includes('dosen_pembimbing_1_id INTEGER NOT NULL')) {
+                database.run("PRAGMA foreign_keys = OFF;");
+                database.run("ALTER TABLE pengajuan_judul_ta RENAME TO pengajuan_judul_ta_old;");
+                database.run(`
+                    CREATE TABLE pengajuan_judul_ta (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        uuid_pengajuan TEXT UNIQUE NOT NULL,
+                        mahasiswa_id INTEGER NOT NULL REFERENCES mahasiswa(id) ON DELETE CASCADE,
+                        judul_1 TEXT NOT NULL,
+                        abstraksi_1 TEXT NOT NULL,
+                        tujuan_1 TEXT NOT NULL,
+                        manfaat_1 TEXT NOT NULL,
+                        judul_2 TEXT NOT NULL,
+                        abstraksi_2 TEXT NOT NULL,
+                        tujuan_2 TEXT NOT NULL,
+                        manfaat_2 TEXT NOT NULL,
+                        judul_3 TEXT NOT NULL,
+                        abstraksi_3 TEXT NOT NULL,
+                        tujuan_3 TEXT NOT NULL,
+                        manfaat_3 TEXT NOT NULL,
+                        judul_disetujui_nomor INTEGER DEFAULT 1,
+                        judul_ta TEXT,
+                        abstrak_rumusan TEXT,
+                        dosen_pembimbing_1_id INTEGER REFERENCES dosen(id),
+                        dosen_pembimbing_2_id INTEGER REFERENCES dosen(id),
+                        file_proposal_gdrive_id TEXT,
+                        file_proposal_url TEXT,
+                        status TEXT DEFAULT 'pending_tu' CHECK (
+                            status IN (
+                                'pending_tu', 
+                                'pending_sekprodi', 
+                                'pending_kaprodi', 
+                                'diterima', 
+                                'ditolak', 
+                                'revisi'
+                            )
+                        ),
+                        catatan_tu TEXT,
+                        catatan_sekprodi TEXT,
+                        catatan_kaprodi TEXT,
+                        pembimbing_1_status TEXT DEFAULT 'pending' CHECK (pembimbing_1_status IN ('pending', 'bersedia', 'menolak')),
+                        pembimbing_2_status TEXT DEFAULT 'pending' CHECK (pembimbing_2_status IN ('pending', 'bersedia', 'menolak')),
+                        catatan_pembimbing_1 TEXT,
+                        catatan_pembimbing_2 TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                `);
+                database.run(`
+                    INSERT INTO pengajuan_judul_ta 
+                    (id, uuid_pengajuan, mahasiswa_id, judul_1, abstraksi_1, tujuan_1, manfaat_1, judul_2, abstraksi_2, tujuan_2, manfaat_2, judul_3, abstraksi_3, tujuan_3, manfaat_3, judul_disetujui_nomor, judul_ta, abstrak_rumusan, dosen_pembimbing_1_id, dosen_pembimbing_2_id, file_proposal_gdrive_id, file_proposal_url, status, catatan_tu, catatan_sekprodi, catatan_kaprodi, pembimbing_1_status, pembimbing_2_status, catatan_pembimbing_1, catatan_pembimbing_2, created_at, updated_at)
+                    SELECT id, uuid_pengajuan, mahasiswa_id, COALESCE(judul_1, judul_ta), COALESCE(abstraksi_1, abstrak_rumusan), COALESCE(tujuan_1, '-'), COALESCE(manfaat_1, '-'), COALESCE(judul_2, '-'), COALESCE(abstraksi_2, '-'), COALESCE(tujuan_2, '-'), COALESCE(manfaat_2, '-'), COALESCE(judul_3, '-'), COALESCE(abstraksi_3, '-'), COALESCE(tujuan_3, '-'), COALESCE(manfaat_3, '-'), COALESCE(judul_disetujui_nomor, 1), judul_ta, abstrak_rumusan, dosen_pembimbing_1_id, dosen_pembimbing_2_id, file_proposal_gdrive_id, file_proposal_url, status, catatan_tu, catatan_sekprodi, catatan_kaprodi, pembimbing_1_status, pembimbing_2_status, catatan_pembimbing_1, catatan_pembimbing_2, created_at, updated_at
+                    FROM pengajuan_judul_ta_old;
+                `);
+                database.run("DROP TABLE pengajuan_judul_ta_old;");
+                database.run("PRAGMA foreign_keys = ON;");
+            }
+        }
+    } catch(e) {
+        console.error("Migration pengajuan_judul_ta error:", e);
+    }
+
 
     seedData(database);
     saveDb();
@@ -299,12 +366,31 @@ function seedData(database) {
         checkAndInsert('LMBR-PERSETUJUAN-WKT', 'Lembar Persetujuan Waktu Ujian / Seminar', 'lembar_persetujuan_waktu');
     }
 
-    // Guaranteed cleanup of removed jenis_surat records
-    database.run("DELETE FROM jenis_surat WHERE kode_surat IN ('SRT-RISET', 'SK-PEMBIMBING', 'SK-BEBAS-TA', 'SRT-SELESAI-PENELITIAN', 'LMBR-PENGESAHAN');");
+    // Migration & Auto-seed: Guarantee single Administrator account (admin) & 123456 password hash
+    const defaultPassHash = bcrypt.hashSync('123456', 10);
+    database.run("UPDATE users SET role = 'admin' WHERE role IN ('staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi', 'tu')");
 
-    // Migration: Consolidate roles into exactly 3 roles (mahasiswa, dosen, staff_tu)
-    database.run("UPDATE users SET role = 'staff_tu' WHERE role IN ('admin', 'sekretaris_prodi', 'kaprodi', 'sekprodi')");
-    database.run("DELETE FROM users WHERE username = 'admin'");
+    const checkAdmin = database.exec("SELECT id FROM users WHERE username = 'admin'");
+    if (!checkAdmin || checkAdmin.length === 0 || checkAdmin[0].values.length === 0) {
+        database.run("INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, status) VALUES ('admin', 'admin@unidayan.ac.id', ?, 'admin', 1, 1, 'active')", [defaultPassHash]);
+    } else {
+        database.run("UPDATE users SET password_hash = ?, role = 'admin', is_active = 1, status = 'active' WHERE username = 'admin'", [defaultPassHash]);
+    }
+    
+    // Sync default password hash 123456 for all active accounts
+    database.run("UPDATE users SET password_hash = ?", [defaultPassHash]);
+
+    seedOfficialDosenList(database, defaultPassHash);
+
+    // Clean up legacy dummy dosen accounts permanently
+    try { database.run("PRAGMA foreign_keys = OFF;"); } catch(e){}
+    try { database.run("DELETE FROM disposisi_surat WHERE penerima_user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3')) OR pengirim_user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3'))"); } catch(e){}
+    try { database.run("DELETE FROM log_surat WHERE user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3'))"); } catch(e){}
+    try { database.run("DELETE FROM plotting_tugas_akhir WHERE dosen_pembimbing_1_id IN (SELECT id FROM dosen WHERE user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3'))) OR dosen_pembimbing_2_id IN (SELECT id FROM dosen WHERE user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3')))"); } catch(e){}
+    try { database.run("DELETE FROM dosen WHERE user_id IN (SELECT id FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3'))"); } catch(e){}
+    try { database.run("DELETE FROM users WHERE username IN ('pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'penguji3')"); } catch(e){}
+    try { database.run("UPDATE mahasiswa SET judul_ta = NULL WHERE id NOT IN (SELECT mahasiswa_id FROM pengajuan_judul_ta WHERE status = 'approved' OR status = 'acc') AND id NOT IN (SELECT mahasiswa_id FROM plotting_tugas_akhir)"); } catch(e){}
+    saveDb();
 
     const checkUser = database.exec("SELECT COUNT(*) as count FROM users");
     const countUser = checkUser.length > 0 ? checkUser[0].values[0][0] : 0;
@@ -326,34 +412,16 @@ function seedData(database) {
 
         database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['stafftu', 'stafftu@univ.ac.id', passHash('tu123'), 'staff_tu']);
 
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing1', 'pembimbing1@univ.ac.id', passHash('dosen123'), 'dosen']);
-        const p1UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing1'");
-        database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p1UserRes[0].values[0][0], '197805122005011002', 'Prof. Dr. Ir. Budi Santoso, M.Kom.', 'Guru Besar / Pembimbing Utama']);
+        const mhsRes = database.exec("SELECT id FROM mahasiswa WHERE nim = '21081010001'");
+        const p1Res = database.exec("SELECT id FROM dosen WHERE nip_nidn = '0724027801'");
+        const p2Res = database.exec("SELECT id FROM dosen WHERE nip_nidn = '0915058201'");
 
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['pembimbing2', 'pembimbing2@univ.ac.id', passHash('dosen123'), 'dosen']);
-        const p2UserRes = database.exec("SELECT id FROM users WHERE username = 'pembimbing2'");
-        database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [p2UserRes[0].values[0][0], '198203152008042003', 'Siti Rahmawati, S.T., M.T.', 'Lektor Kepala / Pembimbing Pendamping']);
-
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji1', 'penguji1@univ.ac.id', passHash('dosen123'), 'dosen']);
-        const u1UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji1'");
-        database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u1UserRes[0].values[0][0], '197509102003121004', 'Dr. Agus Setiawan, M.Sc.', 'Ketua Penguji']);
-
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji2', 'penguji2@univ.ac.id', passHash('dosen123'), 'dosen']);
-        const u2UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji2'");
-        database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u2UserRes[0].values[0][0], '198811202015041005', 'Dian Lestari, M.T.', 'Penguji Anggota 1']);
-
-        database.run("INSERT INTO users (username, email, password_hash, role, is_email_verified) VALUES (?, ?, ?, ?, 1)", ['penguji3', 'penguji3@univ.ac.id', passHash('dosen123'), 'dosen']);
-        const u3UserRes = database.exec("SELECT id FROM users WHERE username = 'penguji3'");
-        database.run("INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (?, ?, ?, ?)", [u3UserRes[0].values[0][0], '199002142019032006', 'Eko Prasetyo, M.Comp.', 'Penguji Anggota 2']);
-
-        const mhsId = database.exec("SELECT id FROM mahasiswa WHERE nim = '21081010001'")[0].values[0][0];
-        const p1Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '197805122005011002'")[0].values[0][0];
-        const p2Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '198203152008042003'")[0].values[0][0];
-        const u1Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '197509102003121004'")[0].values[0][0];
-        const u2Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '198811202015041005'")[0].values[0][0];
-        const u3Id = database.exec("SELECT id FROM dosen WHERE nip_nidn = '199002142019032006'")[0].values[0][0];
-
-        database.run("INSERT INTO plotting_tugas_akhir (mahasiswa_id, dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id, sk_dekan_nomor, status_ta) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [mhsId, p1Id, p2Id, u1Id, u2Id, u3Id, 'SK-DEKAN/2026/089', 'bimbingan']);
+        if (mhsRes && mhsRes.length > 0 && p1Res && p1Res.length > 0 && p2Res && p2Res.length > 0) {
+            const mhsId = mhsRes[0].values[0][0];
+            const p1Id = p1Res[0].values[0][0];
+            const p2Id = p2Res[0].values[0][0];
+            database.run("INSERT INTO plotting_tugas_akhir (mahasiswa_id, dosen_pembimbing_1_id, dosen_pembimbing_2_id, sk_dekan_nomor, status_ta) VALUES (?, ?, ?, ?, ?)", [mhsId, p1Id, p2Id, 'SK-DEKAN/2026/089', 'bimbingan']);
+        }
     }
 }
 
@@ -384,6 +452,58 @@ class DatabaseWrapper {
         saveDb();
         return true;
     }
+}
+
+const officialDosenList = [
+    { username: 'arifsuryawan', email: 'arwan97@unidayan.ac.id', name: 'Ir. MOH. ARIF SURYAWAN, S.Kom., M.T.', nidn: '0724027801', jabatan: 'LEKTOR' },
+    { username: 'naldy', email: 'naldy@ylab.akyutech.ac.jp', name: 'Ir. NALDY NIRMANTO TJONDRONEGORO. S.Kom., M.T.', nidn: '0915058201', jabatan: 'ASISTEN AHLI' },
+    { username: 'erymuchyar', email: 'erymuchyarhasiri@unidayan.ac.id', name: 'Ir. ERY MUCHYAR HASIRI, S.Kom., M.T.', nidn: '0913098203', jabatan: 'LEKTOR' },
+    { username: 'laraufun', email: 'el.raufun@gmail.com', name: 'LA RAUFUN, S.T., M.T.', nidn: '0922058101', jabatan: 'LEKTOR' },
+    { username: 'azlin', email: 'azlin.unidayan01@gmail.com', name: 'AZLIN, S.Kom., M.T.', nidn: '0906118502', jabatan: 'LEKTOR' },
+    { username: 'fajarisrawan', email: 'fajarisrawan@unidayan.ac.id', name: 'Ir. LM. FAJAR ISRAWAN, S.Kom., M.Kom., M.M.', nidn: '0505078501', jabatan: 'LEKTOR' },
+    { username: 'asniati', email: 'asniatiangi@unidayan.ac.id', name: 'Ir. ASNIATI, S.T., M.T.', nidn: '0910096701', jabatan: 'LEKTOR' },
+    { username: 'muhiradat', email: 'muhamadiradatachmad@unidayan.ac.id', name: 'Dr. Ir. MUH IRADAT ACHMAD, S.T., M.T.', nidn: '0911047304', jabatan: 'LEKTOR' },
+    { username: 'muhammadmukmin', email: 'muhammadmukmin@unidayan.ac.id', name: 'MUHAMMAD MUKMIN, S.Kom., M.T.', nidn: '0920118301', jabatan: 'LEKTOR' },
+    { username: 'hennyhamsinar', email: 'hennyhamsinar@unidayan.ac.id', name: 'Ir. HENNY HAMSINAR, S.Kom., M.T., M.M.', nidn: '0917018602', jabatan: 'LEKTOR' },
+    { username: 'jabalnur', email: 'jabalnur@unidayan.ac.id', name: 'Ir. JABAL NUR, S.Kom., M.T.', nidn: '0919058001', jabatan: 'LEKTOR' },
+    { username: 'fithriah', email: 'fith.musadat@gmail.com', name: 'FITHRIAH MUSADAT, S.Si., M.T.', nidn: '0930058705', jabatan: 'LEKTOR' },
+    { username: 'arifsyam', email: 'arifsyam@unidayan.ac.id', name: 'ARIF SYAM, S.Kom., M.Kom.', nidn: '0909028703', jabatan: 'LEKTOR' },
+    { username: 'laatina', email: 'laatina@unidayan.ac.id', name: 'LA ATINA, S.T., M.T.', nidn: '0910038203', jabatan: 'LEKTOR' },
+    { username: 'christopol', email: 'christopoleddy@unidayan.ac.id', name: 'Ir. CHRISTOPOL EDDY, M.Eng.', nidn: '0912126101', jabatan: 'LEKTOR' },
+    { username: 'sultanhady', email: 'sultanhady@unidayan.ac.id', name: 'Ir. SULTAN HADY, S.T., M.T.', nidn: '0910068901', jabatan: 'LEKTOR' },
+    { username: 'nalis', email: 'nhaliez@gmail.com', name: 'NALIS HENDRAWAN, S.T., M.T.', nidn: '0921128902', jabatan: 'LEKTOR' },
+    { username: 'helson', email: 'helson24@gmail.com', name: 'HELSON HAMID, S.T., M.T.', nidn: '0918088903', jabatan: 'LEKTOR' },
+    { username: 'ahmadmaulid', email: 'ahmadmaulid22@gmail.com', name: 'AHMAD MAULID ASMIDDIN, S.T., M.T.', nidn: '0925099004', jabatan: 'LEKTOR' },
+    { username: 'rahmaudaya', email: 'rahmamanarfa@unidayan.ac.id', name: 'WA ODE RAHMA AGUS UDAYA MANARFA, S.T., M.Kom.', nidn: '0913049103', jabatan: 'ASISTEN AHLI' },
+    { username: 'nurulhidayah', email: 'nurul.hyh@gmail.com', name: 'NURUL HIDAYAH, S.Kom., M.Kom.', nidn: '0906029603', jabatan: 'ASISTEN AHLI' },
+    { username: 'dodiman', email: 'dodimantakimpoo@gmail.com', name: 'DODIMAN, S.Kom., M.Kom.', nidn: '0928079403', jabatan: 'ASISTEN AHLI' },
+    { username: 'rasmuin', email: 'rasmuin@unidayan.ac.id', name: 'Prof. Dr. RASMUIN, S.Pd., M.Pd.', nidn: '196812311994031012', jabatan: 'GURU BESAR' },
+    { username: 'rasyidsabirin', email: 'rasyidsabirin.saw@gmail.com', name: 'KH. ABDUL RASYID SABIRIN, Lc., MA.', nidn: '0914047306', jabatan: 'LEKTOR' }
+];
+
+function seedOfficialDosenList(database, defaultPassHash) {
+    officialDosenList.forEach(d => {
+        const checkU = database.exec(`SELECT id FROM users WHERE username = '${d.username}'`);
+        let userId;
+        if (!checkU || checkU.length === 0 || checkU[0].values.length === 0) {
+            database.run(`INSERT INTO users (username, email, password_hash, role, is_active, is_email_verified, status) VALUES ('${d.username}', '${d.email}', ?, 'dosen', 1, 1, 'active')`, [defaultPassHash]);
+            const getU = database.exec(`SELECT id FROM users WHERE username = '${d.username}'`);
+            userId = getU[0].values[0][0];
+        } else {
+            userId = checkU[0].values[0][0];
+        }
+
+        const checkD = database.exec(`SELECT id FROM dosen WHERE user_id = ${userId}`);
+        if (!checkD || checkD.length === 0 || checkD[0].values.length === 0) {
+            try {
+                database.run(`INSERT INTO dosen (user_id, nip_nidn, nama_dosen, jabatan) VALUES (${userId}, '${d.nidn}', '${d.name.replace(/'/g, "''")}', '${d.jabatan}')`);
+            } catch(e){}
+        } else {
+            try {
+                database.run(`UPDATE dosen SET nip_nidn = '${d.nidn}', nama_dosen = '${d.name.replace(/'/g, "''")}', jabatan = '${d.jabatan}' WHERE user_id = ${userId}`);
+            } catch(e){}
+        }
+    });
 }
 
 module.exports = DatabaseWrapper;

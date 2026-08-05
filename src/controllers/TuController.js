@@ -13,14 +13,45 @@ class TuController {
     static async dashboard(req, res) {
         try {
             const user = req.session.user;
-            const pendingSurat = await SuratModel.getByStatus(['pending_tu']);
-            const completedSurat = await SuratModel.getByStatus(['selesai']);
+            const JudulTaModel = require('../models/JudulTaModel');
+
+            // Fetch live database rows
+            let allSurat = await SuratModel.getByFilter({ statusList: null });
+            allSurat = (allSurat || []).filter(s => 
+                s.kode_surat !== 'KARTU-BIMBINGAN' && 
+                s.kode_surat !== 'BA-UJIAN' && 
+                s.template_path !== 'kartu_bimbingan' && 
+                s.template_path !== 'berita_acara_ujian'
+            );
+
+            let pendingSurat = await SuratModel.getByStatus(['pending_tu', 'pending_pembimbing_1', 'pending_pembimbing_2', 'pending_sekprodi', 'pending_kaprodi']);
+            pendingSurat = (pendingSurat || []).filter(s => 
+                s.kode_surat !== 'KARTU-BIMBINGAN' && 
+                s.kode_surat !== 'BA-UJIAN' && 
+                s.template_path !== 'kartu_bimbingan' && 
+                s.template_path !== 'berita_acara_ujian'
+            );
+
+            let completedSurat = await SuratModel.getByStatus(['selesai']);
+            completedSurat = (completedSurat || []).filter(s => 
+                s.kode_surat !== 'KARTU-BIMBINGAN' && 
+                s.kode_surat !== 'BA-UJIAN' && 
+                s.template_path !== 'kartu_bimbingan' && 
+                s.template_path !== 'berita_acara_ujian'
+            );
+            
+            const allJudul = await JudulTaModel.getAllProposals();
+            const pendingJudul = allJudul.filter(j => j.status === 'pending_tu' || j.status === 'menunggu_verifikasi');
 
             return res.render('tu/dashboard', {
-                title: 'Dashboard Staff TU - Penomoran & Cetak PDF',
+                title: 'Dashboard Staff TU - Overview Administrasi TA',
                 user,
-                pendingSurat,
-                completedSurat
+                allSuratCount: allSurat ? allSurat.length : 0,
+                pendingCount: pendingSurat ? pendingSurat.length : 0,
+                completedCount: completedSurat ? completedSurat.length : 0,
+                pendingJudulCount: pendingJudul ? pendingJudul.length : 0,
+                allSurat: allSurat || [],
+                allJudul: allJudul || []
             });
         } catch (err) {
             console.error('TU dashboard error:', err);
@@ -42,13 +73,60 @@ class TuController {
             // Default auto-generated nomor surat
             const defaultNomor = `B/${Math.floor(100 + Math.random() * 900)}/UN.1/TI/TA/2026`;
 
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch (e) {}
+
+            const parseIndonesianDateToISO = (str) => {
+                if (!str || typeof str !== 'string') return null;
+                const trimmed = str.trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+                const months = {
+                    januari: '01', februari: '02', maret: '03', april: '04', mei: '05', juni: '06',
+                    juli: '07', agustus: '08', september: '09', oktober: '10', november: '11', desember: '12'
+                };
+                const cleanStr = trimmed.toLowerCase().replace(/,/g, '');
+                const tokens = cleanStr.split(/\s+/);
+                let day = null, month = null, year = null;
+                for (const t of tokens) {
+                    if (months[t]) month = months[t];
+                    else if (/^\d{1,2}$/.test(t) && !day) day = t.padStart(2, '0');
+                    else if (/^\d{4}$/.test(t)) year = t;
+                }
+                if (year && month && day) return `${year}-${month}-${day}`;
+                return null;
+            };
+
+            const parsePukulToHours = (str) => {
+                if (!str || typeof str !== 'string') return { jamMulai: '09:00', jamSelesai: '11:00' };
+                const match = str.match(/(\d{1,2})[\.:](\d{2})\s*(?:-|s\/d)?\s*(\d{1,2})?[\.:]?(\d{2})?/i);
+                if (match) {
+                    const jamMulai = `${match[1].padStart(2, '0')}:${match[2]}`;
+                    const jamSelesai = (match[3] && match[4]) ? `${match[3].padStart(2, '0')}:${match[4]}` : '11:00';
+                    return { jamMulai, jamSelesai };
+                }
+                return { jamMulai: '09:00', jamSelesai: '11:00' };
+            };
+
+            const defaultTgl = dinamisObj.tanggal_ujian || parseIndonesianDateToISO(dinamisObj.hari_tanggal) || new Date().toISOString().split('T')[0];
+            const parsedPukul = parsePukulToHours(dinamisObj.pukul || dinamisObj.waktu_ujian);
+            const defaultJamMulai = dinamisObj.jam_mulai || parsedPukul.jamMulai;
+            const defaultJamSelesai = dinamisObj.jam_selesai || parsedPukul.jamSelesai;
+            const defaultRuangan = dinamisObj.ruangan || dinamisObj.bertempat_di || dinamisObj.ruang_ujian || 'Ruang Ujian & Seminar TI';
+
             return res.render('tu/detail_penomoran', {
                 title: 'Penomoran Surat & Penerbitan PDF',
                 user: req.session.user,
                 pengajuan,
                 docs,
                 riwayat,
-                defaultNomor
+                defaultNomor,
+                dinamisObj,
+                defaultTgl,
+                defaultJamMulai,
+                defaultJamSelesai,
+                defaultRuangan
             });
         } catch (err) {
             console.error('Render penomoran error:', err);
@@ -59,7 +137,7 @@ class TuController {
     static async processPenomoranAndGeneratePdf(req, res) {
         try {
             const { id } = req.params;
-            const { nomor_surat } = req.body;
+            const { nomor_surat, tanggal_ujian, jam_mulai, jam_selesai, ruangan } = req.body;
             const user = req.session.user;
 
             const pengajuan = await SuratModel.getDetailById(id);
@@ -71,10 +149,79 @@ class TuController {
             await SuratModel.setNomorSurat(id, nomor_surat);
             pengajuan.nomor_surat = nomor_surat;
 
-            const mhs = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
-            const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Dr. Eng. Nama Kaprodi, M.T.', nip_nidn: '198501012010121001' };
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch (e) {}
 
-            // 2. Generate PDF Final Buffer
+            const parseIndonesianDateToISO = (str) => {
+                if (!str || typeof str !== 'string') return null;
+                const trimmed = str.trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+                const months = {
+                    januari: '01', februari: '02', maret: '03', april: '04', mei: '05', juni: '06',
+                    juli: '07', agustus: '08', september: '09', oktober: '10', november: '11', desember: '12'
+                };
+                const cleanStr = trimmed.toLowerCase().replace(/,/g, '');
+                const tokens = cleanStr.split(/\s+/);
+                let day = null, month = null, year = null;
+                for (const t of tokens) {
+                    if (months[t]) month = months[t];
+                    else if (/^\d{1,2}$/.test(t) && !day) day = t.padStart(2, '0');
+                    else if (/^\d{4}$/.test(t)) year = t;
+                }
+                if (year && month && day) return `${year}-${month}-${day}`;
+                return null;
+            };
+
+            const parsePukulToHours = (str) => {
+                if (!str || typeof str !== 'string') return { jamMulai: '09:00', jamSelesai: '11:00' };
+                const match = str.match(/(\d{1,2})[\.:](\d{2})\s*(?:-|s\/d)?\s*(\d{1,2})?[\.:]?(\d{2})?/i);
+                if (match) {
+                    const jamMulai = `${match[1].padStart(2, '0')}:${match[2]}`;
+                    const jamSelesai = (match[3] && match[4]) ? `${match[3].padStart(2, '0')}:${match[4]}` : '11:00';
+                    return { jamMulai, jamSelesai };
+                }
+                return { jamMulai: '09:00', jamSelesai: '11:00' };
+            };
+
+            const tglUjian = tanggal_ujian || dinamisObj.tanggal_ujian || parseIndonesianDateToISO(dinamisObj.hari_tanggal) || new Date().toISOString().split('T')[0];
+            const parsedPukul = parsePukulToHours(dinamisObj.pukul || dinamisObj.waktu_ujian);
+            const jMulai = jam_mulai || dinamisObj.jam_mulai || parsedPukul.jamMulai;
+            const jSelesai = jam_selesai || dinamisObj.jam_selesai || parsedPukul.jamSelesai;
+            const tempatRuangan = ruangan || dinamisObj.ruangan || dinamisObj.bertempat_di || dinamisObj.ruang_ujian || 'Ruang Ujian & Seminar TI';
+
+            // Sync updated schedule info back to pengajuan_surat.data_dinamis
+            dinamisObj.tanggal_ujian = tglUjian;
+            dinamisObj.jam_mulai = jMulai;
+            dinamisObj.jam_selesai = jSelesai;
+            dinamisObj.ruangan = tempatRuangan;
+
+            const db = require('../../config/database');
+            await db.run('UPDATE pengajuan_surat SET data_dinamis = ? WHERE id = ?', [JSON.stringify(dinamisObj), id]);
+            pengajuan.data_dinamis = JSON.stringify(dinamisObj);
+
+            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
+
+            // IF SURAT UNDANGAN SEMINAR: Forward to Dosen Pembimbing for ACC & optional rescheduling!
+            if (isUndangan) {
+                await SuratModel.updateStatus(id, 'pending_pembimbing_1');
+                await DisposisiModel.addLog({
+                    pengajuan_surat_id: id,
+                    actor_user_id: user.id,
+                    actor_role: 'staff_tu',
+                    status_sebelumnya: pengajuan.status,
+                    status_sesudahnya: 'pending_pembimbing_1',
+                    catatan_revisi: `Penomoran & Draf Jadwal ditentukan oleh Staff TU (Nomor: ${nomor_surat}, Tanggal: ${tglUjian}, Waktu: ${jMulai}-${jSelesai}, Ruang: ${tempatRuangan}). Diteruskan ke Dosen Pembimbing untuk ACC / penyesuaian.`
+                });
+
+                return res.redirect(`/tu/daftar-surat?success=${encodeURIComponent('Nomor Surat (' + nomor_surat + ') & Draf Jadwal Ujian berhasil ditentukan! Pengajuan telah diteruskan ke Dosen Pembimbing untuk disetujui / disesuaikan.')}`);
+            }
+
+            // FOR OTHER NON-INVITATION SURAT: Finalize immediately
+            const mhs = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
+            const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Prof. Dr. RASMUIN, S.Pd., M.Pd.', nip_nidn: '196812311994031012' };
+
             const verifyUrl = `${appConfig.baseUrl}/verify-doc/${pengajuan.uuid_surat}`;
             const pdfBuffer = await PdfGeneratorService.generateSuratPdf({
                 pengajuan,
@@ -85,7 +232,6 @@ class TuController {
                 signatureHash: pengajuan.qr_signature_hash
             });
 
-            // 3. Upload PDF Final ke Google Drive
             const ROOT_FOLDER = appConfig.gdriveRootFolderId;
             const tahunFolderId = await gdriveService.getOrCreateFolder('2026', ROOT_FOLDER);
             const mhsFolderName = `${mhs.nim}_${mhs.nama_lengkap.replace(/\s+/g, '_')}`;
@@ -100,7 +246,6 @@ class TuController {
                 pdfFolderId
             );
 
-            // 4. Simpan Metadata Drive ke SQL
             await GDriveDocModel.saveMetadata({
                 pengajuan_surat_id: id,
                 gdrive_file_id: driveResult.id,
@@ -113,45 +258,9 @@ class TuController {
                 web_content_link: driveResult.webContentLink
             });
 
-            // 5. Update Status -> SELESAI
             await SuratModel.updateStatus(id, 'selesai');
 
-            // 6. Terbitkan Jadwal Ujian & Seminar Otomatis
-            const { tanggal_ujian, jam_mulai, jam_selesai, ruangan } = req.body;
-            let dinamisObj = {};
-            try {
-                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
-            } catch (e) {}
-
-            const JadwalUjianModel = require('../models/JadwalUjianModel');
-            const tglUjian = tanggal_ujian || dinamisObj.tanggal_ujian || new Date().toISOString().split('T')[0];
-            const jMulai = jam_mulai || dinamisObj.jam_mulai || '09:00';
-            const jSelesai = jam_selesai || dinamisObj.jam_selesai || '11:00';
-            const tempatRuangan = ruangan || dinamisObj.ruangan || 'Ruang Ujian & Seminar TI';
-
-            await JadwalUjianModel.createOrUpdateJadwal({
-                pengajuan_surat_id: id,
-                mahasiswa_id: pengajuan.mahasiswa_id,
-                jenis_ujian: pengajuan.nama_surat,
-                tanggal_ujian: tglUjian,
-                jam_mulai: jMulai,
-                jam_selesai: jSelesai,
-                ruangan: tempatRuangan,
-                judul_ta: pengajuan.mhs_judul_ta || pengajuan.perihal,
-                pembimbing_1_id: dinamisObj.pembimbing_1_id || null,
-                pembimbing_2_id: dinamisObj.pembimbing_2_id || null
-            });
-
-            await DisposisiModel.addLog({
-                pengajuan_surat_id: id,
-                actor_user_id: user.id,
-                actor_role: 'staff_tu',
-                status_sebelumnya: 'pending_tu',
-                status_sesudahnya: 'selesai',
-                catatan_revisi: `Surat Resmi diterbitkan dengan Nomor: ${nomor_surat}. Jadwal Ujian otomatis diterbitkan ke Mahasiswa dan Dosen.`
-            });
-
-            return res.redirect('/tu/dashboard');
+            return res.redirect(`/tu/daftar-surat?success=${encodeURIComponent('Surat Resmi berhasil di-ACC! Nomor: ' + nomor_surat)}`);
         } catch (err) {
             console.error('Process penomoran error:', err);
             return res.status(500).send('Internal Server Error: ' + err.message);
@@ -161,12 +270,34 @@ class TuController {
         try {
             const user = req.session.user;
             const jenis_surat_id = req.query.jenis_surat_id || null;
-            const jenisList = await SuratModel.getJenisSuratList();
+            let jenisList = await SuratModel.getJenisSuratList();
 
-            const suratList = await SuratModel.getByFilter({
+            // Filter out auto-approved letter types from dropdown filter list
+            jenisList = (jenisList || []).filter(j => 
+                j.kode_surat !== 'KARTU-BIMBINGAN' && 
+                j.kode_surat !== 'BA-UJIAN' && 
+                j.template_path !== 'kartu_bimbingan' && 
+                j.template_path !== 'berita_acara_ujian'
+            );
+
+            let suratList = await SuratModel.getByFilter({
                 jenis_surat_id: jenis_surat_id ? parseInt(jenis_surat_id, 10) : null,
                 statusList: null
             });
+
+            // Filter out auto-approved letters (Kartu Bimbingan TA & BA Ujian) from Admin list view
+            suratList = (suratList || []).filter(s => 
+                s.kode_surat !== 'KARTU-BIMBINGAN' && 
+                s.kode_surat !== 'BA-UJIAN' && 
+                s.template_path !== 'kartu_bimbingan' && 
+                s.template_path !== 'berita_acara_ujian'
+            );
+
+            const fs = require('fs');
+            const path = require('path');
+            const sigDir = path.join(__dirname, '../../public/uploads/signatures');
+            const hasTtdKaprodi = fs.existsSync(path.join(sigDir, 'ttd_kaprodi_default.png'));
+            const hasTtdDekan = fs.existsSync(path.join(sigDir, 'ttd_dekan_default.png'));
 
             return res.render('tu/daftar_surat', {
                 title: 'Daftar Menu Surat Administrasi - Staff TU',
@@ -174,6 +305,8 @@ class TuController {
                 jenisList,
                 suratList,
                 selectedJenis: jenis_surat_id,
+                hasTtdKaprodi,
+                hasTtdDekan,
                 error: req.query.error || null,
                 success: req.query.success || null
             });
@@ -233,7 +366,14 @@ class TuController {
     static async processBuatSurat(req, res) {
         try {
             const user = req.session.user;
-            const { from_id, mahasiswa_id, jenis_surat_id, perihal, pembimbing_1_id, pembimbing_2_id, instansi_tujuan, durasi, catatan } = req.body;
+            const db = require('../../config/database');
+            const { 
+                from_id, mahasiswa_id, jenis_surat_id, perihal, 
+                pembimbing_1_id, pembimbing_2_id, 
+                instansi_tujuan, durasi, catatan,
+                hari_tanggal, pukul, bertempat_di,
+                tanggal_ujian, jam_mulai, jam_selesai, ruangan
+            } = req.body;
             const { v4: uuidv4 } = require('uuid');
             const fs = require('fs');
             const path = require('path');
@@ -241,6 +381,8 @@ class TuController {
             if (!mahasiswa_id || !jenis_surat_id || !perihal) {
                 return res.redirect('/tu/buat-surat?error=' + encodeURIComponent('Mahasiswa, Jenis Surat, dan Perihal wajib diisi!'));
             }
+
+            const jenisSuratObj = await SuratModel.getJenisSuratById(jenis_surat_id);
 
             let ttdTuPath = null;
             if (req.file) {
@@ -253,13 +395,38 @@ class TuController {
                 ttdTuPath = `/uploads/signatures/${filename}`;
             }
 
+            // Fetch Dosen Pembimbing Names if IDs provided
+            let p1Dosen = null, p2Dosen = null;
+            const p1Id = pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : null;
+            const p2Id = pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : null;
+            if (p1Id) p1Dosen = await DosenModel.findById(p1Id);
+            if (p2Id) p2Dosen = await DosenModel.findById(p2Id);
+
+            const mhs = await MahasiswaModel.findById(mahasiswa_id);
+            const approvedProposal = await db.get("SELECT * FROM pengajuan_judul_ta WHERE mahasiswa_id = ? AND status = 'diterima' ORDER BY id DESC LIMIT 1", [mahasiswa_id]);
+            const approvedTitle = (approvedProposal && approvedProposal.judul_ta) ? approvedProposal.judul_ta : (mhs ? mhs.judul_ta : '-');
+
+            const isPersetujuanWaktu = jenisSuratObj && (jenisSuratObj.kode_surat === 'LMBR-PERSETUJUAN-WKT' || jenisSuratObj.template_path === 'lembar_persetujuan_waktu');
+
             const parsedDinamis = {
-                pembimbing_1_id: pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : null,
-                pembimbing_2_id: pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : null,
+                pembimbing_1_id: p1Id,
+                pembimbing_2_id: p2Id,
+                pembimbing_1_nama: p1Dosen ? p1Dosen.nama_dosen : '',
+                pembimbing_2_nama: p2Dosen ? p2Dosen.nama_dosen : '',
                 instansi_tujuan: instansi_tujuan || '',
                 durasi: durasi || '',
-                catatan: catatan || ''
+                catatan: catatan || '',
+                hari_tanggal: hari_tanggal || '',
+                pukul: pukul || '',
+                bertempat_di: bertempat_di || ruangan || 'Ruang Ujian & Seminar TI',
+                tanggal_ujian: tanggal_ujian || new Date().toISOString().split('T')[0],
+                jam_mulai: jam_mulai || '09:00',
+                jam_selesai: jam_selesai || '11:00',
+                ruangan: ruangan || bertempat_di || 'Ruang Ujian & Seminar TI',
+                judul_ta: approvedTitle
             };
+
+            const nextStatus = isPersetujuanWaktu ? 'pending_pembimbing_1' : 'pending_sekprodi';
 
             if (from_id) {
                 // UPDATE SAME EXISTING LETTER (DO NOT CREATE NEW ROW)
@@ -273,16 +440,23 @@ class TuController {
                         ttd_tu_path: ttdTuPath
                     });
 
+                    await db.run('UPDATE pengajuan_surat SET status = ? WHERE id = ?', [nextStatus, from_id]);
+
                     await DisposisiModel.addLog({
                         pengajuan_surat_id: from_id,
                         actor_user_id: user.id,
                         actor_role: 'staff_tu',
                         status_sebelumnya: pengajuanEksisting.status,
-                        status_sesudahnya: 'pending_sekprodi',
-                        catatan_revisi: 'Permintaan Surat Mahasiswa berhasil diproses dan diteruskan oleh Staff TU ke Sekprodi.'
+                        status_sesudahnya: nextStatus,
+                        catatan_revisi: isPersetujuanWaktu 
+                            ? 'Lembar Persetujuan Waktu Ujian diajukan oleh Staff TU dengan saran jadwal dan diteruskan ke Dosen Pembimbing untuk penetapan jadwal resmi.'
+                            : 'Permintaan Surat Mahasiswa berhasil diproses dan diteruskan oleh Staff TU ke Sekprodi.'
                     });
 
-                    return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Permintaan Surat Mahasiswa berhasil diteruskan ke Sekprodi.'));
+                    const msg = isPersetujuanWaktu 
+                        ? 'Lembar Persetujuan Waktu Ujian berhasil diteruskan ke Dosen Pembimbing untuk penetapan jadwal resmi!' 
+                        : 'Permintaan Surat Mahasiswa berhasil diteruskan ke Sekprodi.';
+                    return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent(msg));
                 }
             }
 
@@ -297,16 +471,24 @@ class TuController {
                 ttd_tu_path: ttdTuPath
             });
 
+            await db.run('UPDATE pengajuan_surat SET status = ? WHERE id = ?', [nextStatus, pengajuan.id]);
+
             await DisposisiModel.addLog({
                 pengajuan_surat_id: pengajuan.id,
                 actor_user_id: user.id,
                 actor_role: 'staff_tu',
                 status_sebelumnya: 'draft',
-                status_sesudahnya: 'pending_sekprodi',
-                catatan_revisi: 'Surat Permintaan diterbitkan oleh Staff TU dan diteruskan ke Sekprodi untuk verifikasi/validasi.'
+                status_sesudahnya: nextStatus,
+                catatan_revisi: isPersetujuanWaktu 
+                    ? 'Lembar Persetujuan Waktu Ujian diterbitkan oleh Staff TU dengan saran jadwal dan diteruskan ke Dosen Pembimbing untuk penetapan jadwal resmi.'
+                    : 'Surat Permintaan diterbitkan oleh Staff TU dan diteruskan ke Sekprodi untuk verifikasi/validasi.'
             });
 
-            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Surat Permintaan berhasil dibuat dan diteruskan ke Sekprodi.'));
+            const successMsg = isPersetujuanWaktu 
+                ? 'Lembar Persetujuan Waktu Ujian berhasil diterbitkan dan diteruskan ke Dosen Pembimbing untuk penetapan jadwal resmi!' 
+                : 'Surat Permintaan berhasil dibuat dan diteruskan ke Sekprodi.';
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent(successMsg));
         } catch (err) {
             console.error('TU processBuatSurat error:', err);
             return res.redirect('/tu/buat-surat?error=' + encodeURIComponent(err.message));
@@ -350,7 +532,14 @@ class TuController {
     static async processEditSurat(req, res) {
         try {
             const { id } = req.params;
-            const { mahasiswa_id, jenis_surat_id, perihal, pembimbing_1_id, pembimbing_2_id, instansi_tujuan, durasi, catatan } = req.body;
+            const {
+                mahasiswa_id, jenis_surat_id, perihal,
+                pembimbing_1_id, pembimbing_2_id,
+                instansi_tujuan, tujuan_instansi, alamat_instansi, durasi,
+                tgl_mulai_penelitian, tgl_selesai_penelitian,
+                jenis_seminar, hari_tanggal, tanggal_ujian, pukul, jam_mulai, jam_selesai, bertempat_di, ruangan,
+                tahun_akademik, catatan
+            } = req.body;
             const fs = require('fs');
             const path = require('path');
 
@@ -370,21 +559,70 @@ class TuController {
                 ttdTuPath = `/uploads/signatures/${filename}`;
             }
 
-            const parsedDinamis = {
-                pembimbing_1_id: pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : null,
-                pembimbing_2_id: pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : null,
-                instansi_tujuan: instansi_tujuan || '',
-                durasi: durasi || '',
-                catatan: catatan || ''
+            let existingDinamis = {};
+            try {
+                existingDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch(e) {}
+
+            let p1Dosen = null, p2Dosen = null;
+            const p1Id = pembimbing_1_id ? parseInt(pembimbing_1_id, 10) : (existingDinamis.pembimbing_1_id || null);
+            const p2Id = pembimbing_2_id ? parseInt(pembimbing_2_id, 10) : (existingDinamis.pembimbing_2_id || null);
+            if (p1Id) p1Dosen = await DosenModel.findById(p1Id);
+            if (p2Id) p2Dosen = await DosenModel.findById(p2Id);
+
+            const finalTgl = tanggal_ujian || existingDinamis.tanggal_ujian || tgl_mulai_penelitian || existingDinamis.tgl_mulai_penelitian || new Date().toISOString().split('T')[0];
+            const finalJMulai = jam_mulai || existingDinamis.jam_mulai || '09:00';
+            const finalJSelesai = jam_selesai || existingDinamis.jam_selesai || '11:00';
+            const finalRuangan = ruangan || bertempat_di || existingDinamis.ruangan || existingDinamis.bertempat_di || 'Ruang Ujian & Seminar TI';
+
+            const updatedDinamis = {
+                ...existingDinamis,
+                pembimbing_1_id: p1Id,
+                pembimbing_2_id: p2Id,
+                pembimbing_1_nama: p1Dosen ? p1Dosen.nama_dosen : (existingDinamis.pembimbing_1_nama || ''),
+                pembimbing_2_nama: p2Dosen ? p2Dosen.nama_dosen : (existingDinamis.pembimbing_2_nama || ''),
+                instansi_tujuan: instansi_tujuan || tujuan_instansi || existingDinamis.instansi_tujuan || existingDinamis.tujuan_instansi || '',
+                tujuan_instansi: tujuan_instansi || instansi_tujuan || existingDinamis.tujuan_instansi || existingDinamis.instansi_tujuan || '',
+                alamat_instansi: alamat_instansi !== undefined ? alamat_instansi : (existingDinamis.alamat_instansi || ''),
+                durasi: durasi !== undefined ? durasi : (existingDinamis.durasi || ''),
+                tgl_mulai_penelitian: tgl_mulai_penelitian !== undefined ? tgl_mulai_penelitian : (existingDinamis.tgl_mulai_penelitian || ''),
+                tgl_selesai_penelitian: tgl_selesai_penelitian !== undefined ? tgl_selesai_penelitian : (existingDinamis.tgl_selesai_penelitian || ''),
+                jenis_seminar: jenis_seminar !== undefined ? jenis_seminar : (existingDinamis.jenis_seminar || ''),
+                hari_tanggal: hari_tanggal || existingDinamis.hari_tanggal || '',
+                tanggal_ujian: finalTgl,
+                pukul: pukul || existingDinamis.pukul || '',
+                jam_mulai: finalJMulai,
+                jam_selesai: finalJSelesai,
+                bertempat_di: finalRuangan,
+                ruangan: finalRuangan,
+                tahun_akademik: tahun_akademik !== undefined ? tahun_akademik : (existingDinamis.tahun_akademik || ''),
+                catatan: catatan !== undefined ? catatan : (existingDinamis.catatan || '')
             };
 
             await SuratModel.updateSuratByTu(id, {
                 mahasiswa_id: parseInt(mahasiswa_id, 10),
                 jenis_surat_id: parseInt(jenis_surat_id, 10),
                 perihal,
-                data_dinamis: parsedDinamis,
+                data_dinamis: updatedDinamis,
                 ttd_tu_path: ttdTuPath
             });
+
+            // Sync updated schedule to JadwalUjianModel if UND- letter
+            if (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT')) {
+                const JadwalUjianModel = require('../models/JadwalUjianModel');
+                await JadwalUjianModel.createOrUpdateJadwal({
+                    pengajuan_surat_id: id,
+                    mahasiswa_id: parseInt(mahasiswa_id, 10),
+                    jenis_ujian: pengajuan.nama_surat,
+                    tanggal_ujian: finalTgl,
+                    jam_mulai: finalJMulai,
+                    jam_selesai: finalJSelesai,
+                    ruangan: finalRuangan,
+                    judul_ta: pengajuan.mhs_judul_ta || perihal,
+                    pembimbing_1_id: p1Id,
+                    pembimbing_2_id: p2Id
+                });
+            }
 
             await DisposisiModel.addLog({
                 pengajuan_surat_id: id,
@@ -392,7 +630,7 @@ class TuController {
                 actor_role: 'staff_tu',
                 status_sebelumnya: pengajuan.status,
                 status_sesudahnya: pengajuan.status,
-                catatan_revisi: 'Data Surat Administrasi berhasil diperbarui oleh Staff TU.'
+                catatan_revisi: 'Data Surat Administrasi & Detail Isian Spesifik berhasil diperbarui oleh Staff TU.'
             });
 
             return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Data Surat berhasil diperbarui.'));
@@ -405,9 +643,10 @@ class TuController {
     static async processDeleteSurat(req, res) {
         try {
             const { id } = req.params;
-            const pengajuan = await SuratModel.getDetailById(id);
-            if (!pengajuan) {
-                return res.status(404).send('Pengajuan surat tidak ditemukan.');
+            const db = require('../../config/database');
+            const exist = await db.get('SELECT id FROM pengajuan_surat WHERE id = ?', [id]);
+            if (!exist) {
+                return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Pengajuan surat tidak ditemukan atau telah dihapus sebelumnya.'));
             }
 
             await SuratModel.deleteSurat(id);
@@ -511,6 +750,101 @@ class TuController {
         } catch (err) {
             console.error('TU processHapusUser error:', err);
             return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processEditUser(req, res) {
+        try {
+            const { id } = req.params;
+            const { username, email, role, status, nama, nomor_identitas, password } = req.body;
+
+            await UserModel.updateUserByAdmin({
+                userId: id,
+                username,
+                email,
+                role,
+                status,
+                nama,
+                nomorIdentitas: nomor_identitas,
+                password
+            });
+
+            return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent(`Data pengguna (@${username}) berhasil diperbarui.`));
+        } catch (err) {
+            console.error('TU processEditUser error:', err);
+            return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(err.message));
+        }
+    }
+
+    static async processUploadTtdTu(req, res) {
+        try {
+            if (!req.file) {
+                return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD (PNG/JPG Transparan).'));
+            }
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filename = `ttd_tu_staff_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
+            const targetPath = path.join(uploadDir, filename);
+            fs.writeFileSync(targetPath, req.file.buffer);
+
+            // Copy to default ttd_tu_default.png
+            fs.writeFileSync(path.join(uploadDir, 'ttd_tu_default.png'), req.file.buffer);
+
+            const ttdPath = `/uploads/signatures/${filename}`;
+            req.session.ttd_tu_path = ttdPath;
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Spesimen Tanda Tangan Digital Staff TU berhasil diunggah dan disimpan!'));
+        } catch (err) {
+            console.error('Upload TTD Staff TU error:', err);
+            return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal mengunggah TTD Staff TU: ' + err.message));
+        }
+    }
+
+    static async processUploadTtdKaprodi(req, res) {
+        try {
+            if (!req.file) {
+                return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD Plt. Kaprodi (PNG/JPG Transparan).'));
+            }
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filename = `ttd_kaprodi_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
+            fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+            fs.writeFileSync(path.join(uploadDir, 'ttd_kaprodi_default.png'), req.file.buffer);
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Spesimen Tanda Tangan Digital Plt. Kaprodi berhasil disimpan!'));
+        } catch (err) {
+            console.error('Upload TTD Kaprodi error:', err);
+            return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal mengunggah TTD Kaprodi: ' + err.message));
+        }
+    }
+
+    static async processUploadTtdDekan(req, res) {
+        try {
+            if (!req.file) {
+                return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD Dekan (PNG/JPG Transparan).'));
+            }
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filename = `ttd_dekan_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
+            fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+            fs.writeFileSync(path.join(uploadDir, 'ttd_dekan_default.png'), req.file.buffer);
+
+            return res.redirect('/tu/daftar-surat?success=' + encodeURIComponent('Spesimen Tanda Tangan Digital Dekan berhasil disimpan!'));
+        } catch (err) {
+            console.error('Upload TTD Dekan error:', err);
+            return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal mengunggah TTD Dekan: ' + err.message));
         }
     }
 }

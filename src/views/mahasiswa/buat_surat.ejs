@@ -10,10 +10,27 @@
         </a>
     </div>
 
-    <% if (error) { %>
-        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 text-sm flex items-center gap-3">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span><%= error %></span>
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div id="alert-banner-error" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+                <span class="font-bold"><%= error %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-error')" class="text-rose-500 hover:text-rose-700 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    <% } %>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div id="alert-banner-success" class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-base shrink-0"></i>
+                <span class="font-bold"><%= success %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-success')" class="text-emerald-600 hover:text-emerald-800 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
         </div>
     <% } %>
 
@@ -37,7 +54,7 @@
         </div>
         <div class="pt-2 border-t border-blue-800/60">
             <p class="text-blue-300/80 font-medium text-[11px] uppercase tracking-wider">Judul Skripsi / Tugas Akhir</p>
-            <p class="font-bold text-xs text-slate-100 mt-1 leading-relaxed"><%= (mhs.judul_ta && mhs.judul_ta !== '-') ? mhs.judul_ta : 'Belum Ada Judul Disetujui (Silakan ajukan judul di menu Pengajuan Judul TA)' %></p>
+            <p class="font-bold text-xs text-slate-100 mt-1 leading-relaxed"><%= (mhs && mhs.judul_ta && mhs.judul_ta !== 'null' && mhs.judul_ta !== '-') ? mhs.judul_ta : 'Belum Ada Judul Disetujui (Silakan ajukan usulan judul di menu Pengajuan Judul TA)' %></p>
         </div>
     </div>
 
@@ -89,26 +106,24 @@
             <!-- 2. Fields for LMBR-PERSETUJUAN-WKT & UND- (Undangan Seminar / Ujian) -->
             <div id="field-seminar-jadwal" class="space-y-4 dynamic-section hidden">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Seminar / Ujian *</label>
-                    <select name="jenis_seminar" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1">Jenis Seminar / Ujian *</label>
+                    <select name="jenis_seminar" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600">
                         <option value="Seminar Proposal (Sempro)">Seminar Proposal (Sempro)</option>
                         <option value="Seminar Hasil (Semhas)">Seminar Hasil (Semhas)</option>
-                        <option value="Sidang Akhir / Munaqasyah Skripsi">Sidang Akhir / Munaqasyah Skripsi</option>
+                        <option value="Sidang Akhir / Munaqasyah Skripsi (Tutup)">Sidang Akhir / Munaqasyah Skripsi (Tutup)</option>
                     </select>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Hari / Tanggal Ujian *</label>
-                        <input type="text" name="hari_tanggal" placeholder="Contoh: Jum'at, 19 Juni 2026" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+
+                <!-- Informational Box: Penentuan Jadwal Oleh Dosen & Admin -->
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl space-y-2 text-xs">
+                    <div class="flex items-center gap-2 text-blue-900 font-extrabold">
+                        <i class="fa-solid fa-circle-info text-blue-600 text-sm"></i>
+                        <span>Ketentuan Penentuan Jadwal Seminar / Ujian</span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Waktu / Jam Pelaksanaan *</label>
-                        <input type="text" name="pukul" placeholder="Contoh: 15:00 WITA s/d Selesai" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
-                    <input type="text" name="bertempat_di" placeholder="Contoh: R. Teknik Informatika / Ruang Seminar FTI" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
+                    <p class="text-blue-800 leading-relaxed font-medium">
+                        Mahasiswa tidak menentukan jadwal ujian (Hari/Tanggal, Waktu, dan Ruangan) pada form ini. 
+                        Jadwal resmi akan ditentukan dan disetujui oleh <strong>Dosen Pembimbing</strong>. Pihak Admin (Staff TU) juga dapat memberikan pilihan/saran jadwal ruangan yang tersedia.
+                    </p>
                 </div>
             </div>
 
@@ -117,32 +132,6 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik / Semester</label>
                     <input type="text" name="tahun_akademik" placeholder="Contoh: 2025/2026 (Genap)" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                </div>
-            </div>
-
-            <!-- 4. Fields for BA-UJIAN (Berita Acara Ujian) -->
-            <div id="field-ba-ujian" class="space-y-4 dynamic-section hidden">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Ujian *</label>
-                    <select name="kategori_ujian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
-                        <option value="Ujian Seminar Proposal (Sempro)">Ujian Seminar Proposal (Sempro)</option>
-                        <option value="Ujian Seminar Hasil (Semhas)">Ujian Seminar Hasil (Semhas)</option>
-                        <option value="Ujian Sidang Akhir / Munaqasyah Skripsi">Ujian Sidang Akhir / Munaqasyah Skripsi</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Ujian *</label>
-                        <input type="date" name="tanggal_ujian" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Waktu / Jam Ujian *</label>
-                        <input type="text" name="waktu_ujian" placeholder="09:00 - 11:00 WITA" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Ruang / Tempat Ujian *</label>
-                    <input type="text" name="ruang_ujian" placeholder="Ruang Seminar FTI UNIDAYAN" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800">
                 </div>
             </div>
 
@@ -180,7 +169,7 @@
         document.querySelectorAll('.dynamic-section').forEach(el => el.classList.add('hidden'));
         document.getElementById('field-default-info').classList.add('hidden');
 
-        // Check if file upload is required (Only for UND-SEMPRO, UND-SEMHAS, UND-SIDANG)
+        // Check if file upload is required (Only for UND- letters like Sempro, Semhas, Sidang)
         if (kode.startsWith('UND-')) {
             uploadContainer.classList.remove('hidden');
             fileInput.required = true;
@@ -195,10 +184,30 @@
             document.getElementById('field-seminar-jadwal').classList.remove('hidden');
         } else if (kode === 'SK-PEMBIMBING-PENGUJI' || kode === 'KARTU-BIMBINGAN') {
             document.getElementById('field-sk-bimbingan').classList.remove('hidden');
-        } else if (kode === 'BA-UJIAN') {
-            document.getElementById('field-ba-ujian').classList.remove('hidden');
         } else {
             document.getElementById('field-default-info').classList.remove('hidden');
         }
     }
+
+    function dismissAlert(alertId) {
+        const el = typeof alertId === 'string' ? document.getElementById(alertId) : alertId;
+        if (el) {
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const errorAlert = document.getElementById('alert-banner-error');
+            const successAlert = document.getElementById('alert-banner-success');
+            if (errorAlert) dismissAlert(errorAlert);
+            if (successAlert) dismissAlert(successAlert);
+        }, 4000);
+
+        if (window.location.search.includes('success') || window.location.search.includes('error')) {
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    });
 </script>

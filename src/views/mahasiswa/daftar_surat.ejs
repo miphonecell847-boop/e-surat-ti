@@ -18,6 +18,31 @@
         </div>
     </div>
 
+    <!-- Alert Banners dengan Auto-Dismiss & Tombol Tutup -->
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div id="alert-banner-error" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+                <span class="font-bold"><%= error %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-error')" class="text-rose-500 hover:text-rose-700 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    <% } %>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div id="alert-banner-success" class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-base shrink-0"></i>
+                <span class="font-bold"><%= success %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-success')" class="text-emerald-600 hover:text-emerald-800 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    <% } %>
+
     <!-- Summary Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
@@ -36,7 +61,7 @@
             </div>
             <div>
                 <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Surat / SK Terbit (Selesai)</p>
-                <p class="text-2xl font-black text-emerald-600"><%= listSurat.filter(s => s.status === 'selesai').length %></p>
+                <p class="text-2xl font-black text-emerald-600"><%= listSurat.filter(s => s.status === 'selesai' || s.status === 'approved').length %></p>
             </div>
         </div>
 
@@ -46,7 +71,7 @@
             </div>
             <div>
                 <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Dalam Proses Validasi</p>
-                <p class="text-2xl font-black text-amber-600"><%= listSurat.filter(s => s.status !== 'selesai' && s.status !== 'ditolak').length %></p>
+                <p class="text-2xl font-black text-amber-600"><%= listSurat.filter(s => s.status !== 'selesai' && s.status !== 'approved' && s.status !== 'ditolak').length %></p>
             </div>
         </div>
     </div>
@@ -103,7 +128,12 @@
                                     <%= new Date(surat.tgl_pengajuan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
                                 </td>
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    <% if (surat.status === 'selesai') { %>
+                                    <% const isAutoDoc = (surat.kode_surat === 'KARTU-BIMBINGAN' || surat.kode_surat === 'LMBR-PERSETUJUAN-WKT' || surat.template_path === 'kartu_bimbingan' || surat.template_path === 'lembar_persetujuan_waktu'); %>
+                                    <% if (isAutoDoc) { %>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-300">
+                                            <i class="fa-solid fa-bolt text-amber-500"></i> Langsung Terbit (Tanpa Validasi)
+                                        </span>
+                                    <% } else if (surat.status === 'selesai' || surat.status === 'approved') { %>
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-300">
                                             <i class="fa-solid fa-circle-check text-emerald-500"></i> Selesai & Terbit
                                         </span>
@@ -112,8 +142,8 @@
                                             <i class="fa-solid fa-circle-xmark text-rose-500"></i> Ditolak
                                         </span>
                                     <% } else if (surat.status === 'revisi') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700 border border-rose-300">
-                                            <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Perlu Revisi
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-orange-100 text-orange-700 border border-orange-300">
+                                            <i class="fa-solid fa-triangle-exclamation text-orange-500"></i> Perlu Revisi
                                         </span>
                                     <% } else { %>
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
@@ -123,15 +153,17 @@
                                 </td>
                                 <td class="py-4 px-6 text-center whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition flex items-center gap-1 text-[11px]">
-                                            <i class="fa-solid fa-eye"></i> Detail
-                                        </a>
-
-                                        <% if (surat.status === 'selesai') { %>
+                                        <% if (surat.status === 'selesai' || surat.status === 'approved' || isAutoDoc) { %>
                                             <a href="/surat/preview/<%= surat.id %>" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl shadow-sm transition flex items-center gap-1.5 text-[11px]">
-                                                <i class="fa-solid fa-file-pdf text-amber-300"></i> Download PDF
+                                                <i class="fa-solid fa-file-pdf text-amber-300"></i> Download / Cetak PDF
                                             </a>
                                         <% } %>
+
+                                        <form action="/mahasiswa/surat/hapus/<%= surat.id %>" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus permohonan surat ini? Data yang dihapus tidak dapat dikembalikan.')" class="inline">
+                                            <button type="submit" class="px-3 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition flex items-center gap-1 text-[11px]">
+                                                <i class="fa-solid fa-trash-can"></i> Hapus
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -142,3 +174,27 @@
         <% } %>
     </div>
 </div>
+
+<script>
+    function dismissAlert(alertId) {
+        const el = typeof alertId === 'string' ? document.getElementById(alertId) : alertId;
+        if (el) {
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const errorAlert = document.getElementById('alert-banner-error');
+            const successAlert = document.getElementById('alert-banner-success');
+            if (errorAlert) dismissAlert(errorAlert);
+            if (successAlert) dismissAlert(successAlert);
+        }, 4000);
+
+        if (window.location.search.includes('success') || window.location.search.includes('error')) {
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    });
+</script>

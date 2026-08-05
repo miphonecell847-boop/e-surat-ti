@@ -1,45 +1,58 @@
 <div class="space-y-6">
-    <!-- Student Header Banner -->
-    <div class="bg-gradient-to-r from-indigo-900/60 via-slate-900 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h2 class="text-xl font-bold text-white mb-1">Selamat Datang, <%= mhs ? mhs.nama_lengkap : user.username %> 👋</h2>
-            <p class="text-xs text-slate-400">NIM: <span class="text-indigo-400 font-semibold"><%= mhs ? mhs.nim : '-' %></span> | Angkatan: <%= mhs ? mhs.angkatan : '-' %></p>
-            <p class="text-xs text-slate-400 mt-1 italic">Judul TA: "<%= mhs ? (mhs.judul_ta || 'Belum diisi') : '-' %>"</p>
+    <!-- Student Welcome Header Banner -->
+    <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 border border-indigo-500/20 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="space-y-2">
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-[11px] font-extrabold rounded-full border border-indigo-400/30 uppercase tracking-wider">
+                    Akun Mahasiswa S-1
+                </span>
+            </div>
+            <h2 class="text-xl md:text-2xl font-black text-white">Selamat Datang, <%= mhs ? mhs.nama_lengkap : user.username %> 👋</h2>
+            <p class="text-xs text-slate-300">NIM: <span class="text-indigo-400 font-bold"><%= mhs ? mhs.nim : '-' %></span> | Angkatan: <span class="text-slate-200 font-bold"><%= mhs ? mhs.angkatan : '-' %></span></p>
+            <p class="text-xs text-slate-400 mt-1 italic">
+                Judul TA: <%- (mhs && mhs.judul_ta && mhs.judul_ta !== 'null' && mhs.judul_ta !== '-') ? `"${mhs.judul_ta}"` : '<span class="text-amber-400 font-normal">Belum ada judul yang disetujui. Silakan ajukan usulan judul di menu Pengajuan Judul TA.</span>' %>
+            </p>
         </div>
-        <div>
-            <a href="/mahasiswa/buat-surat" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-plus"></i> Ajukan Surat Baru
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <a href="/mahasiswa/pengajuan-judul" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-2 border border-slate-700">
+                <i class="fa-solid fa-book-bookmark text-amber-400"></i> Pengajuan Judul TA
+            </a>
+            <a href="/mahasiswa/buat-surat" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-extrabold shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-amber-300"></i> Ajukan Surat Baru
             </a>
         </div>
     </div>
 
-    <!-- Stats Summary -->
+    <!-- Stats Summary (3 Metrics) -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
             <div>
-                <span class="text-xs font-semibold text-slate-400 uppercase">Total Pengajuan</span>
-                <h3 class="text-2xl font-bold text-white mt-1"><%= listSurat ? listSurat.length : 0 %></h3>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengajuan</span>
+                <h3 class="text-2xl font-black text-white mt-1"><%= listSurat ? listSurat.length : 0 %></h3>
             </div>
             <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-paper-plane"></i>
+                <i class="fa-solid fa-folder-open"></i>
             </div>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
             <div>
-                <span class="text-xs font-semibold text-slate-400 uppercase">Dalam Proses</span>
-                <h3 class="text-2xl font-bold text-amber-400 mt-1">
-                    <%= listSurat ? listSurat.filter(s => s.status !== 'selesai' && s.status !== 'ditolak').length : 0 %>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dalam Proses</span>
+                <h3 class="text-2xl font-black text-amber-400 mt-1">
+                    <%= listSurat ? listSurat.filter(s => s.status !== 'selesai' && s.status !== 'approved' && s.status !== 'ditolak').length : 0 %>
                 </h3>
             </div>
             <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between shadow-sm">
             <div>
-                <span class="text-xs font-semibold text-slate-400 uppercase">Surat Selesai</span>
-                <h3 class="text-2xl font-bold text-emerald-400 mt-1">
-                    <%= listSurat ? listSurat.filter(s => s.status === 'selesai').length : 0 %>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Surat & SK Selesai</span>
+                <h3 class="text-2xl font-black text-emerald-400 mt-1">
+                    <%= listSurat ? listSurat.filter(s => s.status === 'selesai' || s.status === 'approved').length : 0 %>
                 </h3>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
@@ -48,80 +61,106 @@
         </div>
     </div>
 
-    <!-- Surat List Table -->
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
+    <!-- Informasi Ringkas Plotting Pembimbing TA -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-graduate text-indigo-400"></i> Informasi Dosen Pembimbing TA Saya
+            </h3>
+            <a href="/mahasiswa/pengajuan-judul" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1">
+                Status Judul TA <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Pembimbing 1 -->
+            <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dosen Pembimbing 1 (Utama)</span>
+                    <h4 class="text-xs font-extrabold text-white">
+                        <%= (plotting && plotting.pembimbing_1_nama) ? plotting.pembimbing_1_nama : 'Belum Ditetapkan / Menunggu ACC Kaprodi' %>
+                    </h4>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm font-bold shrink-0">
+                    P1
+                </div>
+            </div>
+
+            <!-- Pembimbing 2 -->
+            <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dosen Pembimbing 2 (Pendamping)</span>
+                    <h4 class="text-xs font-extrabold text-white">
+                        <%= (plotting && plotting.pembimbing_2_nama) ? plotting.pembimbing_2_nama : 'Belum Ditetapkan / Menunggu ACC Kaprodi' %>
+                    </h4>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm font-bold shrink-0">
+                    P2
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ringkasan 3 Permohonan Surat Terbaru -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl space-y-0">
         <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="font-bold text-sm text-white">Riwayat & Status Disposisi Surat</h3>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> Pengajuan Surat Terbaru (Ringkasan)
+            </h3>
+            <a href="/mahasiswa/daftar-surat" class="px-3 py-1.5 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                Lihat Semua Surat & SK Saya <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
         </div>
 
         <% if (!listSurat || listSurat.length === 0) { %>
-            <div class="p-12 text-center text-slate-500">
-                <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
-                <p class="text-sm">Belum ada pengajuan surat. Klik tombol "Ajukan Surat Baru" untuk memulai.</p>
+            <div class="p-8 text-center text-slate-500">
+                <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+                <p class="text-xs font-bold text-slate-400">Belum ada permohonan surat diajukan.</p>
             </div>
         <% } else { %>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950/80 text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
                         <tr>
-                            <th class="px-6 py-3.5">Jenis Surat</th>
-                            <th class="px-6 py-3.5">Perihal</th>
-                            <th class="px-6 py-3.5">Tanggal Pengajuan</th>
-                            <th class="px-6 py-3.5">Status Disposisi</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="px-6 py-3">Jenis Surat</th>
+                            <th class="px-6 py-3">Perihal</th>
+                            <th class="px-6 py-3">Status Disposisi</th>
+                            <th class="px-6 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                        <% listSurat.forEach(surat => { %>
+                    <tbody class="divide-y divide-slate-800/60 font-medium">
+                        <% listSurat.slice(0, 3).forEach(surat => { %>
                             <tr class="hover:bg-slate-800/40 transition">
-                                <td class="px-6 py-4 font-semibold text-white">
-                                    <%= surat.nama_surat %>
-                                    <span class="block text-[10px] text-indigo-400 font-mono"><%= surat.kode_surat %></span>
+                                <td class="px-6 py-3.5">
+                                    <div class="font-bold text-white text-xs"><%= surat.nama_surat %></div>
+                                    <span class="text-[10px] text-indigo-400 font-mono"><%= surat.kode_surat %></span>
                                 </td>
-                                <td class="px-6 py-4 text-slate-300"><%= surat.perihal %></td>
-                                <td class="px-6 py-4 text-slate-400 text-xs"><%= surat.tgl_pengajuan %></td>
-                                <td class="px-6 py-4">
-                                    <% if (surat.status === 'pending_pembimbing_1') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                            <i class="fa-solid fa-clock"></i> Review Pembimbing 1
+                                <td class="px-6 py-3.5 text-slate-300 max-w-xs truncate"><%= surat.perihal %></td>
+                                <td class="px-6 py-3.5">
+                                    <% if (surat.status === 'selesai' || surat.status === 'approved') { %>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            <i class="fa-solid fa-circle-check"></i> Selesai / Terbit
                                         </span>
-                                    <% } else if (surat.status === 'pending_pembimbing_2') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                            <i class="fa-solid fa-clock"></i> Review Pembimbing 2
-                                        </span>
-                                    <% } else if (surat.status === 'pending_sekprodi') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                            <i class="fa-solid fa-spinner fa-spin"></i> Validasi Sekprodi
-                                        </span>
-                                    <% } else if (surat.status === 'pending_kaprodi') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                            <i class="fa-solid fa-stamp"></i> Otorisasi Kaprodi
-                                        </span>
-                                    <% } else if (surat.status === 'pending_tu') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                                            <i class="fa-solid fa-file-signature"></i> Penomoran TU
-                                        </span>
-                                    <% } else if (surat.status === 'selesai') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            <i class="fa-solid fa-check-circle"></i> Selesai
-                                        </span>
-                                    <% } else if (surat.status === 'revisi') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                                            <i class="fa-solid fa-pen"></i> Revisi
+                                    <% } else if (surat.status === 'ditolak') { %>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                            <i class="fa-solid fa-circle-xmark"></i> Ditolak
                                         </span>
                                     <% } else { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                                            <i class="fa-solid fa-circle-xmark"></i> Ditolak
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            <i class="fa-solid fa-spinner fa-spin"></i> Dalam Proses
                                         </span>
                                     <% } %>
                                 </td>
-                                <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
-                                    <button onclick="openPdfPreview('<%= surat.id %>', '<%= surat.nama_surat %>')" class="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
-                                        <i class="fa-solid fa-file-pdf"></i> Preview
-                                    </button>
-                                    <a href="/mahasiswa/surat/<%= surat.id %>" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-medium transition">
-                                        <i class="fa-solid fa-eye mr-1"></i> Detail
-                                    </a>
+                                <td class="px-6 py-3.5 text-right">
+                                    <% if (surat.status === 'selesai' || surat.status === 'approved') { %>
+                                        <a href="/surat/preview/<%= surat.id %>" target="_blank" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-extrabold transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-file-pdf"></i> Lihat PDF
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/mahasiswa/daftar-surat" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-eye"></i> Detail
+                                        </a>
+                                    <% } %>
                                 </td>
                             </tr>
                         <% }); %>
@@ -131,33 +170,3 @@
         <% } %>
     </div>
 </div>
-
-<!-- Modal PDF Preview Interaktif -->
-<div id="pdf-preview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-4xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-file-pdf text-amber-400 text-lg"></i>
-                <h3 id="pdf-modal-title" class="font-extrabold text-sm">Preview Dokumen Surat PDF</h3>
-            </div>
-            <button onclick="closePdfPreview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition">
-                <i class="fa-solid fa-xmark mr-1"></i> Tutup Preview
-            </button>
-        </div>
-        <div class="flex-1 bg-slate-100 relative">
-            <iframe id="pdf-preview-iframe" class="w-full h-full border-0" src=""></iframe>
-        </div>
-    </div>
-</div>
-
-<script>
-    function openPdfPreview(suratId, title) {
-        document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
-        document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
-        document.getElementById('pdf-preview-modal').classList.remove('hidden');
-    }
-    function closePdfPreview() {
-        document.getElementById('pdf-preview-modal').classList.add('hidden');
-        document.getElementById('pdf-preview-iframe').src = '';
-    }
-</script>

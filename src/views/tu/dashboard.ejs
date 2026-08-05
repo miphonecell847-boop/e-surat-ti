@@ -1,57 +1,190 @@
+<%
+    const cAllSurat = typeof allSuratCount !== 'undefined' ? allSuratCount : 0;
+    const cPending = typeof pendingCount !== 'undefined' ? pendingCount : 0;
+    const cCompleted = typeof completedCount !== 'undefined' ? completedCount : 0;
+    const cPendingJudul = typeof pendingJudulCount !== 'undefined' ? pendingJudulCount : 0;
+    const listSurat = typeof allSurat !== 'undefined' && allSurat ? allSurat : [];
+    const listJudul = typeof allJudul !== 'undefined' && allJudul ? allJudul : [];
+%>
+
 <div class="space-y-6">
-    <div class="bg-gradient-to-r from-blue-900/40 via-slate-900 to-slate-900 border border-blue-500/20 rounded-3xl p-6 shadow-xl flex items-center justify-between">
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border border-blue-500/20 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl font-bold text-white mb-1">Dashboard Penomoran & Output PDF (Staff TU)</h2>
-            <p class="text-xs text-slate-400">Penerbitan Nomor Surat Resmi Instansi, Pengoperasian PDF Engine, & Auto Archiving ke Google Drive.</p>
+            <h2 class="text-xl font-extrabold text-white mb-1">Dashboard Pusat Layanan Tata Usaha (Staff TU) 🏛️</h2>
+            <p class="text-xs text-slate-400">Ringkasan Informasi Layanan Administrasi Tugas Akhir, Validasi Judul, & Penerbitan Surat Resmi.</p>
         </div>
-        <div class="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-400 text-xs font-semibold">
-            <i class="fa-solid fa-file-invoice mr-1"></i> Mode Staff Tata Usaha
+        <div class="flex items-center gap-2">
+            <a href="/tu/buat-surat" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-blue-600/30 flex items-center gap-2">
+                <i class="fa-solid fa-plus text-amber-300"></i> Buat Surat Baru
+            </a>
+            <a href="/tu/daftar-surat" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-extrabold transition flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-cyan-400"></i> Kelola Permohonan
+            </a>
         </div>
     </div>
 
-    <!-- Table Pending TU -->
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="font-bold text-sm text-white">Surat Menunggu Penomoran Resmi & Penerbitan PDF</h3>
+    <!-- Summary Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Permohonan Surat</span>
+                <h3 class="text-2xl font-black text-slate-900 mt-1"><%= cAllSurat %></h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-folder-closed"></i>
+            </div>
         </div>
 
-        <% if (!pendingSurat || pendingSurat.length === 0) { %>
-            <div class="p-12 text-center text-slate-500">
-                <i class="fa-solid fa-file-circle-check text-4xl text-blue-400/40 mb-3"></i>
-                <p class="text-sm">Tidak ada antrean penomoran surat saat ini.</p>
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">Surat Perlu ACC / Penomoran</span>
+                <h3 class="text-2xl font-black text-amber-600 mt-1"><%= cPending %></h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">Surat Selesai (PDF Ready)</span>
+                <h3 class="text-2xl font-black text-emerald-600 mt-1"><%= cCompleted %></h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">Judul Perlu Validasi</span>
+                <h3 class="text-2xl font-black text-purple-600 mt-1"><%= cPendingJudul %></h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table 1: Permohonan Surat Masuk (Paginasi 5 Data Per Halaman) -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-blue-600"></i> Tabel Permohonan Surat Masuk (Database)
+            </h3>
+            <span class="text-xs font-bold text-slate-500"><%= listSurat.length %> Total Data</span>
+        </div>
+
+        <% if (!listSurat || listSurat.length === 0) { %>
+            <div class="p-8 text-center text-slate-400 text-xs">
+                <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300"></i>
+                <p>Belum ada permohonan surat masuk di basis data.</p>
             </div>
         <% } else { %>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                <table data-paginate data-per-page="5" class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-3.5">Mahasiswa</th>
-                            <th class="px-6 py-3.5">Jenis Surat</th>
-                            <th class="px-6 py-3.5">Perihal</th>
-                            <th class="px-6 py-3.5">Status E-Signature</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="p-3">Mahasiswa Pemohon</th>
+                            <th class="p-3">Jenis Surat & Kode</th>
+                            <th class="p-3">Perihal / Topik</th>
+                            <th class="p-3">Nomor Surat</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Aksi Cepat</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                        <% pendingSurat.forEach(surat => { %>
-                            <tr class="hover:bg-slate-800/40 transition">
-                                <td class="px-6 py-4">
-                                    <span class="font-bold text-white block"><%= surat.mhs_nama %></span>
-                                    <span class="text-xs text-indigo-400 font-mono">NIM: <%= surat.mhs_nim %></span>
+                    <tbody class="divide-y divide-slate-200 font-medium">
+                        <% listSurat.forEach(s => { %>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3">
+                                    <p class="font-extrabold text-slate-900"><%= s.mhs_nama %></p>
+                                    <p class="text-blue-600 font-mono text-[10px] font-bold">NIM: <%= s.mhs_nim %></p>
                                 </td>
-                                <td class="px-6 py-4 font-semibold text-white">
-                                    <%= surat.nama_surat %>
-                                    <span class="block text-[10px] text-slate-400 font-mono"><%= surat.kode_surat %></span>
+                                <td class="p-3 font-semibold text-slate-900">
+                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px] font-bold"><%= s.kode_surat %></span>
+                                    <p class="mt-0.5 text-[11px] font-bold text-slate-800"><%= s.nama_surat %></p>
                                 </td>
-                                <td class="px-6 py-4 text-slate-300"><%= surat.perihal %></td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                        <i class="fa-solid fa-stamp"></i> QR Verified
-                                    </span>
+                                <td class="p-3 text-slate-700 max-w-xs"><%= s.perihal %></td>
+                                <td class="p-3 font-mono text-xs font-bold text-slate-800">
+                                    <%= s.nomor_surat ? s.nomor_surat : '-' %>
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <a href="/tu/penomoran/<%= surat.id %>" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-600/20">
-                                        <i class="fa-solid fa-file-pdf mr-1"></i> Input Nomor & Terbitkan PDF
+                                <td class="p-3">
+                                    <% if (s.status === 'selesai') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-extrabold">Selesai (PDF)</span>
+                                    <% } else if (s.status === 'pending_tu') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold">Perlu ACC</span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold"><%= s.status.toUpperCase() %></span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="/tu/daftar-surat" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px] transition">
+                                            Kelola
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Table 2: Pengajuan Judul TA (Paginasi 5 Data Per Halaman) -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-purple-600"></i> Tabel Pengajuan Judul TA Mahasiswa (Database)
+            </h3>
+            <span class="text-xs font-bold text-slate-500"><%= listJudul.length %> Total Data</span>
+        </div>
+
+        <% if (!listJudul || listJudul.length === 0) { %>
+            <div class="p-8 text-center text-slate-400 text-xs">
+                <i class="fa-solid fa-circle-check text-3xl mb-2 text-emerald-300"></i>
+                <p>Belum ada pengajuan judul TA di basis data.</p>
+            </div>
+        <% } else { %>
+            <div class="overflow-x-auto">
+                <table data-paginate data-per-page="5" class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Mahasiswa</th>
+                            <th class="p-3">Judul Tugas Akhir / Skripsi</th>
+                            <th class="p-3">Dosen Pembimbing Usulan</th>
+                            <th class="p-3">Status Validasi</th>
+                            <th class="p-3 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 font-medium">
+                        <% listJudul.forEach(j => { %>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3">
+                                    <p class="font-extrabold text-slate-900"><%= j.mhs_nama %></p>
+                                    <p class="text-purple-600 font-mono text-[10px] font-bold">NIM: <%= j.nim || j.mhs_nim %></p>
+                                </td>
+                                <td class="p-3 font-semibold text-slate-900 max-w-sm">
+                                    <p class="line-clamp-2">"<%= j.judul_ta %>"</p>
+                                </td>
+                                <td class="p-3 text-slate-600">
+                                    <p class="text-[11px] font-bold">1. <%= j.pembimbing_1_nama || '-' %></p>
+                                    <p class="text-[11px] text-slate-500">2. <%= j.pembimbing_2_nama || '-' %></p>
+                                </td>
+                                <td class="p-3">
+                                    <% if (j.status === 'diterima') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-extrabold">Disetujui</span>
+                                    <% } else if (j.status === 'pending_tu' || j.status === 'menunggu_verifikasi') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold">Perlu Validasi</span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold uppercase"><%= j.status %></span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <a href="/tu/verifikasi-judul" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-extrabold transition">
+                                        Detail Validasi
                                     </a>
                                 </td>
                             </tr>

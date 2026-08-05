@@ -52,7 +52,7 @@ class PublicVerifyController {
             }
 
             const mhs = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
-            const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Dr. Eng. Nama Kaprodi, M.T.', nip_nidn: '198501012010121001' };
+            const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Prof. Dr. RASMUIN, S.Pd., M.Pd.', nip_nidn: '196812311994031012' };
             const verifyUrl = `${appConfig.baseUrl}/verify-doc/${pengajuan.uuid_surat}`;
 
             const pdfBuffer = await PdfGeneratorService.generateSuratPdf({

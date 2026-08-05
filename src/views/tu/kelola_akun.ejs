@@ -3,10 +3,10 @@
     <div class="bg-slate-900 rounded-2xl p-6 border border-slate-800 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-2">
-                <i class="fa-solid fa-user-shield"></i> Otoritas Staff TU Kampus
+                <i class="fa-solid fa-user-shield"></i> Otoritas Administrator System
             </span>
             <h1 class="text-2xl font-extrabold tracking-tight text-white">Manajemen & Validasi Akun Pengguna</h1>
-            <p class="text-sm text-slate-400 mt-1">Validasi pendaftaran mandiri mahasiswa serta pembuatan akun Dosen & Mahasiswa baru oleh Staff TU.</p>
+            <p class="text-sm text-slate-400 mt-1">Kelola data Dosen & Mahasiswa, validasi registrasi mandiri, pencarian cepat, serta pengeditan profil pengguna.</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/tu/dashboard" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold text-sm transition flex items-center gap-2">
@@ -30,7 +30,13 @@
         </div>
     <% } %>
 
-    <!-- Summary Cards -->
+    <% 
+      const filteredUsers = allUsers.filter(u => u.role === 'mahasiswa' || u.role === 'dosen');
+      const countMhs = filteredUsers.filter(u => u.role === 'mahasiswa' && (u.status === 'active' || u.is_active === 1)).length;
+      const countDosen = filteredUsers.filter(u => u.role === 'dosen').length;
+    %>
+
+    <!-- Summary Cards (Hanya Mahasiswa & Dosen) -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0">
@@ -48,7 +54,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mahasiswa Aktif</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= allUsers.filter(u => u.role === 'mahasiswa' && u.status === 'active').length %></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= countMhs %></h3>
             </div>
         </div>
 
@@ -58,7 +64,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dosen Pengajar</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= allUsers.filter(u => u.role === 'dosen' || u.role === 'kaprodi' || u.role === 'sekretaris_prodi').length %></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= countDosen %></h3>
             </div>
         </div>
 
@@ -68,7 +74,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pengguna</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= allUsers.length %></h3>
+                <h3 class="text-2xl font-extrabold text-slate-900 mt-0.5"><%= filteredUsers.length %></h3>
             </div>
         </div>
     </div>
@@ -82,7 +88,7 @@
                 </div>
                 <div>
                     <h2 class="font-extrabold text-slate-900">Permohonan Registrasi Mandiri Mahasiswa</h2>
-                    <p class="text-xs text-slate-500">Mahasiswa yang telah mendaftar mandiri di web kampus memerlukan validasi Staff TU untuk dapat login.</p>
+                    <p class="text-xs text-slate-500">Mahasiswa yang telah mendaftar mandiri di web kampus memerlukan validasi Admin/TU untuk dapat login.</p>
                 </div>
             </div>
             <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
@@ -94,7 +100,7 @@
             <div class="p-8 text-center">
                 <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-3"></i>
                 <p class="text-sm font-bold text-slate-700">Tidak ada permohonan registrasi yang pending.</p>
-                <p class="text-xs text-slate-500 mt-1">Semua pendaftaran mahasiswa telah diproses dan divalidasi oleh Staff TU.</p>
+                <p class="text-xs text-slate-500 mt-1">Semua pendaftaran mahasiswa telah diproses dan divalidasi oleh Administrator.</p>
             </div>
         <% } else { %>
             <div class="overflow-x-auto">
@@ -154,25 +160,25 @@
                     <i class="fa-solid fa-user-plus"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-900">Buat Akun Dosen Baru</h3>
-                    <p class="text-xs text-slate-500">Akun Dosen yang dibuat Staff TU akan langsung aktif.</p>
+                    <h3 class="font-extrabold text-slate-900">Tambah Akun Dosen Baru</h3>
+                    <p class="text-xs text-slate-500">Akun Dosen baru akan langsung aktif secara otomatis.</p>
                 </div>
             </div>
 
             <form action="/tu/buat-akun-dosen" method="POST" class="space-y-3">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">NIP / NIDN Dosen *</label>
-                    <input type="text" name="nip_nidn" required placeholder="Contoh: 198501012010121001" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <input type="text" name="nip_nidn" required placeholder="Contoh: 0724027801" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
-                    <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Ir. Budi Santoso, M.T." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <input type="text" name="nama_dosen" required placeholder="Contoh: Ir. MOH. ARIF SURYAWAN, S.Kom., M.T." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Jabatan Dosen</label>
-                    <input type="text" name="jabatan" placeholder="Contoh: Lektor / Dosen Pengajar" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Email Dosen *</label>
+                    <input type="email" name="email" required placeholder="dosen@unidayan.ac.id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -181,14 +187,9 @@
                         <input type="text" name="username" required placeholder="Username" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
-                        <input type="email" name="email" required placeholder="dosen@univ.ac.id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Password Initial *</label>
+                        <input type="password" name="password" required value="123456" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Password Initial *</label>
-                    <input type="password" name="password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
 
                 <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 mt-2">
@@ -204,8 +205,8 @@
                     <i class="fa-solid fa-user-graduate"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-900">Buat Akun Mahasiswa Baru</h3>
-                    <p class="text-xs text-slate-500">Buat akun mahasiswa secara langsung tanpa pendaftaran mandiri.</p>
+                    <h3 class="font-extrabold text-slate-900">Tambah Akun Mahasiswa Baru</h3>
+                    <p class="text-xs text-slate-500">Buat akun mahasiswa langsung aktif tanpa registrasi mandiri.</p>
                 </div>
             </div>
 
@@ -217,7 +218,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Angkatan *</label>
-                        <input type="number" name="angkatan" required value="2021" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="number" name="angkatan" required value="2022" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                 </div>
 
@@ -238,13 +239,13 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
-                        <input type="email" name="email" required placeholder="mhs@univ.ac.id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="email" name="email" required placeholder="mhs@unidayan.ac.id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Password Initial *</label>
-                    <input type="password" name="password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="password" name="password" required value="123456" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
                 <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 mt-2">
@@ -254,87 +255,302 @@
         </div>
     </div>
 
-    <!-- Section 3: Daftar Seluruh Pengguna Sistem -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+    <!-- Section 3: Daftar Seluruh Pengguna (Mahasiswa & Dosen) dengan Pencarian & Filter & PAGINATION -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center text-sm font-bold">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-base font-bold shadow-sm">
                     <i class="fa-solid fa-address-book"></i>
                 </div>
                 <div>
-                    <h2 class="font-extrabold text-slate-900">Daftar Seluruh Pengguna Sistem E-Surat</h2>
-                    <p class="text-xs text-slate-500">Kelola akun aktif, status perizinan, dan penghapusan pengguna.</p>
+                    <h2 class="font-extrabold text-base text-slate-900">Daftar Pengguna Sistem (Mahasiswa & Dosen)</h2>
+                    <p class="text-xs text-slate-500">Gunakan pencarian, filter role, dan halaman per-10 data untuk mengelola pengguna.</p>
                 </div>
             </div>
-            <span class="text-xs font-bold text-slate-500"><%= allUsers.length %> Pengguna Terdaftar</span>
+            <span class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200">
+                Total <%= filteredUsers.length %> Pengguna (Dosen & Mahasiswa)
+            </span>
         </div>
 
+        <!-- Filter & Search Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="md:col-span-2 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="userSearchInput" onkeyup="filterUserTable(1)" placeholder="Cari berdasarkan Nama, NIM/NIP, Username, atau Email..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-600 transition">
+            </div>
+
+            <div>
+                <select id="userRoleFilter" onchange="filterUserTable(1)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-600 transition">
+                    <option value="all">-- Semua Role (Mahasiswa & Dosen) --</option>
+                    <option value="mahasiswa">Mahasiswa</option>
+                    <option value="dosen">Dosen Pengajar</option>
+                    <option value="pending">Pending Validasi</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- User Data Table -->
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table id="user-table" class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                        <th class="p-4">Pengguna & Role</th>
-                        <th class="p-4">Identitas / Profil</th>
-                        <th class="p-4">Email</th>
-                        <th class="p-4 text-center">Status Akun</th>
-                        <th class="p-4 text-center">Opsi</th>
+                    <tr class="bg-slate-100/80 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        <th class="p-3.5">Identitas & User</th>
+                        <th class="p-3.5">NIM / NIP-NIDN</th>
+                        <th class="p-3.5">Nama Lengkap & Gelar</th>
+                        <th class="p-3.5">Email / Kontak</th>
+                        <th class="p-3.5 text-center">Status Akun</th>
+                        <th class="p-3.5 text-center">Aksi Administrasi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 text-sm">
-                    <% allUsers.forEach(u => { %>
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-4">
-                                <div class="font-bold text-slate-900"><%= u.username %></div>
+                <tbody id="user-table-body" class="divide-y divide-slate-100 text-xs">
+                    <% filteredUsers.forEach(u => { 
+                        const nama = u.profile ? (u.profile.nama_lengkap || u.profile.nama_dosen || u.username) : u.username;
+                        const nomor = u.profile ? (u.profile.nim || u.profile.nip_nidn || '-') : '-';
+                    %>
+                        <tr class="user-row hover:bg-slate-50 transition" 
+                            data-role="<%= u.role %>"
+                            data-status="<%= u.status || 'active' %>"
+                            data-search="<%= (nama + ' ' + nomor + ' ' + u.username + ' ' + u.email).toLowerCase() %>">
+                            <td class="p-3.5">
+                                <div class="font-bold text-slate-900 text-xs mb-0.5">@<%= u.username %></div>
                                 <% if (u.role === 'mahasiswa') { %>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Mahasiswa</span>
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Mahasiswa</span>
                                 <% } else if (u.role === 'dosen') { %>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Dosen Pengajar</span>
-                                <% } else if (u.role === 'sekretaris_prodi') { %>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800">Sekretaris Prodi</span>
-                                <% } else if (u.role === 'kaprodi') { %>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">Ketua Prodi</span>
-                                <% } else if (u.role === 'staff_tu') { %>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Staff TU</span>
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Dosen Pengajar</span>
                                 <% } %>
                             </td>
-                            <td class="p-4">
-                                <% if (u.profile && u.profile.nama_lengkap) { %>
-                                    <div class="font-semibold text-slate-800"><%= u.profile.nama_lengkap %></div>
-                                    <div class="text-xs text-slate-500 font-mono">NIM: <%= u.profile.nim %> (Angkatan <%= u.profile.angkatan %>)</div>
-                                <% } else if (u.profile && u.profile.nama_dosen) { %>
-                                    <div class="font-semibold text-slate-800"><%= u.profile.nama_dosen %></div>
-                                    <div class="text-xs text-slate-500 font-mono">NIP/NIDN: <%= u.profile.nip_nidn %></div>
-                                <% } else { %>
-                                    <span class="text-xs text-slate-400 font-italic">Staf Administrasi System</span>
-                                <% } %>
+                            <td class="p-3.5 font-mono font-bold text-slate-800 whitespace-nowrap">
+                                <%= nomor %>
                             </td>
-                            <td class="p-4 text-xs font-mono text-slate-700"><%= u.email %></td>
-                            <td class="p-4 text-center">
+                            <td class="p-3.5 font-bold text-slate-900">
+                                <%= nama %>
+                            </td>
+                            <td class="p-3.5 font-mono text-slate-600">
+                                <%= u.email %>
+                            </td>
+                            <td class="p-3.5 text-center whitespace-nowrap">
                                 <% if (u.status === 'active' || u.is_active === 1) { %>
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                        <i class="fa-solid fa-circle-check"></i> Aktif
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <i class="fa-solid fa-circle-check text-emerald-600"></i> Aktif
                                     </span>
                                 <% } else { %>
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
-                                        <i class="fa-solid fa-clock"></i> Pending Validasi
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                                        <i class="fa-solid fa-clock text-amber-600"></i> Pending
                                     </span>
                                 <% } %>
                             </td>
-                            <td class="p-4 text-center">
-                                <% if (u.id !== user.id) { %>
-                                    <form action="/tu/hapus-user/<%= u.id %>" method="POST" onsubmit="return confirm('Yakin ingin menghapus akun ini secara permanen?');">
-                                        <button type="submit" title="Hapus Akun" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition">
-                                            <i class="fa-solid fa-trash-can"></i>
+                            <td class="p-3.5 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <!-- Edit Button -->
+                                    <button type="button" 
+                                        data-id="<%= u.id %>"
+                                        data-username="<%= u.username %>"
+                                        data-email="<%= u.email %>"
+                                        data-role="<%= u.role %>"
+                                        data-status="<%= u.status || 'active' %>"
+                                        data-nama="<%= nama %>"
+                                        data-nomor="<%= nomor %>"
+                                        onclick="openEditUserModal(this)"
+                                        class="px-2.5 py-1.5 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 font-bold rounded-lg text-[11px] transition inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <form action="/tu/hapus-user/<%= u.id %>" method="POST" onsubmit="return confirm('Yakin ingin menghapus akun <%= u.username %> ini secara permanen?');" class="inline">
+                                        <button type="submit" title="Hapus Akun" class="px-2.5 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold rounded-lg text-[11px] transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-trash-can"></i> Hapus
                                         </button>
                                     </form>
-                                <% } else { %>
-                                    <span class="text-xs text-slate-400 italic">Akun Anda</span>
-                                <% } %>
+                                </div>
                             </td>
                         </tr>
                     <% }) %>
                 </tbody>
             </table>
         </div>
+
+        <!-- PAGINATION CONTAINER CONTAINER -->
+        <div id="user-pagination-container"></div>
     </div>
 </div>
+
+<!-- MODAL EDIT USER INTERAKTIF -->
+<div id="edit-user-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-user-pen text-amber-500"></i> Edit Data Pengguna
+            </h3>
+            <button type="button" onclick="closeEditUserModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="edit-user-form" action="" method="POST" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
+                <input type="text" id="edit-nama" name="nama" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">NIM / NIDN *</label>
+                    <input type="text" id="edit-nomor" name="nomor_identitas" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Username Login *</label>
+                    <input type="text" id="edit-username" name="username" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Email Pengguna *</label>
+                <input type="email" id="edit-email" name="email" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Role Pengguna *</label>
+                    <select id="edit-role" name="role" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="mahasiswa">Mahasiswa</option>
+                        <option value="dosen">Dosen Pengajar</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Status Akun *</label>
+                    <select id="edit-status" name="status" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="active">Aktif</option>
+                        <option value="pending_approval">Pending Validasi</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Password Baru (Opsional)</label>
+                <input type="password" name="password" placeholder="Biarkan kosong jika tidak mengubah password" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeEditUserModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow transition">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const perPage = 5;
+
+    function filterUserTable(page = 1) {
+        currentPage = page;
+        const query = document.getElementById('userSearchInput').value.toLowerCase().trim();
+        const role = document.getElementById('userRoleFilter').value;
+        const rows = Array.from(document.querySelectorAll('.user-row'));
+
+        const visibleRows = rows.filter(row => {
+            const rowRole = row.getAttribute('data-role');
+            const rowStatus = row.getAttribute('data-status');
+            const searchData = row.getAttribute('data-search');
+
+            let matchesSearch = !query || searchData.includes(query);
+            let matchesRole = true;
+
+            if (role === 'mahasiswa') matchesRole = (rowRole === 'mahasiswa');
+            else if (role === 'dosen') matchesRole = (rowRole === 'dosen');
+            else if (role === 'pending') matchesRole = (rowStatus === 'pending_approval');
+
+            return matchesSearch && matchesRole;
+        });
+
+        // Hide all rows initially
+        rows.forEach(r => r.style.display = 'none');
+
+        const totalItems = visibleRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIdx = (currentPage - 1) * perPage;
+        const endIdx = startIdx + perPage;
+
+        const pageRows = visibleRows.slice(startIdx, endIdx);
+        pageRows.forEach(r => r.style.display = '');
+
+        renderUserPaginationUI(currentPage, totalPages, totalItems, startIdx, Math.min(endIdx, totalItems));
+    }
+
+    function renderUserPaginationUI(page, totalPages, totalItems, startIdx, endIdx) {
+        const container = document.getElementById('user-pagination-container');
+        if (!container) return;
+
+        if (totalItems === 0) {
+            container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 font-semibold">Tidak ada data pengguna ditemukan.</div>`;
+            return;
+        }
+
+        let pageBtns = '';
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === page) {
+                pageBtns += `<button type="button" onclick="filterUserTable(${i})" class="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold text-xs shadow-sm">${i}</button>`;
+            } else {
+                pageBtns += `<button type="button" onclick="filterUserTable(${i})" class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">${i}</button>`;
+            }
+        }
+
+        const prevDisabled = page === 1;
+        const nextDisabled = page === totalPages;
+
+        container.innerHTML = `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 bg-slate-50/50">
+                <div class="text-xs text-slate-500 font-medium">
+                    Menampilkan <span class="font-bold text-slate-800">${startIdx + 1}</span> - <span class="font-bold text-slate-800">${endIdx}</span> dari <span class="font-bold text-slate-900">${totalItems}</span> pengguna
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="filterUserTable(${page - 1})" ${prevDisabled ? 'disabled class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-bold text-xs cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition shadow-sm"'}>
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                    </button>
+                    <div class="flex items-center gap-1">${pageBtns}</div>
+                    <button type="button" onclick="filterUserTable(${page + 1})" ${nextDisabled ? 'disabled class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-bold text-xs cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition shadow-sm"'}>
+                        Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function openEditUserModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const username = btn.getAttribute('data-username');
+        const email = btn.getAttribute('data-email');
+        const role = btn.getAttribute('data-role');
+        const status = btn.getAttribute('data-status');
+        const nama = btn.getAttribute('data-nama');
+        const nomor = btn.getAttribute('data-nomor');
+
+        document.getElementById('edit-user-form').action = '/tu/edit-user/' + id;
+        document.getElementById('edit-username').value = username || '';
+        document.getElementById('edit-email').value = email || '';
+        document.getElementById('edit-role').value = role || 'mahasiswa';
+        document.getElementById('edit-status').value = status || 'active';
+        document.getElementById('edit-nama').value = nama || '';
+        document.getElementById('edit-nomor').value = nomor || '';
+
+        document.getElementById('edit-user-modal').classList.remove('hidden');
+    }
+
+    function closeEditUserModal() {
+        document.getElementById('edit-user-modal').classList.add('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        filterUserTable(1);
+    });
+</script>

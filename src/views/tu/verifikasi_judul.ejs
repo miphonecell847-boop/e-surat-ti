@@ -1,104 +1,299 @@
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto space-y-5">
+    <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Verifikasi Kelengkapan Administrasi Judul TA (Staff TU)</h2>
-            <p class="text-xs text-slate-500 mt-1">Periksa kelayakan administrasi mahasiswa sebelum diteruskan ke Sekretaris Prodi.</p>
+            <h2 class="text-xl font-extrabold text-slate-900">Validasi Judul TA & Plotting Dosen</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pilih judul disetujui dan plot Dosen Pembimbing & Penguji untuk mahasiswa.</p>
         </div>
-        <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+        <a href="/dashboard" class="px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
             <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
         </a>
     </div>
 
-    <% if (typeof success !== 'undefined' && success) { %>
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold">
-            <%= success %>
-        </div>
-    <% } %>
-
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
+    <!-- Minimalist Data Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
+            <table data-paginate class="w-full text-left text-xs">
+                <thead class="bg-slate-50 uppercase text-slate-500 font-extrabold border-b border-slate-200">
                     <tr>
-                        <th class="p-3">Mahasiswa</th>
-                        <th class="p-3">Judul Usulan TA</th>
-                        <th class="p-3">Usulan Pembimbing</th>
-                        <th class="p-3">Status Saat Ini</th>
-                        <th class="p-3">Aksi Verifikasi TU</th>
+                        <th class="p-3.5">Mahasiswa</th>
+                        <th class="p-3.5">Usulan Judul TA (3 Pilihan)</th>
+                        <th class="p-3.5">Status</th>
+                        <th class="p-3.5 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 font-medium">
-                    <% proposals.forEach(p => { %>
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3">
-                                <p class="font-bold text-slate-900"><%= p.mhs_nama %></p>
-                                <p class="text-slate-500 font-mono">NIM: <%= p.nim %></p>
-                            </td>
-                            <td class="p-3 font-semibold text-slate-800 max-w-md space-y-2">
-                                <!-- Judul 1 -->
-                                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs space-y-1">
-                                    <div class="font-extrabold text-blue-900 flex items-center gap-1.5">
-                                        <span class="px-1.5 py-0.5 bg-blue-700 text-white rounded text-[10px]">1</span>
-                                        <span><%= p.judul_1 || p.judul_ta %></span>
-                                    </div>
-                                    <% if (p.abstraksi_1 || p.abstrak_rumusan) { %>
-                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_1 || p.abstrak_rumusan %></p>
-                                    <% } %>
-                                </div>
-                                <!-- Judul 2 -->
-                                <% if (p.judul_2) { %>
-                                    <div class="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs space-y-1">
-                                        <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
-                                            <span class="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[10px]">2</span>
-                                            <span><%= p.judul_2 %></span>
-                                        </div>
-                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_2 %></p>
-                                    </div>
-                                <% } %>
-                                <!-- Judul 3 -->
-                                <% if (p.judul_3) { %>
-                                    <div class="p-2.5 bg-purple-50/80 border border-purple-200 rounded-xl text-xs space-y-1">
-                                        <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
-                                            <span class="px-1.5 py-0.5 bg-purple-700 text-white rounded text-[10px]">3</span>
-                                            <span><%= p.judul_3 %></span>
-                                        </div>
-                                        <p class="text-[11px] text-slate-600"><strong>Abstraksi:</strong> <%= p.abstraksi_3 %></p>
-                                    </div>
-                                <% } %>
-                            </td>
-                            <td class="p-3 text-slate-700 text-[11px]">
-                                <p>P1: <%= p.pembimbing_1_nama %></p>
-                                <p>P2: <%= p.pembimbing_2_nama %></p>
-                            </td>
-                            <td class="p-3">
-                                <% if (p.status === 'pending_tu') { %>
-                                    <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Pending TU</span>
-                                <% } else { %>
-                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold"><%= p.status.toUpperCase() %></span>
-                                <% } %>
-                            </td>
-                            <td class="p-3">
-                                <% if (p.status === 'pending_tu') { %>
-                                    <form action="/tu/verifikasi-judul" method="POST" class="space-y-2">
-                                        <input type="hidden" name="proposal_id" value="<%= p.id %>">
-                                        <input type="text" name="catatan_tu" placeholder="Catatan TU (opsional)" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs">
-                                        <div class="flex items-center gap-2">
-                                            <button type="submit" name="status_tu" value="setuju" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[10px]">
-                                                <i class="fa-solid fa-check mr-1"></i> Verifikasi Lolos
-                                            </button>
-                                            <button type="submit" name="status_tu" value="tolak" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-[10px]">
-                                                <i class="fa-solid fa-xmark mr-1"></i> Tolak
-                                            </button>
-                                        </div>
-                                    </form>
-                                <% } else { %>
-                                    <span class="text-slate-400 text-[11px] font-semibold">Telah Diverifikasi</span>
-                                <% } %>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    <% if (!proposals || proposals.length === 0) { %>
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-slate-400 font-bold">
+                                Belum ada pengajuan usulan judul TA dari mahasiswa.
                             </td>
                         </tr>
-                    <% }); %>
+                    <% } else { %>
+                        <% proposals.forEach(p => { %>
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <!-- Mahasiswa Info -->
+                                <td class="p-3.5 align-top">
+                                    <p class="font-extrabold text-slate-900"><%= p.mhs_nama %></p>
+                                    <p class="text-slate-500 font-mono text-[11px]">NIM: <%= p.nim %></p>
+                                </td>
+
+                                <!-- Usulan Judul Summary -->
+                                <td class="p-3.5 align-top max-w-md">
+                                    <div class="space-y-1">
+                                        <p class="text-slate-900 font-bold line-clamp-1">
+                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-extrabold mr-1">1</span>
+                                            <%= p.judul_1 || p.judul_ta %>
+                                        </p>
+                                        <% if (p.judul_2) { %>
+                                            <p class="text-slate-600 line-clamp-1 text-[11px]">
+                                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[10px] font-extrabold mr-1">2</span>
+                                                <%= p.judul_2 %>
+                                            </p>
+                                        <% } %>
+                                        <% if (p.judul_3) { %>
+                                            <p class="text-slate-600 line-clamp-1 text-[11px]">
+                                                <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-[10px] font-extrabold mr-1">3</span>
+                                                <%= p.judul_3 %>
+                                            </p>
+                                        <% } %>
+                                    </div>
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td class="p-3.5 align-top whitespace-nowrap">
+                                    <% if (p.status === 'diterima') { %>
+                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-extrabold inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-check text-emerald-500"></i> ACC Judul #<%= p.judul_disetujui_nomor || 1 %>
+                                        </span>
+                                    <% } else if (p.status === 'ditolak') { %>
+                                        <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-extrabold inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-xmark text-rose-500"></i> Ditolak
+                                        </span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-extrabold inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-clock text-amber-500"></i> Perlu Validasi
+                                        </span>
+                                    <% } %>
+                                </td>
+
+                                <!-- Action Button -->
+                                <td class="p-3.5 align-top text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button type="button" 
+                                            data-id="<%= p.id %>"
+                                            data-nama="<%= p.mhs_nama %>"
+                                            data-nim="<%= p.nim %>"
+                                            data-j1="<%= p.judul_1 || p.judul_ta %>"
+                                            data-j2="<%= p.judul_2 || '' %>"
+                                            data-j3="<%= p.judul_3 || '' %>"
+                                            data-num="<%= p.judul_disetujui_nomor || 1 %>"
+                                            data-p1="<%= p.dosen_pembimbing_1_id || '' %>"
+                                            data-p2="<%= p.dosen_pembimbing_2_id || '' %>"
+                                            data-catatan="<%= p.catatan_tu || '' %>"
+                                            data-status="<%= p.status %>"
+                                            onclick="openAccModal(this)"
+                                            class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1 shadow-sm">
+                                            <i class="fa-solid fa-pen-to-square"></i> ACC & Plotting
+                                        </button>
+
+                                        <form action="/tu/delete-judul/<%= p.id %>" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus permohonan usulan judul TA ini?');" class="inline">
+                                            <button type="submit" title="Hapus Usulan Judul" class="px-2.5 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-trash-can"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<!-- COMPACT ACC & PLOTTING MODAL -->
+<div id="acc-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-extrabold text-sm text-slate-900">Validasi & Plotting Dosen TA</h3>
+                <p id="modal-mhs-info" class="text-xs text-slate-500 font-medium mt-0.5">-</p>
+            </div>
+            <button type="button" onclick="closeAccModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form action="/tu/verifikasi-judul" method="POST" class="space-y-4 text-xs">
+            <input type="hidden" id="modal-proposal-id" name="proposal_id">
+
+            <!-- 1. Pilih Judul Di-ACC -->
+            <div>
+                <label class="block font-extrabold text-slate-800 uppercase tracking-wider mb-2">1. Pilih Judul yang Di-ACC *</label>
+                <div class="space-y-2">
+                    <label class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5 cursor-pointer hover:border-blue-500 transition">
+                        <input type="radio" id="rad-j1" name="judul_disetujui_nomor" value="1" class="mt-0.5 text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <span class="font-extrabold text-blue-900 block text-[11px]">Judul #1</span>
+                            <span id="modal-j1-text" class="text-slate-700 font-medium text-[11px] block">-</span>
+                        </div>
+                    </label>
+
+                    <label id="container-j2" class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5 cursor-pointer hover:border-emerald-500 transition">
+                        <input type="radio" id="rad-j2" name="judul_disetujui_nomor" value="2" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                        <div>
+                            <span class="font-extrabold text-emerald-900 block text-[11px]">Judul #2</span>
+                            <span id="modal-j2-text" class="text-slate-700 font-medium text-[11px] block">-</span>
+                        </div>
+                    </label>
+
+                    <label id="container-j3" class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5 cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" id="rad-j3" name="judul_disetujui_nomor" value="3" class="mt-0.5 text-purple-600 focus:ring-purple-500">
+                        <div>
+                            <span class="font-extrabold text-purple-900 block text-[11px]">Judul #3</span>
+                            <span id="modal-j3-text" class="text-slate-700 font-medium text-[11px] block">-</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. Plotting Dosen Pembimbing -->
+            <div>
+                <label class="block font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">2. Dosen Pembimbing *</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-500 mb-1">Pembimbing 1 (Utama)</label>
+                        <select id="modal-p1" name="dosen_pembimbing_1_id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Pembimbing 1 --</option>
+                            <% dosenList.forEach(d => { %>
+                                <option value="<%= d.id %>"><%= d.nama_dosen %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-slate-500 mb-1">Pembimbing 2 (Pendamping)</label>
+                        <select id="modal-p2" name="dosen_pembimbing_2_id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Pembimbing 2 --</option>
+                            <% dosenList.forEach(d => { %>
+                                <option value="<%= d.id %>"><%= d.nama_dosen %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Plotting Dosen Penguji -->
+            <div>
+                <label class="block font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">3. Dosen Penguji (Opsional)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-0.5">Penguji 1</label>
+                        <select name="dosen_penguji_1_id" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800">
+                            <option value="">-- Penguji 1 --</option>
+                            <% dosenList.forEach(d => { %>
+                                <option value="<%= d.id %>"><%= d.nama_dosen %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-0.5">Penguji 2</label>
+                        <select name="dosen_penguji_2_id" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800">
+                            <option value="">-- Penguji 2 --</option>
+                            <% dosenList.forEach(d => { %>
+                                <option value="<%= d.id %>"><%= d.nama_dosen %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-0.5">Penguji 3</label>
+                        <select name="dosen_penguji_3_id" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800">
+                            <option value="">-- Penguji 3 --</option>
+                            <% dosenList.forEach(d => { %>
+                                <option value="<%= d.id %>"><%= d.nama_dosen %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Decision & Notes -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-slate-100">
+                <div>
+                    <label class="block font-extrabold text-slate-800 uppercase tracking-wider mb-1">Status *</label>
+                    <select id="modal-status" name="status_tu" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900">
+                        <option value="setuju">ACC / Disetujui</option>
+                        <option value="tolak">Tolak / Perbaiki</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block font-extrabold text-slate-800 uppercase tracking-wider mb-1">Catatan</label>
+                    <input type="text" id="modal-catatan" name="catatan_tu" placeholder="Catatan verifikasi..."
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-2 pt-3">
+                <button type="button" onclick="closeAccModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-md transition">
+                    Simpan ACC & Plotting
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAccModal(btn) {
+    const ds = btn.dataset;
+    document.getElementById('modal-proposal-id').value = ds.id || '';
+    document.getElementById('modal-mhs-info').innerText = (ds.nama || '') + ' (NIM: ' + (ds.nim || '') + ')';
+    
+    document.getElementById('modal-j1-text').innerText = ds.j1 || '-';
+    
+    if (ds.j2) {
+        document.getElementById('modal-j2-text').innerText = ds.j2;
+        document.getElementById('container-j2').classList.remove('hidden');
+    } else {
+        document.getElementById('container-j2').classList.add('hidden');
+    }
+
+    if (ds.j3) {
+        document.getElementById('modal-j3-text').innerText = ds.j3;
+        document.getElementById('container-j3').classList.remove('hidden');
+    } else {
+        document.getElementById('container-j3').classList.add('hidden');
+    }
+
+    const num = ds.num || '1';
+    if (num === '3' && ds.j3) {
+        document.getElementById('rad-j3').checked = true;
+    } else if (num === '2' && ds.j2) {
+        document.getElementById('rad-j2').checked = true;
+    } else {
+        document.getElementById('rad-j1').checked = true;
+    }
+
+    if (ds.p1) document.getElementById('modal-p1').value = ds.p1;
+    if (ds.p2) document.getElementById('modal-p2').value = ds.p2;
+    if (ds.catatan) document.getElementById('modal-catatan').value = ds.catatan;
+    
+    if (ds.status === 'ditolak') {
+        document.getElementById('modal-status').value = 'tolak';
+    } else {
+        document.getElementById('modal-status').value = 'setuju';
+    }
+
+    document.getElementById('acc-modal').classList.remove('hidden');
+}
+
+function closeAccModal() {
+    document.getElementById('acc-modal').classList.add('hidden');
+}
+</script>

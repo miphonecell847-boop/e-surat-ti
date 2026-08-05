@@ -1,40 +1,30 @@
 <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Daftar Menu Surat Administrasi (Staff TU)</h2>
-            <p class="text-xs text-slate-500 mt-1">Kelola dan terbitkan surat permintaan administrasi Tugas Akhir untuk 10 jenis surat resmi.</p>
+            <h2 class="text-xl font-extrabold text-slate-900">Daftar Permohonan Surat & ACC Penomoran (Staff TU)</h2>
+            <p class="text-xs text-slate-500 mt-1">Kelola permohonan surat mahasiswa, berikan ACC nomor surat resmi, dan terbitkan PDF berkode QR.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="/tu/buat-surat" class="px-4 py-2.5 bg-blue-700 hover:bg-blue-600 text-white text-xs font-extrabold rounded-xl transition shadow-lg flex items-center gap-2">
-                <i class="fa-solid fa-plus text-amber-400"></i> Buat Surat Permintaan Baru
-            </a>
-            <a href="/dashboard" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openModalUploadKaprodi()" class="px-3.5 py-2.5 bg-purple-700 hover:bg-purple-600 text-white text-xs font-extrabold rounded-xl transition shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-amber-400"></i> <%= (typeof hasTtdKaprodi !== 'undefined' && hasTtdKaprodi) ? 'Perbaharui TTD Digital Kaprodi' : 'Unggah TTD Digital Kaprodi' %>
+            </button>
+            <button onclick="openModalUploadDekan()" class="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-xl transition shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-amber-400"></i> <%= (typeof hasTtdDekan !== 'undefined' && hasTtdDekan) ? 'Perbaharui TTD Digital Dekan' : 'Unggah TTD Digital Dekan' %>
+            </button>
+            <a href="/dashboard" class="px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition shadow-sm">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
             </a>
         </div>
     </div>
 
-    <% if (typeof success !== 'undefined' && success) { %>
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-base"></i>
-            <span><%= success %></span>
-        </div>
-    <% } %>
-
-    <% if (typeof error !== 'undefined' && error) { %>
-        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold flex items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-base"></i>
-            <span><%= error %></span>
-        </div>
-    <% } %>
-
-    <!-- Filter 10 Jenis Surat -->
+    <!-- Category & Status Filters -->
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
         <form action="/tu/daftar-surat" method="GET" class="flex flex-col sm:flex-row items-center gap-4">
             <div class="flex-1 w-full">
-                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Filter Kategori 10 Jenis Surat:</label>
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Filter Kategori Jenis Surat:</label>
                 <select name="jenis_surat_id" onchange="this.form.submit()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
-                    <option value="">-- Semua Jenis Surat (10 Kategori) --</option>
+                    <option value="">-- Semua Kategori Jenis Surat --</option>
                     <% jenisList.forEach(j => { %>
                         <option value="<%= j.id %>" <%= selectedJenis == j.id ? 'selected' : '' %>><%= j.nama_surat %> (<%= j.kode_surat %>)</option>
                     <% }); %>
@@ -46,74 +36,90 @@
         </form>
     </div>
 
-    <!-- Tabel Surat -->
+    <!-- Letter Table -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table data-paginate class="w-full text-left text-xs">
                 <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
                     <tr>
-                        <th class="p-3">Mahasiswa</th>
-                        <th class="p-3">Jenis Surat</th>
-                        <th class="p-3">Perihal</th>
-                        <th class="p-3">Diterbitkan Oleh</th>
-                        <th class="p-3">Status Surat</th>
-                        <th class="p-3">Aksi</th>
+                        <th class="p-3">Mahasiswa Pemohon</th>
+                        <th class="p-3">Jenis Surat & Kode</th>
+                        <th class="p-3">Perihal / Topik</th>
+                        <th class="p-3">Nomor Surat Resmi</th>
+                        <th class="p-3">Status Disposisi</th>
+                        <th class="p-3 text-right">Aksi Penomoran & PDF</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-medium">
                     <% if (suratList && suratList.length > 0) { %>
                         <% suratList.forEach(s => { %>
-                            <tr class="hover:bg-slate-50">
+                            <% if (s.kode_surat === 'KARTU-BIMBINGAN' || s.kode_surat === 'LMBR-PERSETUJUAN-WKT' || s.kode_surat === 'BA-UJIAN' || s.template_path === 'kartu_bimbingan' || s.template_path === 'lembar_persetujuan_waktu' || s.template_path === 'berita_acara_ujian') return; %>
+                            <tr class="hover:bg-slate-50 transition">
                                 <td class="p-3">
-                                    <p class="font-bold text-slate-900"><%= s.mhs_nama %></p>
-                                    <p class="text-slate-500 font-mono text-[10px]">NIM: <%= s.mhs_nim %></p>
+                                    <p class="font-extrabold text-slate-900"><%= s.mhs_nama %></p>
+                                    <p class="text-blue-600 font-mono text-[10px] font-bold">NIM: <%= s.mhs_nim %></p>
                                 </td>
-                                <td class="p-3 font-semibold text-blue-900">
-                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px]"><%= s.kode_surat %></span>
-                                    <p class="mt-0.5 text-[11px]"><%= s.nama_surat %></p>
+                                <td class="p-3 font-semibold text-slate-900">
+                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px] font-bold"><%= s.kode_surat %></span>
+                                    <p class="mt-0.5 text-[11px] font-bold text-slate-800"><%= s.nama_surat %></p>
                                 </td>
                                 <td class="p-3 text-slate-700 max-w-xs"><%= s.perihal %></td>
                                 <td class="p-3">
-                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold uppercase"><%= s.created_by_role || 'mahasiswa' %></span>
-                                </td>
-                                <td class="p-3">
-                                    <% if (s.status === 'pending_sekprodi') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Validasi Sekprodi</span>
-                                    <% } else if (s.status === 'pending_kaprodi') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">Otorisasi Kaprodi</span>
-                                    <% } else if (s.status === 'pending_tu') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Penomoran TU</span>
-                                    <% } else if (s.status === 'selesai') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">SELESAI (PDF Ready)</span>
+                                    <% if (s.nomor_surat) { %>
+                                        <span class="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded-md border border-slate-300 block w-fit"><%= s.nomor_surat %></span>
                                     <% } else { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold"><%= s.status.toUpperCase() %></span>
+                                        <span class="text-slate-400 italic text-[11px]">Belum Ada Nomor</span>
                                     <% } %>
                                 </td>
                                 <td class="p-3">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <button onclick="openPdfPreview('<%= s.id %>', '<%= s.nama_surat %>')" class="px-2.5 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-bold rounded-lg text-[10px] flex items-center gap-1">
-                                            <i class="fa-solid fa-file-pdf text-blue-600"></i> Preview
-                                        </button>
+                                    <% if (s.status === 'pending_tu') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold animate-pulse">
+                                            <i class="fa-solid fa-clock mr-1"></i> Perlu ACC & Nomor
+                                        </span>
+                                    <% } else if (s.status === 'selesai') { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-extrabold">
+                                            <i class="fa-solid fa-check-circle mr-1"></i> SELESAI (PDF Ready)
+                                        </span>
+                                    <% } else { %>
+                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold"><%= s.status.toUpperCase() %></span>
+                                    <% } %>
+                                </td>
+                                <td class="p-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                         
-                                        <% if ((s.created_by_role === 'mahasiswa' || !s.created_by_role) && (s.status === 'draft' || s.status === 'pending_pembimbing_1' || s.status === 'pending_pembimbing_2')) { %>
-                                            <a href="/tu/buat-surat?from_id=<%= s.id %>" title="Buat/Sesuaikan Surat dari Pengajuan Mahasiswa Ini" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold rounded-lg text-[10px] flex items-center gap-1 shadow-sm">
-                                                <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Buat dr Permintaan
-                                            </a>
+                                        <!-- Tombol ACC & Input Nomor Surat -->
+                                        <% if (s.status === 'pending_tu' || !s.nomor_surat) { %>
+                                            <button type="button"
+                                                data-id="<%= s.id %>"
+                                                data-nama="<%= s.mhs_nama %>"
+                                                data-nim="<%= s.mhs_nim %>"
+                                                data-jenis="<%= s.nama_surat %>"
+                                                data-nomor="<%= s.nomor_surat || '' %>"
+                                                onclick="handleOpenAccNomorModal(this)"
+                                                class="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-[11px] shadow-md shadow-emerald-600/20 flex items-center gap-1 transition transform hover:-translate-y-0.5">
+                                                <i class="fa-solid fa-file-signature text-amber-300"></i> ACC & Input Nomor
+                                            </button>
                                         <% } %>
 
-                                        <% if (s.status === 'pending_tu') { %>
-                                            <a href="/tu/penomoran/<%= s.id %>" class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-lg text-[10px]">
-                                                <i class="fa-solid fa-file-pen mr-1"></i> Penomoran
-                                            </a>
-                                        <% } %>
-
-                                        <a href="/tu/edit-surat/<%= s.id %>" title="Edit Data Surat" class="px-2 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg text-[10px]">
-                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        <a href="/surat/detail/<%= s.id %>" class="px-2.5 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-[10px] flex items-center gap-1">
+                                            <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Detail Status
                                         </a>
 
-                                        <form action="/tu/delete-surat/<%= s.id %>" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus surat ini? Action ini tidak dapat dibatalkan.');" class="inline">
-                                            <button type="submit" title="Hapus Surat" class="px-2 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg text-[10px]">
-                                                <i class="fa-solid fa-trash-can"></i> Hapus
+                                        <button type="button"
+                                            data-id="<%= s.id %>"
+                                            data-title="<%= s.nama_surat %>"
+                                            onclick="handleOpenPdfPreview(this)"
+                                            class="px-2.5 py-1.5 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[10px] flex items-center gap-1">
+                                            <i class="fa-solid fa-file-pdf text-rose-600"></i> Preview PDF
+                                        </button>
+
+                                        <a href="/tu/edit-surat/<%= s.id %>" title="Edit Data Surat" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px]">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+
+                                        <form action="/tu/delete-surat/<%= s.id %>" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus permohonan surat ini?');" class="inline">
+                                            <button type="submit" title="Hapus Surat" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-[10px]">
+                                                <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -122,12 +128,52 @@
                         <% }); %>
                     <% } else { %>
                         <tr>
-                            <td colspan="6" class="p-6 text-center text-slate-500 text-xs">Tidak ada surat ditemukan untuk kategori filter ini.</td>
+                            <td colspan="6" class="p-8 text-center text-slate-500 text-xs">Tidak ada surat ditemukan untuk kategori filter ini.</td>
                         </tr>
                     <% } %>
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- Modal ACC & Input Nomor Surat Interaktif -->
+<div id="acc-nomor-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl space-y-5 p-6 border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-file-signature text-sm"></i>
+                </div>
+                <h3 class="font-extrabold text-sm text-slate-900">ACC & Penomoran Surat Resmi</h3>
+            </div>
+            <button onclick="closeAccNomorModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xs p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="acc-nomor-form" action="" method="POST" class="space-y-4">
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                <p class="text-slate-500 font-medium">Mahasiswa Pemohon: <span id="modal-mhs-nama" class="font-bold text-slate-900"></span> (<span id="modal-mhs-nim" class="font-mono text-blue-600"></span>)</p>
+                <p class="text-slate-500 font-medium">Jenis Surat: <span id="modal-jenis-surat" class="font-extrabold text-blue-950"></span></p>
+            </div>
+
+            <div>
+                <label for="modal_nomor_surat" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">Nomor Surat Resmi *</label>
+                <input type="text" id="modal_nomor_surat" name="nomor_surat" required placeholder="Contoh: B/345/UN.1/TI/TA/2026"
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600 font-mono text-xs font-bold text-slate-900 transition">
+                <p class="text-[10px] text-slate-400 mt-1 italic">Sistem menyarankan format nomor standar di atas. Anda dapat menyesuaikannya.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeAccNomorModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-check-circle text-amber-300"></i> ACC & Terbitkan PDF Resmi
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -150,13 +196,109 @@
 </div>
 
 <script>
-    function openPdfPreview(suratId, title) {
+    function handleOpenAccNomorModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const namaMhs = btn.getAttribute('data-nama');
+        const nimMhs = btn.getAttribute('data-nim');
+        const jenisSurat = btn.getAttribute('data-jenis');
+        const existingNomor = btn.getAttribute('data-nomor');
+
+        document.getElementById('modal-mhs-nama').innerText = namaMhs;
+        document.getElementById('modal-mhs-nim').innerText = nimMhs;
+        document.getElementById('modal-jenis-surat').innerText = jenisSurat;
+        
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        document.getElementById('modal_nomor_surat').value = existingNomor || ('B/' + randomNum + '/UN.1/TI/TA/2026');
+        
+        document.getElementById('acc-nomor-form').action = '/tu/penomoran/' + id;
+        document.getElementById('acc-nomor-modal').classList.remove('hidden');
+    }
+
+    function closeAccNomorModal() {
+        document.getElementById('acc-nomor-modal').classList.add('hidden');
+    }
+
+    function handleOpenPdfPreview(btn) {
+        const suratId = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+
         document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
         document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;
         document.getElementById('pdf-preview-modal').classList.remove('hidden');
     }
+    
     function closePdfPreview() {
         document.getElementById('pdf-preview-modal').classList.add('hidden');
         document.getElementById('pdf-preview-iframe').src = '';
     }
+
+    function openModalUploadKaprodi() {
+        document.getElementById('modal-upload-kaprodi').classList.remove('hidden');
+    }
+    function closeModalUploadKaprodi() {
+        document.getElementById('modal-upload-kaprodi').classList.add('hidden');
+    }
+
+    function openModalUploadDekan() {
+        document.getElementById('modal-upload-dekan').classList.remove('hidden');
+    }
+    function closeModalUploadDekan() {
+        document.getElementById('modal-upload-dekan').classList.add('hidden');
+    }
 </script>
+
+<!-- Modal Upload TTD Digital Kaprodi -->
+<div id="modal-upload-kaprodi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-purple-600"></i> <%= (typeof hasTtdKaprodi !== 'undefined' && hasTtdKaprodi) ? 'Perbaharui TTD Digital Kaprodi' : 'Unggah TTD Digital Kaprodi' %>
+            </h3>
+            <button onclick="closeModalUploadKaprodi()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form action="/tu/upload-ttd-kaprodi" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <p class="text-xs text-slate-600">Unggah berkas spesimen tanda tangan digital Plt. Kaprodi (Prof. Dr. Rasmuin, S.Pd., M.Pd.) format PNG/JPG transparan.</p>
+
+            <div class="space-y-1.5">
+                <label class="block text-[11px] font-extrabold text-slate-700 uppercase">File Spesimen TTD Kaprodi:</label>
+                <input type="file" name="ttd_kaprodi" accept="image/png, image/jpeg" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-800 hover:file:bg-purple-200">
+            </div>
+
+            <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button type="button" onclick="closeModalUploadKaprodi()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-purple-700 hover:bg-purple-600 text-white text-xs font-extrabold rounded-xl shadow-md">Simpan Spesimen TTD Kaprodi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Upload TTD Digital Dekan -->
+<div id="modal-upload-dekan" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-emerald-600"></i> <%= (typeof hasTtdDekan !== 'undefined' && hasTtdDekan) ? 'Perbaharui TTD Digital Dekan' : 'Unggah TTD Digital Dekan' %>
+            </h3>
+            <button onclick="closeModalUploadDekan()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form action="/tu/upload-ttd-dekan" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <p class="text-xs text-slate-600">Unggah berkas spesimen tanda tangan digital Dekan (Ir. HILDA SULAIMAN NUR, S.T., M.T.) format PNG/JPG transparan.</p>
+
+            <div class="space-y-1.5">
+                <label class="block text-[11px] font-extrabold text-slate-700 uppercase">File Spesimen TTD Dekan:</label>
+                <input type="file" name="ttd_dekan" accept="image/png, image/jpeg" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+            </div>
+
+            <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button type="button" onclick="closeModalUploadDekan()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-xl shadow-md">Simpan Spesimen TTD Dekan</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -10,17 +10,28 @@
         </a>
     </div>
 
+    <!-- Alert Banners dengan Auto-Dismiss & Tombol Tutup -->
     <% if (typeof error !== 'undefined' && error) { %>
-        <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 text-xs flex items-center gap-3">
-            <i class="fa-solid fa-triangle-exclamation text-base"></i>
-            <span><%= error %></span>
+        <div id="alert-banner-error" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+                <span class="font-bold"><%= error %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-error')" class="text-rose-500 hover:text-rose-700 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
         </div>
     <% } %>
 
     <% if (typeof success !== 'undefined' && success) { %>
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center gap-3">
-            <i class="fa-solid fa-circle-check text-base"></i>
-            <span><%= success %></span>
+        <div id="alert-banner-success" class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center justify-between gap-3 shadow-sm transition-all duration-500">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-base shrink-0"></i>
+                <span class="font-bold"><%= success %></span>
+            </div>
+            <button type="button" onclick="dismissAlert('alert-banner-success')" class="text-emerald-600 hover:text-emerald-800 p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
         </div>
     <% } %>
 
@@ -123,34 +134,22 @@
             </div>
         </div>
 
-        <!-- Selection Usulan Pembimbing 1 & Pembimbing 2 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <div>
-                <label for="dosen_pembimbing_1_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Usulan Dosen Pembimbing 1 (Utama) *</label>
-                <select id="dosen_pembimbing_1_id" name="dosen_pembimbing_1_id" required
-                    class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
-                    <option value="" disabled selected>-- Pilih Dosen Pembimbing 1 --</option>
-                    <% dosenList.forEach(dosen => { %>
-                        <option value="<%= dosen.id %>"><%= dosen.nama_dosen %> (<%= dosen.jabatan || 'Dosen' %>)</option>
-                    <% }); %>
-                </select>
+        <!-- Informational Banner for Dosen Pembimbing Assignment -->
+        <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex items-start gap-3 text-xs text-blue-900 shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+                <i class="fa-solid fa-user-gear"></i>
             </div>
-
             <div>
-                <label for="dosen_pembimbing_2_id" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Usulan Dosen Pembimbing 2 (Pendamping) *</label>
-                <select id="dosen_pembimbing_2_id" name="dosen_pembimbing_2_id" required
-                    class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-xs font-bold text-slate-900">
-                    <option value="" disabled selected>-- Pilih Dosen Pembimbing 2 --</option>
-                    <% dosenList.forEach(dosen => { %>
-                        <option value="<%= dosen.id %>"><%= dosen.nama_dosen %> (<%= dosen.jabatan || 'Dosen' %>)</option>
-                    <% }); %>
-                </select>
+                <h4 class="font-extrabold text-blue-900 uppercase tracking-wider text-[11px]">Penetapan Dosen Pembimbing Oleh Program Studi</h4>
+                <p class="mt-1 font-medium leading-relaxed text-blue-800">
+                    Sesuai kebijakan akademik, Mahasiswa tidak memilih Dosen Pembimbing sendiri. Dosen Pembimbing Utama (Pembimbing I) dan Pendamping (Pembimbing II) akan ditentukan secara resmi oleh Kaprodi / Sekprodi / Admin setelah hasil verifikasi 3 usulan judul Anda disetujui.
+                </p>
             </div>
         </div>
 
         <!-- Berkas Proposal PDF -->
         <div>
-            <label for="file_proposal" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Draft Proposal Skripsi / Outine Penelitian (PDF)</label>
+            <label for="file_proposal" class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Upload Draft Proposal Skripsi / Outline Penelitian (PDF)</label>
             <div class="p-4 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center hover:border-blue-500 transition">
                 <input type="file" id="file_proposal" name="file_proposal" accept=".pdf" class="text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-700 file:text-white cursor-pointer">
             </div>
@@ -161,93 +160,222 @@
         </button>
     </form>
 
-    <!-- Riwayat Pengajuan Judul -->
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4">
-        <h3 class="text-sm font-black text-slate-900 border-b border-slate-200 pb-3 flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> Riwayat Status Pengajuan Judul Saya
-        </h3>
+    <!-- Riwayat Status Pengajuan Judul (Tampilan Sistematis & Timeline) -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-bold shadow-sm">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Riwayat Status Pengajuan Judul Saya</h3>
+                    <p class="text-xs text-slate-500">Pantau proses pemeriksaan dan persetujuan 3 usulan judul Tugas Akhir Anda.</p>
+                </div>
+            </div>
+            <% if (listJudul && listJudul.length > 0) { %>
+                <span class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200">
+                    Total <%= listJudul.length %> Pengajuan
+                </span>
+            <% } %>
+        </div>
 
         <% if (listJudul && listJudul.length > 0) { %>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-100 uppercase text-slate-500 font-extrabold border-b border-slate-200">
-                        <tr>
-                            <th class="p-3">Judul TA</th>
-                            <th class="p-3">Usulan Pembimbing</th>
-                            <th class="p-3">Status Verifikasi</th>
-                            <th class="p-3">Kesediaan Dosen</th>
-                            <th class="p-3">Catatan / Feedback</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200 font-medium">
-                        <% listJudul.forEach(item => { %>
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 font-semibold text-slate-900 max-w-sm leading-relaxed space-y-1.5">
-                                    <div class="p-2 rounded-lg bg-blue-50 border border-blue-100 text-[11px] <%= item.status === 'diterima' && (item.judul_disetujui_nomor === 1 || !item.judul_disetujui_nomor) ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
-                                        <span class="font-extrabold text-blue-700">1:</span> <%= item.judul_1 || item.judul_ta %>
+            <div class="space-y-6">
+                <% listJudul.forEach((item, index) => { 
+                    const isPending = item.status === 'pending_tu' || item.status === 'pending_sekprodi' || item.status === 'pending_kaprodi';
+                    const isApproved = item.status === 'diterima';
+                    const isRejected = item.status === 'ditolak';
+                    const isRevisi = item.status === 'revisi';
+                %>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-5 shadow-sm transition hover:shadow-md">
+                        <!-- Top Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-black bg-slate-900 text-white">#<%= listJudul.length - index %></span>
+                                <span class="text-xs font-bold text-slate-600">
+                                    <i class="fa-solid fa-calendar-day mr-1 text-slate-400"></i>
+                                    <%= new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+                                </span>
+                            </div>
+
+                            <div>
+                                <% if (isPending) { %>
+                                    <span class="px-3 py-1.5 rounded-full bg-blue-100 border border-blue-300 text-blue-800 text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-spinner fa-spin text-blue-600"></i> Proses Pemeriksaan
+                                    </span>
+                                <% } else if (isApproved) { %>
+                                    <span class="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-circle-check"></i> DITERIMA (ACC)
+                                    </span>
+                                <% } else if (isRevisi) { %>
+                                    <span class="px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-pen-to-square"></i> PERLU REVISI
+                                    </span>
+                                <% } else { %>
+                                    <span class="px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-black flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-circle-xmark"></i> DITOLAK
+                                    </span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Step Tracker -->
+                        <div class="grid grid-cols-3 gap-2 bg-white rounded-xl p-3 border border-slate-200 text-center">
+                            <div class="space-y-1">
+                                <div class="w-6 h-6 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-extrabold">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-700">1. Usulan Dikirim</p>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="w-6 h-6 mx-auto rounded-full <%= isApproved ? 'bg-emerald-500 text-white' : (isPending ? 'bg-blue-600 text-white animate-pulse' : 'bg-slate-300 text-slate-600') %> flex items-center justify-center text-[10px] font-extrabold">
+                                    <i class="fa-solid <%= isApproved ? 'fa-check' : 'fa-hourglass-half' %>"></i>
+                                </div>
+                                <p class="text-[10px] font-bold <%= isPending ? 'text-blue-700' : 'text-slate-700' %>">2. Proses Pemeriksaan</p>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="w-6 h-6 mx-auto rounded-full <%= isApproved ? 'bg-emerald-500 text-white' : (isRejected ? 'bg-rose-500 text-white' : 'bg-slate-300 text-slate-600') %> flex items-center justify-center text-[10px] font-extrabold">
+                                    <i class="fa-solid <%= isApproved ? 'fa-award' : (isRejected ? 'fa-xmark' : 'fa-flag') %>"></i>
+                                </div>
+                                <p class="text-[10px] font-bold <%= isApproved ? 'text-emerald-700 font-extrabold' : 'text-slate-700' %>">3. Keputusan ACC</p>
+                            </div>
+                        </div>
+
+                        <!-- 3 Proposed Titles Grid -->
+                        <div class="space-y-2.5">
+                            <p class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">3 Usulan Judul Yang Diajukan:</p>
+
+                            <!-- Judul 1 -->
+                            <div class="p-3.5 rounded-xl bg-white border <%= isApproved && (item.judul_disetujui_nomor === 1 || !item.judul_disetujui_nomor) ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/30' : 'border-slate-200' %> transition">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 shrink-0">Judul 1</span>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed"><%= item.judul_1 || item.judul_ta %></p>
                                     </div>
-                                    <% if (item.judul_2) { %>
-                                        <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-100 text-[11px] <%= item.status === 'diterima' && item.judul_disetujui_nomor === 2 ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
-                                            <span class="font-extrabold text-emerald-700">2:</span> <%= item.judul_2 %>
+                                    <% if (isApproved && (item.judul_disetujui_nomor === 1 || !item.judul_disetujui_nomor)) { %>
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-600 text-white border border-emerald-700 shrink-0">
+                                            <i class="fa-solid fa-circle-check mr-1"></i> JUDUL DI-ACC
+                                        </span>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Judul 2 -->
+                            <% if (item.judul_2) { %>
+                                <div class="p-3.5 rounded-xl bg-white border <%= isApproved && item.judul_disetujui_nomor === 2 ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/30' : 'border-slate-200' %> transition">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex gap-2">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">Judul 2</span>
+                                            <p class="text-xs font-bold text-slate-900 leading-relaxed"><%= item.judul_2 %></p>
                                         </div>
-                                    <% } %>
-                                    <% if (item.judul_3) { %>
-                                        <div class="p-2 rounded-lg bg-purple-50 border border-purple-100 text-[11px] <%= item.status === 'diterima' && item.judul_disetujui_nomor === 3 ? 'ring-2 ring-emerald-500 font-extrabold' : '' %>">
-                                            <span class="font-extrabold text-purple-700">3:</span> <%= item.judul_3 %>
-                                        </div>
-                                    <% } %>
-                                </td>
-                                <td class="p-3 text-slate-700 space-y-1">
-                                    <p><strong class="text-slate-900">P1:</strong> <%= item.pembimbing_1_nama %></p>
-                                    <p><strong class="text-slate-900">P2:</strong> <%= item.pembimbing_2_nama %></p>
-                                </td>
-                                <td class="p-3">
-                                    <% if (item.status === 'pending_tu') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 text-[10px] font-bold">Verifikasi TU</span>
-                                    <% } else if (item.status === 'pending_sekprodi') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Validasi Sekprodi</span>
-                                    <% } else if (item.status === 'pending_kaprodi') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">Otorisasi Kaprodi</span>
-                                    <% } else if (item.status === 'diterima') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">DITERIMA</span>
-                                    <% } else if (item.status === 'revisi') { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold">REVISI</span>
-                                    <% } else { %>
-                                        <span class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold">DITOLAK</span>
-                                    <% } %>
-                                </td>
-                                <td class="p-3 space-y-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-[10px] text-slate-500 font-bold">P1:</span>
-                                        <% if (item.pembimbing_1_status === 'bersedia') { %>
-                                            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">BERSEDIA</span>
-                                        <% } else if (item.pembimbing_1_status === 'menolak') { %>
-                                            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-bold">MENOLAK</span>
-                                        <% } else { %>
-                                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">PENDING</span>
+                                        <% if (isApproved && item.judul_disetujui_nomor === 2) { %>
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-600 text-white border border-emerald-700 shrink-0">
+                                                <i class="fa-solid fa-circle-check mr-1"></i> JUDUL DI-ACC
+                                            </span>
                                         <% } %>
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-[10px] text-slate-500 font-bold">P2:</span>
-                                        <% if (item.pembimbing_2_status === 'bersedia') { %>
-                                            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">BERSEDIA</span>
-                                        <% } else if (item.pembimbing_2_status === 'menolak') { %>
-                                            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[9px] font-bold">MENOLAK</span>
-                                        <% } else { %>
-                                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-bold">PENDING</span>
+                                </div>
+                            <% } %>
+
+                            <!-- Judul 3 -->
+                            <% if (item.judul_3) { %>
+                                <div class="p-3.5 rounded-xl bg-white border <%= isApproved && item.judul_disetujui_nomor === 3 ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/30' : 'border-slate-200' %> transition">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex gap-2">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200 shrink-0">Judul 3</span>
+                                            <p class="text-xs font-bold text-slate-900 leading-relaxed"><%= item.judul_3 %></p>
+                                        </div>
+                                        <% if (isApproved && item.judul_disetujui_nomor === 3) { %>
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-600 text-white border border-emerald-700 shrink-0">
+                                                <i class="fa-solid fa-circle-check mr-1"></i> JUDUL DI-ACC
+                                            </span>
                                         <% } %>
                                     </div>
-                                </td>
-                                <td class="p-3 text-slate-600 text-[11px]">
-                                    <%= item.catatan_kaprodi || item.catatan_sekprodi || item.catatan_tu || '-' %>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Proposed Lecturers Status Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <!-- Pembimbing 1 -->
+                            <div class="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Dosen Pembimbing 1</span>
+                                    <span class="font-bold text-slate-900"><%= item.pembimbing_1_nama || 'Belum Ditentukan (Oleh Prodi)' %></span>
+                                </div>
+                                <% if (item.pembimbing_1_status === 'bersedia') { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-300">BERSEDIA</span>
+                                <% } else if (item.pembimbing_1_status === 'menolak') { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 text-[10px] font-extrabold border border-rose-300">MENOLAK</span>
+                                <% } else { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 text-[10px] font-extrabold border border-amber-200">PROSES</span>
+                                <% } %>
+                            </div>
+
+                            <!-- Pembimbing 2 -->
+                            <div class="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Dosen Pembimbing 2</span>
+                                    <span class="font-bold text-slate-900"><%= item.pembimbing_2_nama || 'Belum Ditentukan (Oleh Prodi)' %></span>
+                                </div>
+                                <% if (item.pembimbing_2_status === 'bersedia') { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-300">BERSEDIA</span>
+                                <% } else if (item.pembimbing_2_status === 'menolak') { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 text-[10px] font-extrabold border border-rose-300">MENOLAK</span>
+                                <% } else { %>
+                                    <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 text-[10px] font-extrabold border border-amber-200">PROSES</span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Feedback / Notes Card (If Any) -->
+                        <% if (item.catatan_kaprodi || item.catatan_sekprodi || item.catatan_tu) { %>
+                            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1">
+                                <span class="font-extrabold text-amber-800 flex items-center gap-1">
+                                    <i class="fa-solid fa-comment-dots"></i> Catatan & Feedback Pemeriksa:
+                                </span>
+                                <p class="text-slate-800 font-medium leading-relaxed">
+                                    <%= item.catatan_kaprodi || item.catatan_sekprodi || item.catatan_tu %>
+                                </p>
+                            </div>
+                        <% } %>
+                    </div>
+                <% }); %>
             </div>
         <% } else { %>
-            <p class="text-xs text-slate-500 text-center py-6">Belum ada pengajuan judul TA. Gunakan form di atas untuk mengajukan judul baru.</p>
+            <div class="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-2"></i>
+                <p class="text-xs text-slate-600 font-bold">Belum ada pengajuan judul TA.</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Gunakan formulir di atas untuk mengisi 3 usulan judul Tugas Akhir Anda.</p>
+            </div>
         <% } %>
     </div>
 </div>
+
+<script>
+    function dismissAlert(alertId) {
+        const el = typeof alertId === 'string' ? document.getElementById(alertId) : alertId;
+        if (el) {
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Auto dismiss alert after 4 seconds
+        setTimeout(() => {
+            const errorAlert = document.getElementById('alert-banner-error');
+            const successAlert = document.getElementById('alert-banner-success');
+            if (errorAlert) dismissAlert(errorAlert);
+            if (successAlert) dismissAlert(successAlert);
+        }, 4000);
+
+        // Clear ?success=... and ?error=... query params from browser URL bar without reloading
+        if (window.location.search.includes('success') || window.location.search.includes('error')) {
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    });
+</script>

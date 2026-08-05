@@ -21,28 +21,66 @@
             <p class="text-[11px] text-slate-400 mt-1.5">Format standar prodi: <span class="font-mono text-slate-300">B/123/UN.1/TI/TA/2026</span></p>
         </div>
 
-        <!-- Automatic Exam Schedule Fields for Staff TU -->
+        <!-- Automatic Exam Schedule Fields for Staff TU (Saran Jadwal untuk Dosen Pembimbing) -->
         <div class="p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-4">
-            <h4 class="text-xs font-bold text-amber-300 uppercase flex items-center gap-2">
-                <i class="fa-solid fa-calendar-check"></i> Pengaturan Jadwal Ujian & Seminar Otomatis
-            </h4>
-            <p class="text-xs text-slate-300">Surat undangan ini secara otomatis akan menerbitkan Jadwal Ujian ke akun Mahasiswa dan Dosen Pembimbing/Penguji.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="flex items-center justify-between border-b border-amber-500/20 pb-3">
+                <h4 class="text-xs font-extrabold text-amber-300 uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-plus text-amber-400"></i> Penentuan Saran Jadwal & Ruangan Ujian (Admin / Staff TU)
+                </h4>
+                <span class="px-2.5 py-1 bg-amber-500/20 text-amber-200 text-[10px] font-bold rounded-lg border border-amber-500/30">
+                    Opsi Saran Admin
+                </span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Tentukan usulan/saran jadwal (Hari/Tanggal, Waktu, dan Ruangan Ujian) yang dapat dipilih atau disesuaikan secara langsung oleh <strong>Dosen Pembimbing</strong> saat menyetujui surat ini.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2 border-t border-amber-500/20">
                 <div>
-                    <label class="block font-bold text-slate-300 mb-1">Tanggal Ujian / Seminar *</label>
-                    <input type="date" name="tanggal_ujian" required value="<%= dinamisObj.tanggal_ujian || new Date().toISOString().split('T')[0] %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                    <label for="input_tanggal_ujian" class="block font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Tanggal Ujian / Seminar *</span>
+                        <span class="text-[10px] text-amber-400 font-normal">Klik untuk Buka Kalender 📅</span>
+                    </label>
+                    <div class="relative">
+                        <input type="date" id="input_tanggal_ujian" name="tanggal_ujian" required value="<%= typeof defaultTgl !== 'undefined' ? defaultTgl : (dinamisObj.tanggal_ujian || new Date().toISOString().split('T')[0]) %>"
+                            onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                            class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400 cursor-pointer pr-10 [color-scheme:dark]">
+                        <button type="button" onclick="const el=document.getElementById('input_tanggal_ujian'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-300 p-1">
+                            <i class="fa-solid fa-calendar-days text-sm"></i>
+                        </button>
+                    </div>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-300 mb-1">Ruangan / Tempat Ujian *</label>
-                    <input type="text" name="ruangan" required value="<%= dinamisObj.ruangan || 'Ruang Ujian & Seminar TI' %>" placeholder="Contoh: Ruang Seminar Lantai 2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                    <label for="input_ruangan" class="block font-bold text-slate-300 mb-1">Ruangan / Tempat Ujian *</label>
+                    <input type="text" id="input_ruangan" name="ruangan" required value="<%= typeof defaultRuangan !== 'undefined' ? defaultRuangan : (dinamisObj.ruangan || 'Ruang Ujian & Seminar TI') %>" placeholder="Contoh: Ruang Seminar Lantai 2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-300 mb-1">Jam Mulai Ujian *</label>
-                    <input type="time" name="jam_mulai" required value="<%= dinamisObj.jam_mulai || '09:00' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                    <label for="input_jam_mulai" class="block font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Jam Mulai Ujian *</span>
+                        <span class="text-[10px] text-amber-400 font-normal">Klik untuk Buka Jam ⏰</span>
+                    </label>
+                    <div class="relative">
+                        <input type="time" id="input_jam_mulai" name="jam_mulai" required value="<%= typeof defaultJamMulai !== 'undefined' ? defaultJamMulai : (dinamisObj.jam_mulai || '09:00') %>"
+                            onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                            class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400 cursor-pointer pr-10 [color-scheme:dark]">
+                        <button type="button" onclick="const el=document.getElementById('input_jam_mulai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-300 p-1">
+                            <i class="fa-solid fa-clock text-sm"></i>
+                        </button>
+                    </div>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-300 mb-1">Jam Selesai Ujian *</label>
-                    <input type="time" name="jam_selesai" required value="<%= dinamisObj.jam_selesai || '11:00' %>" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400">
+                    <label for="input_jam_selesai" class="block font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Jam Selesai Ujian *</span>
+                        <span class="text-[10px] text-amber-400 font-normal">Klik untuk Buka Jam ⏰</span>
+                    </label>
+                    <div class="relative">
+                        <input type="time" id="input_jam_selesai" name="jam_selesai" required value="<%= typeof defaultJamSelesai !== 'undefined' ? defaultJamSelesai : (dinamisObj.jam_selesai || '11:00') %>"
+                            onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                            class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold focus:outline-none focus:border-amber-400 cursor-pointer pr-10 [color-scheme:dark]">
+                        <button type="button" onclick="const el=document.getElementById('input_jam_selesai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-400 hover:text-amber-300 p-1">
+                            <i class="fa-solid fa-clock text-sm"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,6 +130,35 @@
 </div>
 
 <script>
+    function setPresetSession(start, end) {
+        document.getElementById('input_jam_mulai').value = start;
+        document.getElementById('input_jam_selesai').value = end;
+    }
+
+    function setTuPenomoranDateOption(offsetDays) {
+        const d = new Date();
+        if (offsetDays === 'next_monday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day === 0 ? 1 : 8 - day);
+            d.setDate(diff);
+        } else if (offsetDays === 'next_friday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day <= 5 ? 5 - day : 12 - day);
+            d.setDate(diff);
+        } else {
+            d.setDate(d.getDate() + parseInt(offsetDays, 10));
+        }
+        if (document.getElementById('input_tanggal_ujian')) {
+            document.getElementById('input_tanggal_ujian').value = d.toISOString().split('T')[0];
+        }
+    }
+
+    function setTuPenomoranRoomOption(roomName) {
+        if (document.getElementById('input_ruangan')) {
+            document.getElementById('input_ruangan').value = roomName;
+        }
+    }
+
     function openPdfPreview(suratId, title) {
         document.getElementById('pdf-modal-title').innerText = 'Preview Dokumen: ' + title;
         document.getElementById('pdf-preview-iframe').src = '/surat/preview/' + suratId;

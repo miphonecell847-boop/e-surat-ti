@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6.5.1 CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -55,6 +57,9 @@
                     <a href="/mahasiswa/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-paper-plane w-5 text-center text-blue-400"></i> Pengajuan Surat
                     </a>
+                    <a href="/mahasiswa/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
+                        <i class="fa-solid fa-file-contract w-5 text-center text-emerald-400"></i> Daftar Surat & SK Saya
+                    </a>
                     <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-calendar-days w-5 text-center text-amber-400"></i> Jadwal Ujian & Seminar
                     </a>
@@ -65,25 +70,22 @@
                         <i class="fa-solid fa-inbox w-5 text-center text-emerald-400"></i> Inbox Approval & SK
                     </a>
                     <a href="/dosen/konfirmasi-bimbingan" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-bell w-5 text-center text-amber-400"></i> Konfirmasi Bimbingan
+                        <i class="fa-solid fa-book-bookmark w-5 text-center text-blue-400"></i> Pengajuan Judul Mahasiswa
                     </a>
                     <a href="/mahasiswa/jadwal-ujian" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-calendar-days w-5 text-center text-purple-400"></i> Jadwal Ujian Mahasiswa
                     </a>
                 <% } %>
 
-                <% if (user && (user.role === 'staff_tu' || user.role === 'stafftu' || user.role === 'admin' || user.role === 'sekretaris_prodi' || user.role === 'kaprodi')) { %>
+                <% if (user && (user.role === 'admin' || user.role === 'staff_tu' || user.role === 'stafftu' || user.role === 'sekretaris_prodi' || user.role === 'kaprodi')) { %>
                     <a href="/tu/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-pdf w-5 text-center text-emerald-400"></i> Dashboard Staff TU
+                        <i class="fa-solid fa-user-shield w-5 text-center text-emerald-400"></i> Dashboard Administrator
                     </a>
                     <a href="/tu/daftar-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-list-check w-5 text-center text-cyan-400"></i> Daftar Permohonan Surat
                     </a>
-                    <a href="/tu/buat-surat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-circle-plus w-5 text-center text-blue-400"></i> Buat Surat Permintaan
-                    </a>
                     <a href="/tu/verifikasi-judul" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                        <i class="fa-solid fa-file-check w-5 text-center text-purple-400"></i> Verifikasi Judul TA
+                        <i class="fa-solid fa-book-bookmark w-5 text-center text-purple-400"></i> Validasi Judul TA
                     </a>
                     <a href="/tu/kelola-akun" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition">
                         <i class="fa-solid fa-user-gear w-5 text-center text-amber-400"></i> Kelola & Validasi Akun
@@ -92,10 +94,6 @@
 
                 <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
                     <i class="fa-solid fa-circle-user w-5 text-center"></i> Profil Saya
-                </a>
-
-                <a href="/change-password" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition">
-                    <i class="fa-solid fa-key w-5 text-center"></i> Ganti Password
                 </a>
 
                 <a href="https://www.unidayan.ac.id" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-4 py-3 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 transition">
@@ -123,6 +121,39 @@
         </div>
     </aside>
 
+    <!-- Global Top-Right Floating Toast Notification Container (Auto 3 Seconds) -->
+    <div id="global-toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="toast-item pointer-events-auto bg-slate-900/95 border border-emerald-500/50 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-md flex items-start gap-3 transition-all duration-400 ease-in-out">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-circle-check text-lg"></i>
+                </div>
+                <div class="flex-1 text-xs">
+                    <h4 class="font-extrabold text-emerald-400">Pemberitahuan Sukses</h4>
+                    <p class="text-slate-200 mt-0.5 font-medium leading-relaxed"><%= success %></p>
+                </div>
+                <button type="button" onclick="this.closest('.toast-item').remove()" class="text-slate-400 hover:text-white text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="toast-item pointer-events-auto bg-slate-900/95 border border-rose-500/50 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-md flex items-start gap-3 transition-all duration-400 ease-in-out">
+                <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div class="flex-1 text-xs">
+                    <h4 class="font-extrabold text-rose-400">Pemberitahuan System</h4>
+                    <p class="text-slate-200 mt-0.5 font-medium leading-relaxed"><%= error %></p>
+                </div>
+                <button type="button" onclick="this.closest('.toast-item').remove()" class="text-slate-400 hover:text-white text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        <% } %>
+    </div>
+
     <!-- Main Content Wrapper -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         
@@ -148,7 +179,93 @@
         </main>
     </div>
 
+    <!-- Global Floating Toast Notification Container (Top Right - Pojok Kanan Atas) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0">
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div id="toast-success" class="toast-item pointer-events-auto bg-slate-900/95 backdrop-blur border-l-4 border-emerald-500 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 transform translate-x-full opacity-0 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-circle-check text-base"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-extrabold text-slate-100">Berhasil!</p>
+                        <p class="text-xs text-slate-300 font-medium"><%= success %></p>
+                    </div>
+                </div>
+                <button onclick="dismissToast('toast-success')" class="text-slate-400 hover:text-white transition text-xs p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div id="toast-error" class="toast-item pointer-events-auto bg-slate-900/95 backdrop-blur border-l-4 border-rose-500 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 transform translate-x-full opacity-0 transition-all duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-extrabold text-slate-100">Pemberitahuan</p>
+                        <p class="text-xs text-slate-300 font-medium"><%= error %></p>
+                    </div>
+                </div>
+                <button onclick="dismissToast('toast-error')" class="text-slate-400 hover:text-white transition text-xs p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        <% } %>
+    </div>
+
     <script>
+        function dismissToast(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => el.remove(), 300);
+        }
+
+        function createToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const id = 'toast-' + Date.now();
+            const isSuccess = type === 'success';
+            const borderColor = isSuccess ? 'border-emerald-500' : 'border-rose-500';
+            const iconBg = isSuccess ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400';
+            const iconClass = isSuccess ? 'fa-circle-check' : 'fa-triangle-exclamation';
+            const title = isSuccess ? 'Berhasil!' : 'Pemberitahuan';
+
+            const toastHtml = `
+                <div id="${id}" class="toast-item pointer-events-auto bg-slate-900/95 backdrop-blur border-l-4 ${borderColor} text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3 transform translate-x-full opacity-0 transition-all duration-300">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full ${iconBg} flex items-center justify-center shrink-0">
+                            <i class="fa-solid ${iconClass} text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-extrabold text-slate-100">${title}</p>
+                            <p class="text-xs text-slate-300 font-medium">${message}</p>
+                        </div>
+                    </div>
+                    <button onclick="dismissToast('${id}')" class="text-slate-400 hover:text-white transition text-xs p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', toastHtml);
+
+            const toastEl = document.getElementById(id);
+            setTimeout(() => {
+                toastEl.classList.remove('translate-x-full', 'opacity-0');
+                toastEl.classList.add('translate-x-0', 'opacity-100');
+            }, 50);
+
+            setTimeout(() => {
+                dismissToast(id);
+            }, 3000);
+        }
+
+        window.showToast = createToast;
+
         const btn = document.getElementById('mobile-sidebar-toggle');
         const sidebar = document.getElementById('app-sidebar');
         if (btn && sidebar) {
@@ -193,7 +310,251 @@
                     link.className = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 transition";
                 }
             });
+
+            // Auto dismiss flash toasts after 3 seconds (3000ms)
+            const toasts = document.querySelectorAll('.toast-item');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full', 'opacity-0');
+                    toast.classList.add('translate-x-0', 'opacity-100');
+                }, 50);
+
+                setTimeout(() => {
+                    dismissToast(toast.id);
+                }, 3000);
+            });
+
+            // Auto-initialize pagination (5 items per page) on all tables with data-paginate
+            document.querySelectorAll('table[data-paginate]').forEach((table, idx) => {
+                const containerId = table.getAttribute('data-pagination-container') || ('auto-pagination-' + idx);
+                let container = document.getElementById(containerId);
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = containerId;
+                    container.className = 'px-6 pb-4';
+                    table.closest('.overflow-x-auto, div')?.after(container);
+                }
+                const perPage = parseInt(table.getAttribute('data-per-page') || '5', 10);
+                initTablePagination(table, containerId, perPage);
+            });
         });
+
+        // Global Automatic Table Pagination Engine (5 Data Per Page)
+        function initTablePagination(tableSelector, paginationContainerId, itemsPerPage = 5) {
+            const table = typeof tableSelector === 'string' ? document.querySelector(tableSelector) : tableSelector;
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.children).filter(child => child.tagName === 'TR' && !child.hasAttribute('data-no-paginate'));
+            if (rows.length <= itemsPerPage) {
+                rows.forEach(row => { row.style.display = ''; });
+                const container = document.getElementById(paginationContainerId);
+                if (container) {
+                    container.innerHTML = `<div class="p-3 text-[11px] font-semibold text-slate-400">Menampilkan seluruh ${rows.length} data</div>`;
+                }
+                return;
+            }
+
+            let currentPage = 1;
+            const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+            function renderPage(page) {
+                if (page < 1) page = 1;
+                if (page > totalPages) page = totalPages;
+                currentPage = page;
+
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+
+                rows.forEach((row, index) => {
+                    if (index >= start && index < end) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                const container = document.getElementById(paginationContainerId);
+                if (!container) return;
+
+                const isDark = container.closest('.bg-slate-900') || container.classList.contains('text-white');
+                const btnBgClass = isDark ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
+                const disabledClass = isDark ? 'bg-slate-950 text-slate-600 border-slate-800 cursor-not-allowed' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed';
+
+                container.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200/40 text-xs">
+                        <span class="font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}">
+                            Menampilkan data <strong class="${isDark ? 'text-white' : 'text-slate-900'}">${start + 1} - ${Math.min(end, rows.length)}</strong> dari <strong class="${isDark ? 'text-white' : 'text-slate-900'}">${rows.length}</strong> total data
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" class="px-3 py-1.5 rounded-xl border text-xs font-bold transition shadow-sm ${currentPage === 1 ? disabledClass : btnBgClass}" ${currentPage === 1 ? 'disabled' : ''} onclick="window['paginate_${paginationContainerId}'](${currentPage - 1})">
+                                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                            </button>
+                            <span class="px-3 py-1.5 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-extrabold">
+                                Halaman ${currentPage} / ${totalPages}
+                            </span>
+                            <button type="button" class="px-3 py-1.5 rounded-xl border text-xs font-bold transition shadow-sm ${currentPage === totalPages ? disabledClass : btnBgClass}" ${currentPage === totalPages ? 'disabled' : ''} onclick="window['paginate_${paginationContainerId}'](${currentPage + 1})">
+                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            window[`paginate_${paginationContainerId}`] = renderPage;
+            renderPage(1);
+        }
+
+        window.initTablePagination = initTablePagination;
+
+        // Auto-dismiss floating toast notifications after 3 seconds (3000ms)
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('#global-toast-container .toast-item');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(120%)';
+                    setTimeout(() => toast.remove(), 400);
+                }, 3000);
+            });
+        });
+
+        // Global Interceptor: Upgrade all native confirm() popups to premium SweetAlert2 Dark Modals
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            const onsubmitAttr = form.getAttribute('onsubmit');
+            if (onsubmitAttr && onsubmitAttr.includes('confirm(')) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const match = onsubmitAttr.match(/confirm\((['"])(.*?)\1\)/);
+                const message = match ? match[2] : 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+                
+                let title = 'Konfirmasi Akses';
+                let confirmText = 'Ya, Lanjutkan';
+                let color = '#3b82f6';
+                let iconType = 'warning';
+
+                const lowerMsg = message.toLowerCase();
+                if (lowerMsg.includes('hapus')) {
+                    title = 'Konfirmasi Hapus Data';
+                    confirmText = 'Ya, Hapus Data';
+                    color = '#ef4444';
+                    iconType = 'error';
+                } else if (lowerMsg.includes('aktifkan') || lowerMsg.includes('setujui') || lowerMsg.includes('acc')) {
+                    title = 'Konfirmasi Persetujuan';
+                    confirmText = 'Ya, Setujui';
+                    color = '#10b981';
+                    iconType = 'question';
+                } else if (lowerMsg.includes('tolak') || lowerMsg.includes('kembalikan') || lowerMsg.includes('revisi')) {
+                    title = 'Konfirmasi Penolakan';
+                    confirmText = 'Ya, Proses';
+                    color = '#f59e0b';
+                    iconType = 'warning';
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: title,
+                        text: message,
+                        icon: iconType,
+                        showCancelButton: true,
+                        confirmButtonColor: color,
+                        cancelButtonColor: '#334155',
+                        confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i> ' + confirmText,
+                        cancelButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Batal',
+                        reverseButtons: true,
+                        customClass: {
+                            popup: 'rounded-3xl border border-slate-800 bg-slate-900 text-white shadow-2xl p-6',
+                            title: 'text-lg font-bold text-white',
+                            htmlContainer: 'text-xs text-slate-300 font-medium mt-2',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg transition flex items-center gap-1.5',
+                            cancelButton: 'px-5 py-2.5 rounded-xl font-bold text-xs transition bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 mr-3'
+                        },
+                        background: '#0f172a',
+                        color: '#f8fafc'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.removeAttribute('onsubmit');
+                            form.submit();
+                        }
+                    });
+                } else {
+                    if (window.confirm(message)) {
+                        form.removeAttribute('onsubmit');
+                        form.submit();
+                    }
+                }
+                return false;
+            }
+        }, true);
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[onclick*="confirm("]');
+            if (btn) {
+                const onclickAttr = btn.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes('confirm(')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    const match = onclickAttr.match(/confirm\((['"])(.*?)\1\)/);
+                    const message = match ? match[2] : 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+                    
+                    let title = 'Konfirmasi Akses';
+                    let confirmText = 'Ya, Lanjutkan';
+                    let color = '#f59e0b';
+                    let iconType = 'warning';
+
+                    const lowerMsg = message.toLowerCase();
+                    if (lowerMsg.includes('hapus')) {
+                        title = 'Konfirmasi Hapus Data';
+                        confirmText = 'Ya, Hapus Data';
+                        color = '#ef4444';
+                        iconType = 'error';
+                    } else if (lowerMsg.includes('kembalikan') || lowerMsg.includes('revisi')) {
+                        title = 'Konfirmasi Perbaikan';
+                        confirmText = 'Ya, Kembalikan';
+                        color = '#f59e0b';
+                        iconType = 'warning';
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: title,
+                            text: message,
+                            icon: iconType,
+                            showCancelButton: true,
+                            confirmButtonColor: color,
+                            cancelButtonColor: '#334155',
+                            confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i> ' + confirmText,
+                            cancelButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Batal',
+                            reverseButtons: true,
+                            customClass: {
+                                popup: 'rounded-3xl border border-slate-800 bg-slate-900 text-white shadow-2xl p-6',
+                                title: 'text-lg font-bold text-white',
+                                htmlContainer: 'text-xs text-slate-300 font-medium mt-2',
+                                confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg transition flex items-center gap-1.5',
+                                cancelButton: 'px-5 py-2.5 rounded-xl font-bold text-xs transition bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 mr-3'
+                            },
+                            background: '#0f172a',
+                            color: '#f8fafc'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                btn.removeAttribute('onclick');
+                                btn.click();
+                            }
+                        });
+                    } else {
+                        if (window.confirm(message)) {
+                            btn.removeAttribute('onclick');
+                            btn.click();
+                        }
+                    }
+                    return false;
+                }
+            }
+        }, true);
     </script>
 </body>
 </html>

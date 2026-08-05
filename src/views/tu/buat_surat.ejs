@@ -114,18 +114,54 @@
                 </div>
             </div>
 
-            <div id="tu-field-jadwal" class="grid grid-cols-1 sm:grid-cols-3 gap-3 tu-dynamic-section">
-                <div>
-                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1">Hari / Tanggal Ujian</label>
-                    <input type="text" name="hari_tanggal" value="<%= prefilledData ? (prefilledData.hari_tanggal || '') : '' %>" placeholder="Jum'at, 19 Juni 2026" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900">
-                </div>
-                <div>
-                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1">Waktu Pelaksanaan</label>
-                    <input type="text" name="pukul" value="<%= prefilledData ? (prefilledData.pukul || '') : '' %>" placeholder="15:00 WITA s/d Selesai" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900">
-                </div>
-                <div>
-                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1">Ruang / Tempat</label>
-                    <input type="text" name="bertempat_di" value="<%= prefilledData ? (prefilledData.bertempat_di || '') : '' %>" placeholder="R. Teknik Informatika" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900">
+            <div id="tu-field-jadwal" class="space-y-4 tu-dynamic-section">
+                <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-4">
+                    <span class="text-xs font-extrabold text-amber-900 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-plus text-amber-600"></i> Saran / Usulan Jadwal Ujian Oleh Staff TU (Admin)
+                    </span>
+                    <p class="text-xs text-slate-600">
+                        Admin dapat memasukkan usulan waktu & ruangan yang tersedia di bawah ini. Usulan ini akan diteruskan ke <strong>Dosen Pembimbing</strong> untuk dikonfirmasi/disesuaikan.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-amber-200">
+                        <div>
+                            <label for="tu_buat_tanggal_ujian" class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Tanggal Ujian / Seminar *</label>
+                            <div class="relative">
+                                <input type="date" id="tu_buat_tanggal_ujian" name="tanggal_ujian" value="<%= prefilledData ? (prefilledData.tanggal_ujian || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0] %>"
+                                    onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                    class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 cursor-pointer pr-10">
+                                <button type="button" onclick="const el=document.getElementById('tu_buat_tanggal_ujian'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                    <i class="fa-solid fa-calendar-days text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="tu_buat_ruangan" class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Ruangan / Tempat Ujian *</label>
+                            <input type="text" id="tu_buat_ruangan" name="ruangan" value="<%= prefilledData ? (prefilledData.ruangan || prefilledData.bertempat_di || 'Ruang Ujian & Seminar TI') : 'Ruang Ujian & Seminar TI' %>" placeholder="Ruang Seminar Lantai 2" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-900">
+                        </div>
+                        <div>
+                            <label for="tu_jam_mulai" class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Jam Mulai *</label>
+                            <div class="relative">
+                                <input type="time" id="tu_jam_mulai" name="jam_mulai" value="<%= prefilledData ? (prefilledData.jam_mulai || '09:00') : '09:00' %>"
+                                    onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                    class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 cursor-pointer pr-10">
+                                <button type="button" onclick="const el=document.getElementById('tu_jam_mulai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                    <i class="fa-solid fa-clock text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="tu_jam_selesai" class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Jam Selesai *</label>
+                            <div class="relative">
+                                <input type="time" id="tu_jam_selesai" name="jam_selesai" value="<%= prefilledData ? (prefilledData.jam_selesai || '11:00') : '11:00' %>"
+                                    onclick="if (typeof this.showPicker === 'function') this.showPicker()"
+                                    class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 cursor-pointer pr-10">
+                                <button type="button" onclick="const el=document.getElementById('tu_jam_selesai'); if(el && typeof el.showPicker==='function') el.showPicker(); else if(el) el.focus();" class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 hover:text-amber-700 p-1">
+                                    <i class="fa-solid fa-clock text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -143,18 +179,48 @@
             <p class="text-[11px] text-slate-500">Opsional: Gambar TTD digital akan disimpan dan digunakan pada penerbitan dokumen PDF resmi.</p>
         </div>
 
-        <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-paper-plane text-amber-400"></i> Terbitkan & Diteruskan ke Sekprodi
+        <button type="submit" id="btn-submit-tu" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane text-amber-400"></i> Terbitkan & Diteruskan ke Dosen Pembimbing / Sekprodi
         </button>
     </form>
 </div>
 
 <script>
+    function setTuPreset(start, end) {
+        if (document.getElementById('tu_jam_mulai')) document.getElementById('tu_jam_mulai').value = start;
+        if (document.getElementById('tu_jam_selesai')) document.getElementById('tu_jam_selesai').value = end;
+    }
+
+    function setTuBuatDateOption(offsetDays) {
+        const d = new Date();
+        if (offsetDays === 'next_monday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day === 0 ? 1 : 8 - day);
+            d.setDate(diff);
+        } else if (offsetDays === 'next_friday') {
+            const day = d.getDay();
+            const diff = d.getDate() + (day <= 5 ? 5 - day : 12 - day);
+            d.setDate(diff);
+        } else {
+            d.setDate(d.getDate() + parseInt(offsetDays, 10));
+        }
+        if (document.getElementById('tu_buat_tanggal_ujian')) {
+            document.getElementById('tu_buat_tanggal_ujian').value = d.toISOString().split('T')[0];
+        }
+    }
+
+    function setTuBuatRoomOption(roomName) {
+        if (document.getElementById('tu_buat_ruangan')) {
+            document.getElementById('tu_buat_ruangan').value = roomName;
+        }
+    }
+
     function toggleTuFormFields(selectEl) {
         const selectedOption = selectEl.options[selectEl.selectedIndex];
         const kode = selectedOption ? selectedOption.getAttribute('data-kode') : '';
         const risetSec = document.getElementById('tu-field-riset');
         const jadwalSec = document.getElementById('tu-field-jadwal');
+        const btnSubmit = document.getElementById('btn-submit-tu');
 
         if (kode === 'SRT-IZIN-PENELITIAN') {
             risetSec.classList.remove('hidden');
@@ -165,6 +231,12 @@
         } else {
             risetSec.classList.remove('hidden');
             jadwalSec.classList.remove('hidden');
+        }
+
+        if (kode === 'LMBR-PERSETUJUAN-WKT') {
+            btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane text-amber-400"></i> Terbitkan Lembar Persetujuan Waktu & Diteruskan ke Dosen Pembimbing';
+        } else {
+            btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane text-amber-400"></i> Terbitkan & Diteruskan ke Sekprodi';
         }
     }
 

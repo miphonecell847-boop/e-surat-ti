@@ -333,11 +333,57 @@ class AuthController {
         }
     }
 
-    static renderProfile(req, res) {
-        return res.render('auth/profile', {
-            title: 'Profil Saya',
-            user: req.session.user
-        });
+    static async renderProfile(req, res) {
+        try {
+            const sessionUser = req.session.user;
+            if (!sessionUser) return res.redirect('/login');
+            const fullUser = await UserModel.getUserProfile(sessionUser.id, sessionUser.role);
+            const mhsProfile = fullUser ? fullUser.profile : (sessionUser.profile || null);
+            return res.render('auth/profile', {
+                title: 'Profil Saya - E-Surat TA',
+                user: sessionUser,
+                fullUser,
+                profile: mhsProfile,
+                success: req.query.success || null,
+                error: req.query.error || null
+            });
+        } catch (err) {
+            console.error('Render profile error:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static async processUpdateProfile(req, res) {
+        try {
+            const sessionUser = req.session.user;
+            const { nama_lengkap, angkatan, no_hp, email, password, confirm_password } = req.body;
+
+            if (password && password !== confirm_password) {
+                return res.redirect('/profile?error=Konfirmasi password baru tidak cocok!');
+            }
+
+            if (sessionUser.role === 'mahasiswa') {
+                const updatedUser = await UserModel.updateMahasiswaProfile({
+                    userId: sessionUser.id,
+                    email,
+                    nama_lengkap,
+                    angkatan,
+                    no_hp,
+                    newPassword: password
+                });
+
+                // Sync session
+                if (updatedUser) {
+                    req.session.user.email = updatedUser.email;
+                    req.session.user.profile = updatedUser.profile;
+                }
+            }
+
+            return res.redirect('/profile?success=Data profil Anda berhasil diperbarui!');
+        } catch (err) {
+            console.error('Update profile error:', err);
+            return res.redirect('/profile?error=Gagal memperbarui profil.');
+        }
     }
 
     static logout(req, res) {

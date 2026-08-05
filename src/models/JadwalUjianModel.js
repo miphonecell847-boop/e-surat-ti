@@ -29,13 +29,13 @@ class JadwalUjianModel {
         const sql = `
             SELECT j.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim,
                    d1.nama_dosen AS p1_nama, d2.nama_dosen AS p2_nama,
-                   p.uuid_surat, p.nomor_surat
+                   p.uuid_surat, p.nomor_surat, p.data_dinamis
             FROM jadwal_ujian j
             JOIN mahasiswa m ON j.mahasiswa_id = m.id
             LEFT JOIN dosen d1 ON j.pembimbing_1_id = d1.id
             LEFT JOIN dosen d2 ON j.pembimbing_2_id = d2.id
-            LEFT JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
-            WHERE j.mahasiswa_id = ?
+            JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
+            WHERE j.mahasiswa_id = ? AND p.nomor_surat IS NOT NULL AND p.nomor_surat != ''
             ORDER BY j.tanggal_ujian ASC
         `;
         return await db.query(sql, [mahasiswa_id]);
@@ -43,30 +43,34 @@ class JadwalUjianModel {
 
     static async getByDosenId(dosen_id) {
         const sql = `
-            SELECT j.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim,
+            SELECT DISTINCT j.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim,
                    d1.nama_dosen AS p1_nama, d2.nama_dosen AS p2_nama,
-                   p.uuid_surat, p.nomor_surat
+                   p.uuid_surat, p.nomor_surat, p.data_dinamis
             FROM jadwal_ujian j
             JOIN mahasiswa m ON j.mahasiswa_id = m.id
             LEFT JOIN dosen d1 ON j.pembimbing_1_id = d1.id
             LEFT JOIN dosen d2 ON j.pembimbing_2_id = d2.id
-            LEFT JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
-            WHERE j.pembimbing_1_id = ? OR j.pembimbing_2_id = ?
+            LEFT JOIN plotting_tugas_akhir plt ON j.mahasiswa_id = plt.mahasiswa_id
+            JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
+            WHERE (j.pembimbing_1_id = ? OR j.pembimbing_2_id = ? 
+               OR plt.dosen_penguji_1_id = ? OR plt.dosen_penguji_2_id = ? OR plt.dosen_penguji_3_id = ?)
+               AND p.nomor_surat IS NOT NULL AND p.nomor_surat != ''
             ORDER BY j.tanggal_ujian ASC
         `;
-        return await db.query(sql, [dosen_id, dosen_id]);
+        return await db.query(sql, [dosen_id, dosen_id, dosen_id, dosen_id, dosen_id]);
     }
 
     static async getAllJadwal() {
         const sql = `
             SELECT j.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim,
                    d1.nama_dosen AS p1_nama, d2.nama_dosen AS p2_nama,
-                   p.uuid_surat, p.nomor_surat
+                   p.uuid_surat, p.nomor_surat, p.data_dinamis
             FROM jadwal_ujian j
             JOIN mahasiswa m ON j.mahasiswa_id = m.id
             LEFT JOIN dosen d1 ON j.pembimbing_1_id = d1.id
             LEFT JOIN dosen d2 ON j.pembimbing_2_id = d2.id
-            LEFT JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
+            JOIN pengajuan_surat p ON j.pengajuan_surat_id = p.id
+            WHERE p.nomor_surat IS NOT NULL AND p.nomor_surat != ''
             ORDER BY j.tanggal_ujian ASC
         `;
         return await db.query(sql);

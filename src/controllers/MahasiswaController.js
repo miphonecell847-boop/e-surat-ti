@@ -134,7 +134,8 @@ class MahasiswaController {
 
             const isKartuBimbingan = jenisSuratObj && (jenisSuratObj.kode_surat === 'KARTU-BIMBINGAN' || jenisSuratObj.template_path === 'kartu_bimbingan');
             const isBaUjian = jenisSuratObj && (jenisSuratObj.kode_surat === 'BA-UJIAN' || jenisSuratObj.template_path === 'berita_acara_ujian');
-            const isAutoApproved = isKartuBimbingan || isBaUjian;
+            const isPersetujuanWaktu = jenisSuratObj && (jenisSuratObj.kode_surat === 'LMBR-PERSETUJUAN-WKT' || jenisSuratObj.template_path === 'lembar_persetujuan_waktu');
+            const isAutoApproved = isKartuBimbingan || isBaUjian || isPersetujuanWaktu;
 
             // --- KHUSUS KARTU BIMBINGAN TA: BUAT 2 DOKUMEN TERPISAH (PEMBIMBING 1 & PEMBIMBING 2) ---
             if (isKartuBimbingan) {

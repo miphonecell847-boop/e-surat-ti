@@ -94,7 +94,7 @@ class DosenController {
             } catch (e) {}
 
             const prevStatus = pengajuan.status;
-            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
+            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'));
 
             let nextStatus = prevStatus;
             let approvalP1 = null;

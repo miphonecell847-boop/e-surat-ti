@@ -215,7 +215,7 @@ class TuController {
             await db.run('UPDATE pengajuan_surat SET data_dinamis = ? WHERE id = ?', [JSON.stringify(dinamisObj), id]);
             pengajuan.data_dinamis = JSON.stringify(dinamisObj);
 
-            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
+            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'));
 
             // 1. Update status to 'selesai' immediately
             await SuratModel.updateStatus(id, 'selesai');
@@ -676,7 +676,7 @@ class TuController {
             });
 
             // Sync updated schedule to JadwalUjianModel if UND- letter
-            if (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT')) {
+            if (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'))) {
                 const JadwalUjianModel = require('../models/JadwalUjianModel');
                 await JadwalUjianModel.createOrUpdateJadwal({
                     pengajuan_surat_id: id,
@@ -927,7 +927,7 @@ class TuController {
             const waktuUjian = dinamisObj.jam_mulai ? `${dinamisObj.jam_mulai} - ${dinamisObj.jam_selesai || ''}` : (dinamisObj.pukul || dinamisObj.waktu_ujian || '09:00 - 11:00 WITA');
             const ruangan = dinamisObj.ruangan || dinamisObj.bertempat_di || 'Ruang Ujian & Seminar TI';
 
-            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
+            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'));
 
             if (target_mode === 'custom' && custom_phone) {
                 let sendResult;

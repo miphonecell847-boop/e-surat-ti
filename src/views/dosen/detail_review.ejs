@@ -65,7 +65,7 @@
             <% } %>
         </h3>
 
-        <% if (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT')) { 
+        <% if (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'))) { 
             const sugTgl = (dinamisObj && dinamisObj.tanggal_ujian) ? dinamisObj.tanggal_ujian : new Date().toISOString().split('T')[0];
             const sugJamMulai = (dinamisObj && dinamisObj.jam_mulai) ? dinamisObj.jam_mulai : '09:00';
             const sugJamSelesai = (dinamisObj && dinamisObj.jam_selesai) ? dinamisObj.jam_selesai : '11:00';
@@ -160,7 +160,7 @@
 
         <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
             <button type="submit" name="action" value="approve" class="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-clock-check text-amber-300"></i> <%= (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT')) ? 'ACC & Simpan Respon Jam Ujian' : 'ACC & Terbitkan Surat' %>
+                <i class="fa-solid fa-clock-check text-amber-300"></i> <%= (pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN'))) ? 'ACC & Simpan Respon Jam Ujian' : 'ACC & Terbitkan Surat' %>
             </button>
             <button type="submit" name="action" value="revision" class="w-full sm:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-amber-600/30 flex items-center justify-center gap-2">
                 <i class="fa-solid fa-pen-to-square"></i> Minta Revisi

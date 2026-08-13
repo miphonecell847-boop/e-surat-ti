@@ -8,10 +8,40 @@ const gdriveConfig = require('../../config/gdrive');
 class GDriveStorageService {
     constructor() {
         this.drive = null;
-        this.isMock = !gdriveConfig.isConfigured;
+        this.isMock = true;
 
-        if (gdriveConfig.hasOAuth2) {
-            try {
+        try {
+            if (gdriveConfig.serviceAccountJson) {
+                let credentials;
+                const envJson = gdriveConfig.serviceAccountJson.trim();
+                if (envJson.startsWith('{')) {
+                    credentials = JSON.parse(envJson);
+                } else {
+                    credentials = JSON.parse(Buffer.from(envJson, 'base64').toString('utf8'));
+                }
+                const auth = new google.auth.GoogleAuth({
+                    credentials,
+                    scopes: gdriveConfig.scopes
+                });
+                this.drive = google.drive({ version: 'v3', auth });
+                this.isMock = false;
+            } else if (gdriveConfig.clientEmail && gdriveConfig.privateKey) {
+                const auth = new google.auth.JWT(
+                    gdriveConfig.clientEmail,
+                    null,
+                    gdriveConfig.privateKey.replace(/\\n/g, '\n'),
+                    gdriveConfig.scopes
+                );
+                this.drive = google.drive({ version: 'v3', auth });
+                this.isMock = false;
+            } else if (gdriveConfig.hasServiceAccountFile) {
+                const auth = new google.auth.GoogleAuth({
+                    keyFile: gdriveConfig.serviceAccountPath,
+                    scopes: gdriveConfig.scopes,
+                });
+                this.drive = google.drive({ version: 'v3', auth });
+                this.isMock = false;
+            } else if (gdriveConfig.hasOAuth2) {
                 const oauth2Client = new google.auth.OAuth2(
                     gdriveConfig.clientId,
                     gdriveConfig.clientSecret,
@@ -22,36 +52,16 @@ class GDriveStorageService {
                 });
                 this.drive = google.drive({ version: 'v3', auth: oauth2Client });
                 this.isMock = false;
-            } catch (err) {
-                console.warn('Google Drive OAuth2 Auth error, fallback ke mock:', err.message);
-                this.isMock = true;
             }
-        } else if (gdriveConfig.hasServiceAccount) {
-            try {
-                const auth = new google.auth.GoogleAuth({
-                    keyFile: gdriveConfig.serviceAccountPath,
-                    scopes: gdriveConfig.scopes,
-                });
-                this.drive = google.drive({ version: 'v3', auth });
-                this.isMock = false;
-            } catch (err) {
-                console.warn('Google Drive Service Account Auth warning, fallback ke mock storage:', err.message);
-                this.isMock = true;
-            }
-        } else if (gdriveConfig.hasApiKey) {
-            try {
-                this.drive = google.drive({ version: 'v3', auth: gdriveConfig.apiKey });
-                this.isMock = false;
-            } catch (err) {
-                console.warn('Google Drive API Key Auth error, fallback ke mock:', err.message);
-                this.isMock = true;
-            }
+        } catch (err) {
+            console.error('Google Drive Auth error, falling back to local storage:', err.message);
+            this.isMock = true;
         }
 
         if (this.isMock) {
-            console.log('ℹ️ Google Drive API: Menggunakan Penyimpanan Lokal Fallback (Menunggu berkas service-account-gdrive.json atau Client Secret).');
+            console.log('ℹ️ Google Drive API: Mode Fallback Lokal (Menunggu Service Account JSON / Client Secret + Refresh Token).');
         } else {
-            console.log('✅ Google Drive API: Terhubung Aktif ke Cloud Google Drive!');
+            console.log('✅ Google Drive API: Terhubung Aktif ke Google Drive Cloud!');
         }
     }
 
@@ -63,7 +73,7 @@ class GDriveStorageService {
 
         try {
             let query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-            if (parentFolderId && !parentFolderId.startsWith('mock_')) {
+            if (parentFolderId && !parentFolderId.startsWith('mock_') && !parentFolderId.startsWith('fallback_')) {
                 query += ` and '${parentFolderId}' in parents`;
             }
 
@@ -75,7 +85,7 @@ class GDriveStorageService {
             const folderMetadata = {
                 name: folderName,
                 mimeType: 'application/vnd.google-apps.folder',
-                parents: (parentFolderId && !parentFolderId.startsWith('mock_')) ? [parentFolderId] : []
+                parents: (parentFolderId && !parentFolderId.startsWith('mock_') && !parentFolderId.startsWith('fallback_')) ? [parentFolderId] : []
             };
 
             const folder = await this.drive.files.create({
@@ -115,7 +125,7 @@ class GDriveStorageService {
 
             const fileMetadata = {
                 name: `${Date.now()}_${fileName}`,
-                parents: (parentFolderId && !parentFolderId.startsWith('mock_')) ? [parentFolderId] : []
+                parents: (parentFolderId && !parentFolderId.startsWith('mock_') && !parentFolderId.startsWith('fallback_')) ? [parentFolderId] : []
             };
 
             const media = {

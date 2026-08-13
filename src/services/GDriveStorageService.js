@@ -2,6 +2,7 @@ const { google } = require('googleapis');
 const stream = require('stream');
 const path = require('path');
 const fs = require('fs');
+const { getUploadsDir } = require('../utils/pathHelper');
 const gdriveConfig = require('../../config/gdrive');
 
 class GDriveStorageService {
@@ -90,11 +91,8 @@ class GDriveStorageService {
 
     async uploadFileStream(fileBuffer, fileName, mimeType, parentFolderId) {
         if (this.isMock) {
-            // Save to public/uploads local directory as fallback
-            const uploadsDir = path.join(__dirname, '../../public/uploads');
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-            }
+            // Save to local uploads directory as fallback
+            const uploadsDir = getUploadsDir();
             const localFileName = `${Date.now()}_${fileName}`;
             const localFilePath = path.join(uploadsDir, localFileName);
             fs.writeFileSync(localFilePath, fileBuffer);
@@ -140,10 +138,7 @@ class GDriveStorageService {
         } catch (error) {
             console.error('GDrive uploadFileStream error:', error.message);
             // Fallback to local file
-            const uploadsDir = path.join(__dirname, '../../public/uploads');
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-            }
+            const uploadsDir = getUploadsDir();
             const localFileName = `${Date.now()}_${fileName}`;
             fs.writeFileSync(path.join(uploadsDir, localFileName), fileBuffer);
 

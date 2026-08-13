@@ -88,12 +88,8 @@ class KaprodiController {
 
             // Save TTD Digital Kaprodi if uploaded
             if (req.file) {
-                const fs = require('fs');
-                const path = require('path');
-                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
-                }
+                const { getUploadsDir } = require('../utils/pathHelper');
+                const uploadDir = getUploadsDir('signatures');
                 const filename = `ttd_kaprodi_${Date.now()}_${req.file.originalname}`;
                 fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
                 await SuratModel.updateTtdKaprodi(id, `/uploads/signatures/${filename}`);

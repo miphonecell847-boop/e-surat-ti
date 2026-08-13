@@ -8,6 +8,7 @@ const PdfGeneratorService = require('../services/PdfGeneratorService');
 const ESignatureService = require('../services/ESignatureService');
 const gdriveService = require('../services/GDriveStorageService');
 const appConfig = require('../../config/app');
+const { getUploadsDir } = require('../utils/pathHelper');
 
 class TuController {
     static async dashboard(req, res) {
@@ -457,10 +458,7 @@ class TuController {
 
             let ttdTuPath = null;
             if (req.file) {
-                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
-                }
+                const uploadDir = getUploadsDir('signatures');
                 const filename = `ttd_tu_${Date.now()}_${req.file.originalname}`;
                 fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
                 ttdTuPath = `/uploads/signatures/${filename}`;
@@ -621,10 +619,7 @@ class TuController {
 
             let ttdTuPath = null;
             if (req.file) {
-                const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
-                }
+                const uploadDir = getUploadsDir('signatures');
                 const filename = `ttd_tu_${Date.now()}_${req.file.originalname}`;
                 fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
                 ttdTuPath = `/uploads/signatures/${filename}`;
@@ -853,12 +848,7 @@ class TuController {
             if (!req.file) {
                 return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD (PNG/JPG Transparan).'));
             }
-            const fs = require('fs');
-            const path = require('path');
-            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+            const uploadDir = getUploadsDir('signatures');
             const filename = `ttd_tu_staff_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
             const targetPath = path.join(uploadDir, filename);
             fs.writeFileSync(targetPath, req.file.buffer);
@@ -881,12 +871,7 @@ class TuController {
             if (!req.file) {
                 return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD Plt. Kaprodi (PNG/JPG Transparan).'));
             }
-            const fs = require('fs');
-            const path = require('path');
-            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+            const uploadDir = getUploadsDir('signatures');
             const filename = `ttd_kaprodi_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
             fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
             fs.writeFileSync(path.join(uploadDir, 'ttd_kaprodi_default.png'), req.file.buffer);
@@ -903,12 +888,7 @@ class TuController {
             if (!req.file) {
                 return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Silakan pilih file spesimen TTD Dekan (PNG/JPG Transparan).'));
             }
-            const fs = require('fs');
-            const path = require('path');
-            const uploadDir = path.join(__dirname, '../../public/uploads/signatures');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+            const uploadDir = getUploadsDir('signatures');
             const filename = `ttd_dekan_${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
             fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
             fs.writeFileSync(path.join(uploadDir, 'ttd_dekan_default.png'), req.file.buffer);

@@ -28,6 +28,15 @@ app.set('views', path.join(__dirname, 'src/views'));
 app.set('view engine', 'ejs');
 
 // Static Files
+const isVercelEnv = process.env.VERCEL || process.env.NOW_BUILDER;
+if (isVercelEnv) {
+    const fs = require('fs');
+    const tmpUploads = path.join('/tmp', 'uploads');
+    if (!fs.existsSync(tmpUploads)) {
+        try { fs.mkdirSync(tmpUploads, { recursive: true }); } catch (e) {}
+    }
+    app.use('/uploads', express.static(tmpUploads));
+}
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Pass Session User & Current Path to All Views

@@ -21,18 +21,56 @@
             <p class="text-[11px] text-slate-400 mt-1.5">Format standar prodi: <span class="font-mono text-slate-300">B/123/UN.1/TI/TA/2026</span></p>
         </div>
 
+        <!-- Panel Riwayat Usulan Jam 5 Dosen (Pembimbing 1, 2 & Penguji 1, 2, 3) -->
+        <div class="p-5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-400 text-base"></i>
+                    <h4 class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider">
+                        Riwayat Respon & Usulan Jam 5 Dosen (Pembimbing & Penguji)
+                    </h4>
+                </div>
+                <span class="px-2.5 py-1 bg-indigo-500/20 text-indigo-200 text-[10px] font-extrabold rounded-lg border border-indigo-500/30">
+                    Progres: <%= typeof dosenVoteProgress !== 'undefined' ? dosenVoteProgress : 0 %>/5 Dosen
+                </span>
+            </div>
+
+            <% if (typeof dosenScheduleVotes !== 'undefined' && dosenScheduleVotes && dosenScheduleVotes.length > 0) { %>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <% dosenScheduleVotes.forEach(v => { %>
+                        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-200"><%= v.nama_dosen %></span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase <%= v.status_persetujuan === 'setuju' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30' %>">
+                                    <%= v.status_persetujuan === 'setuju' ? 'ACC Jam' : 'Usulan Baru' %>
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 font-mono">
+                                📅 <%= v.tanggal_usulan || '-' %> | ⏰ <%= v.jam_mulai_usulan || '09:00' %> - <%= v.jam_selesai_usulan || '11:00' %> WITA
+                            </p>
+                            <p class="text-[10px] text-slate-400 italic">🏫 Ruangan: <%= v.ruangan_usulan || '-' %></p>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <p class="text-xs text-slate-400 italic bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+                    Belum ada respon usulan jam dari Dosen Pembimbing/Penguji. Admin dapat menentukan saran jam resmi di bawah ini.
+                </p>
+            <% } %>
+        </div>
+
         <!-- Automatic Exam Schedule Fields for Staff TU (Saran Jadwal untuk Dosen Pembimbing) -->
         <div class="p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-amber-500/20 pb-3">
                 <h4 class="text-xs font-extrabold text-amber-300 uppercase flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-plus text-amber-400"></i> Penentuan Saran Jadwal & Ruangan Ujian (Admin / Staff TU)
+                    <i class="fa-solid fa-calendar-plus text-amber-400"></i> Penentuan Jadwal Final & Ruangan Ujian (Admin / Staff TU)
                 </h4>
                 <span class="px-2.5 py-1 bg-amber-500/20 text-amber-200 text-[10px] font-bold rounded-lg border border-amber-500/30">
-                    Opsi Saran Admin
+                    Penetapan Admin
                 </span>
             </div>
             <p class="text-xs text-slate-300 leading-relaxed">
-                Tentukan usulan/saran jadwal (Hari/Tanggal, Waktu, dan Ruangan Ujian) yang dapat dipilih atau disesuaikan secara langsung oleh <strong>Dosen Pembimbing</strong> saat menyetujui surat ini.
+                Tentukan/sesuaikan jadwal final resmi (Hari/Tanggal, Waktu, dan Ruangan Ujian) berdasarkan riwayat kesepakatan 5 Dosen di atas.
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2 border-t border-amber-500/20">
@@ -104,11 +142,77 @@
             <button type="button" onclick="openPdfPreview('<%= pengajuan.id %>', '<%= pengajuan.nama_surat %>')" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold rounded-xl text-xs flex items-center gap-2 border border-slate-700">
                 <i class="fa-solid fa-file-pdf text-amber-400"></i> Mode Preview PDF
             </button>
+            <button type="button" onclick="openWaModal()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs flex items-center gap-2 border border-emerald-500/30 shadow-lg shadow-emerald-600/30 transition">
+                <i class="fa-brands fa-whatsapp text-white text-sm"></i> Kirim Notifikasi WA
+            </button>
             <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
                 <i class="fa-solid fa-cloud-arrow-up"></i> Terbitkan PDF Final & Upload ke Google Drive
             </button>
         </div>
     </form>
+</div>
+
+<!-- Modal Kirim Notifikasi WA Interaktif -->
+<div id="wa-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-5 text-white">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-white">Kirim Notifikasi WhatsApp Fonnte</h3>
+                    <p class="text-[11px] text-slate-400">Pilih tujuan pengiriman pesan notifikasi</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeWaModal()" class="text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <form action="/tu/kirim-wa-manual/<%= pengajuan.id %>" method="POST" class="space-y-4 text-xs">
+            <input type="hidden" name="redirect_url" value="/tu/penomoran/<%= pengajuan.id %>">
+            
+            <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-1">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mahasiswa & Dokumen</p>
+                <p class="font-bold text-slate-200 text-sm"><%= pengajuan.mhs_nama %> (<%= pengajuan.mhs_nim %>)</p>
+                <p class="text-slate-300"><%= pengajuan.nama_surat %> — <span class="font-mono text-emerald-400"><%= pengajuan.nomor_surat || defaultNomor %></span></p>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block font-bold text-slate-300">Pilih Target Tujuan Pengiriman *</label>
+                
+                <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start gap-3 cursor-pointer hover:border-emerald-500/50 transition" onclick="document.getElementById('mode_dosen').checked=true; toggleCustomPhoneInput();">
+                    <input type="radio" id="mode_dosen" name="target_mode" value="dosen" checked onchange="toggleCustomPhoneInput()" class="mt-0.5 text-emerald-500 focus:ring-emerald-500">
+                    <div>
+                        <label for="mode_dosen" class="font-bold text-slate-200 cursor-pointer block">Kirim ke Seluruh Dosen Pembimbing & Penguji</label>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Notifikasi dikirim otomatis ke WhatsApp Pembimbing 1, Pembimbing 2, Penguji 1, 2, dan 3 terdaftar.</p>
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start gap-3 cursor-pointer hover:border-emerald-500/50 transition" onclick="document.getElementById('mode_custom').checked=true; toggleCustomPhoneInput();">
+                    <input type="radio" id="mode_custom" name="target_mode" value="custom" onchange="toggleCustomPhoneInput()" class="mt-0.5 text-emerald-500 focus:ring-emerald-500">
+                    <div class="w-full">
+                        <label for="mode_custom" class="font-bold text-slate-200 cursor-pointer block">Kirim ke Nomor WA Tes Custom (HP Anda)</label>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Masukkan nomor WA Anda sendiri untuk menguji pengiriman secara langsung.</p>
+                        
+                        <div id="custom-phone-container" class="hidden mt-2.5">
+                            <input type="text" id="custom_phone" name="custom_phone" placeholder="Contoh: 082212345678" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+                <button type="button" onclick="closeWaModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim WA Sekarang
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal PDF Preview Interaktif -->
@@ -130,6 +234,23 @@
 </div>
 
 <script>
+    function openWaModal() {
+        document.getElementById('wa-modal').classList.remove('hidden');
+    }
+    function closeWaModal() {
+        document.getElementById('wa-modal').classList.add('hidden');
+    }
+    function toggleCustomPhoneInput() {
+        const isCustom = document.getElementById('mode_custom').checked;
+        const container = document.getElementById('custom-phone-container');
+        if (isCustom) {
+            container.classList.remove('hidden');
+            document.getElementById('custom_phone').focus();
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
     function setPresetSession(start, end) {
         document.getElementById('input_jam_mulai').value = start;
         document.getElementById('input_jam_selesai').value = end;

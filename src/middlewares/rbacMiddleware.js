@@ -4,8 +4,8 @@ function checkRole(allowedRoles = []) {
             return res.redirect('/login');
         }
 
-        let userRole = req.session.user.role;
-        if (userRole === 'staff_tu' || userRole === 'stafftu' || userRole === 'sekretaris_prodi' || userRole === 'sekprodi' || userRole === 'kaprodi' || userRole === 'admin') {
+        let userRole = (req.session.user.role || '').toLowerCase();
+        if (userRole === 'staff_tu' || userRole === 'stafftu' || userRole === 'sekretaris_prodi' || userRole === 'sekprodi' || userRole === 'kaprodi' || userRole === 'admin' || userRole === 'administrator') {
             userRole = 'admin';
         }
 

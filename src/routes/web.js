@@ -61,6 +61,7 @@ router.get('/mahasiswa/jadwal-ujian', isAuthenticated, checkRole(['mahasiswa', '
 router.get('/dosen/dashboard', isAuthenticated, checkRole(['dosen']), DosenController.dashboard);
 router.get('/dosen/review/:id', isAuthenticated, checkRole(['dosen']), DosenController.renderReview);
 router.post('/dosen/review/:id', isAuthenticated, checkRole(['dosen']), DosenController.processAction);
+router.post('/dosen/update-profile', isAuthenticated, checkRole(['dosen', 'kaprodi', 'sekretaris_prodi']), DosenController.updateProfile);
 
 // Dosen: Konfirmasi Kesediaan Membimbing
 router.get('/dosen/konfirmasi-bimbingan', isAuthenticated, checkRole(['dosen']), JudulTaController.renderDosenKonfirmasi);
@@ -78,6 +79,8 @@ router.post('/tu/edit-surat/:id', isAuthenticated, checkRole(['staff_tu', 'staff
 router.post('/tu/delete-surat/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processDeleteSurat);
 router.get('/tu/penomoran/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.renderPenomoran);
 router.post('/tu/penomoran/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processPenomoranAndGeneratePdf);
+router.get('/tu/kirim-wa-manual/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processKirimWaManual);
+router.post('/tu/kirim-wa-manual/:id', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'admin', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), TuController.processKirimWaManual);
 
 // Staff TU: Verifikasi Judul TA
 router.get('/tu/verifikasi-judul', isAuthenticated, checkRole(['staff_tu', 'stafftu', 'sekretaris_prodi', 'sekprodi', 'kaprodi']), JudulTaController.renderTuVerifikasi);

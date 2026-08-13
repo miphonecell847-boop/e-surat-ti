@@ -175,16 +175,19 @@ class SuratModel {
         const sql = `
             SELECT s.*, m.nama_lengkap AS mhs_nama, m.nim AS mhs_nim, m.angkatan AS mhs_angkatan,
                    j.nama_surat, j.kode_surat, j.template_path,
-                   p.dosen_pembimbing_1_id, p.dosen_pembimbing_2_id
+                   p.dosen_pembimbing_1_id, p.dosen_pembimbing_2_id,
+                   p.dosen_penguji_1_id, p.dosen_penguji_2_id, p.dosen_penguji_3_id
             FROM pengajuan_surat s
             LEFT JOIN mahasiswa m ON s.mahasiswa_id = m.id
             LEFT JOIN jenis_surat j ON s.jenis_surat_id = j.id
             LEFT JOIN plotting_tugas_akhir p ON s.mahasiswa_id = p.mahasiswa_id
-            WHERE s.status IN ('pending_pembimbing_1', 'pending_pembimbing_2', 'pending_pembimbing')
             ORDER BY s.tgl_pengajuan DESC
         `;
         const list = await db.query(sql);
         if (!list || list.length === 0) return [];
+
+        const myVotes = await db.query('SELECT pengajuan_surat_id FROM persetujuan_jadwal_dosen WHERE dosen_id = ?', [dosenId]);
+        const votedSuratIds = new Set((myVotes || []).map(v => v.pengajuan_surat_id));
 
         return list.filter(surat => {
             let dinamisObj = {};
@@ -192,25 +195,36 @@ class SuratModel {
                 dinamisObj = typeof surat.data_dinamis === 'string' ? JSON.parse(surat.data_dinamis) : (surat.data_dinamis || {});
             } catch (e) {}
 
+            const isUndangan = surat.kode_surat && (surat.kode_surat.startsWith('UND-') || surat.kode_surat.includes('UNDANGAN') || surat.kode_surat === 'LMBR-PERSETUJUAN-WKT' || surat.kode_surat.startsWith('SK-'));
+
             const p1Id = dinamisObj.pembimbing_1_id || surat.dosen_pembimbing_1_id;
             const p2Id = dinamisObj.pembimbing_2_id || surat.dosen_pembimbing_2_id;
+            const u1Id = surat.dosen_penguji_1_id;
+            const u2Id = surat.dosen_penguji_2_id;
+            const u3Id = surat.dosen_penguji_3_id;
+
+            const isMyBimbingan = (p1Id == dosenId || p2Id == dosenId);
+            const isMyPenguji = (u1Id == dosenId || u2Id == dosenId || u3Id == dosenId);
+
+            if (isUndangan && (isMyBimbingan || isMyPenguji)) {
+                if (!votedSuratIds.has(surat.id)) {
+                    return true;
+                }
+            }
 
             if (surat.status === 'pending_pembimbing_1') {
-                if (p1Id) return p1Id == dosenId;
-                return true;
+                return p1Id == dosenId;
             }
 
             if (surat.status === 'pending_pembimbing_2') {
-                if (p2Id) return p2Id == dosenId;
-                return true;
+                return p2Id == dosenId;
             }
 
             if (surat.status === 'pending_pembimbing') {
-                if (p1Id == dosenId || p2Id == dosenId) return true;
-                return true;
+                return isMyBimbingan;
             }
 
-            return true;
+            return false;
         });
     }
 

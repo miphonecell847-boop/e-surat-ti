@@ -115,6 +115,15 @@ class TuController {
             const defaultJamSelesai = dinamisObj.jam_selesai || parsedPukul.jamSelesai;
             const defaultRuangan = dinamisObj.ruangan || dinamisObj.bertempat_di || dinamisObj.ruang_ujian || 'Ruang Ujian & Seminar TI';
 
+            const db = require('../../config/database');
+            const votes = await db.query(`
+                SELECT p.*, d.nama_dosen, d.no_hp
+                FROM persetujuan_jadwal_dosen p
+                JOIN dosen d ON p.dosen_id = d.id
+                WHERE p.pengajuan_surat_id = ?
+                ORDER BY p.id ASC
+            `, [id]);
+
             return res.render('tu/detail_penomoran', {
                 title: 'Penomoran Surat & Penerbitan PDF',
                 user: req.session.user,
@@ -126,7 +135,9 @@ class TuController {
                 defaultTgl,
                 defaultJamMulai,
                 defaultJamSelesai,
-                defaultRuangan
+                defaultRuangan,
+                dosenScheduleVotes: votes || [],
+                dosenVoteProgress: (votes || []).length
             });
         } catch (err) {
             console.error('Render penomoran error:', err);
@@ -203,22 +214,18 @@ class TuController {
 
             const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
 
-            // IF SURAT UNDANGAN SEMINAR: Forward to Dosen Pembimbing for ACC & optional rescheduling!
-            if (isUndangan) {
-                await SuratModel.updateStatus(id, 'pending_pembimbing_1');
-                await DisposisiModel.addLog({
-                    pengajuan_surat_id: id,
-                    actor_user_id: user.id,
-                    actor_role: 'staff_tu',
-                    status_sebelumnya: pengajuan.status,
-                    status_sesudahnya: 'pending_pembimbing_1',
-                    catatan_revisi: `Penomoran & Draf Jadwal ditentukan oleh Staff TU (Nomor: ${nomor_surat}, Tanggal: ${tglUjian}, Waktu: ${jMulai}-${jSelesai}, Ruang: ${tempatRuangan}). Diteruskan ke Dosen Pembimbing untuk ACC / penyesuaian.`
-                });
+            // 1. Update status to 'selesai' immediately
+            await SuratModel.updateStatus(id, 'selesai');
+            await DisposisiModel.addLog({
+                pengajuan_surat_id: id,
+                actor_user_id: user.id,
+                actor_role: 'staff_tu',
+                status_sebelumnya: pengajuan.status,
+                status_sesudahnya: 'selesai',
+                catatan_revisi: `Penomoran & Jadwal Ujian Resmi disetujui dan diterbitkan oleh Staff TU (Nomor: ${nomor_surat}, Tanggal: ${tglUjian}, Waktu: ${jMulai}-${jSelesai}, Ruang: ${tempatRuangan}). Status diset ke SELESAI.`
+            });
 
-                return res.redirect(`/tu/daftar-surat?success=${encodeURIComponent('Nomor Surat (' + nomor_surat + ') & Draf Jadwal Ujian berhasil ditentukan! Pengajuan telah diteruskan ke Dosen Pembimbing untuk disetujui / disesuaikan.')}`);
-            }
-
-            // FOR OTHER NON-INVITATION SURAT: Finalize immediately
+            // 2. Generate PDF Document Stream & Upload to Google Drive
             const mhs = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
             const kaprodiDosen = await DosenModel.getDosenKaprodi ? await DosenModel.getDosenKaprodi() : { nama_dosen: 'Prof. Dr. RASMUIN, S.Pd., M.Pd.', nip_nidn: '196812311994031012' };
 
@@ -258,9 +265,66 @@ class TuController {
                 web_content_link: driveResult.webContentLink
             });
 
-            await SuratModel.updateStatus(id, 'selesai');
+            // 3. Dispatch WhatsApp Notification to 5 Dosen
+            try {
+                const WhatsAppService = require('../services/WhatsAppService');
+                const plot = await db.get('SELECT dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id FROM plotting_tugas_akhir WHERE mahasiswa_id = ?', [pengajuan.mahasiswa_id]);
+                
+                let p1 = plot ? plot.dosen_pembimbing_1_id : null;
+                let p2 = plot ? plot.dosen_pembimbing_2_id : null;
+                let u1 = plot ? plot.dosen_penguji_1_id : null;
+                let u2 = plot ? plot.dosen_penguji_2_id : null;
+                let u3 = plot ? plot.dosen_penguji_3_id : null;
 
-            return res.redirect(`/tu/daftar-surat?success=${encodeURIComponent('Surat Resmi berhasil di-ACC! Nomor: ' + nomor_surat)}`);
+                const fallbackDosenList = await db.query('SELECT id FROM dosen WHERE id NOT IN (?, ?)', [p1 || 0, p2 || 0]);
+                if (!u1 && fallbackDosenList.length > 0) u1 = fallbackDosenList[0].id;
+                if (!u2 && fallbackDosenList.length > 1) u2 = fallbackDosenList[1].id;
+                if (!u3 && fallbackDosenList.length > 2) u3 = fallbackDosenList[2].id;
+
+                const targetDosen = [
+                    { id: p1, peran: 'Dosen Pembimbing Utama' },
+                    { id: p2, peran: 'Dosen Pembimbing Pendamping' },
+                    { id: u1, peran: 'Dosen Penguji 1' },
+                    { id: u2, peran: 'Dosen Penguji 2' },
+                    { id: u3, peran: 'Dosen Penguji 3' }
+                ];
+
+                for (const item of targetDosen) {
+                    if (item.id) {
+                        const d = await DosenModel.findById(item.id);
+                        if (d && d.no_hp) {
+                            if (isUndangan) {
+                                WhatsAppService.sendUndanganNotification({
+                                    dosenPhone: d.no_hp,
+                                    dosenNama: d.nama_dosen,
+                                    mhsNama: mhs ? mhs.nama_lengkap : pengajuan.mhs_nama,
+                                    mhsNim: mhs ? mhs.nim : pengajuan.mhs_nim,
+                                    jenisSurat: pengajuan.nama_surat,
+                                    perihal: pengajuan.perihal,
+                                    nomorSurat: nomor_surat,
+                                    tanggal: tglUjian,
+                                    waktu: `${jMulai} - ${jSelesai}`,
+                                    ruangan: tempatRuangan
+                                }).catch(e => console.warn(`WA error ${item.peran}:`, e.message));
+                            } else {
+                                WhatsAppService.sendSkNotification({
+                                    dosenPhone: d.no_hp,
+                                    dosenNama: d.nama_dosen,
+                                    mhsNama: mhs ? mhs.nama_lengkap : pengajuan.mhs_nama,
+                                    mhsNim: mhs ? mhs.nim : pengajuan.mhs_nim,
+                                    nomorSk: nomor_surat,
+                                    judulTa: pengajuan.mhs_judul_ta || pengajuan.perihal,
+                                    peranDosen: item.peran
+                                }).catch(e => console.warn(`WA error ${item.peran}:`, e.message));
+                            }
+                        }
+                    }
+                }
+            } catch (waErr) {
+                console.warn('WhatsApp Undangan Dispatch Warning:', waErr.message);
+            }
+
+            return res.redirect(`/tu/daftar-surat?success=${encodeURIComponent('Nomor Surat (' + nomor_surat + ') & PDF Resmi berhasil diterbitkan (Status: SELESAI)!')}`);
         } catch (err) {
             console.error('Process penomoran error:', err);
             return res.status(500).send('Internal Server Error: ' + err.message);
@@ -292,6 +356,12 @@ class TuController {
                 s.template_path !== 'kartu_bimbingan' && 
                 s.template_path !== 'berita_acara_ujian'
             );
+
+            const db = require('../../config/database');
+            for (let s of suratList) {
+                const votes = await db.query('SELECT id FROM persetujuan_jadwal_dosen WHERE pengajuan_surat_id = ?', [s.id]);
+                s.respondedCount = votes ? votes.length : 0;
+            }
 
             const fs = require('fs');
             const path = require('path');
@@ -426,7 +496,7 @@ class TuController {
                 judul_ta: approvedTitle
             };
 
-            const nextStatus = isPersetujuanWaktu ? 'pending_pembimbing_1' : 'pending_sekprodi';
+            const nextStatus = 'pending_sekprodi';
 
             if (from_id) {
                 // UPDATE SAME EXISTING LETTER (DO NOT CREATE NEW ROW)
@@ -702,7 +772,7 @@ class TuController {
 
     static async processBuatAkunDosen(req, res) {
         try {
-            const { username, email, password, nip_nidn, nama_dosen, jabatan } = req.body;
+            const { username, email, password, nip_nidn, nama_dosen, jabatan, no_hp } = req.body;
 
             const existingUser = await UserModel.findByUsername(username);
             if (existingUser) {
@@ -713,7 +783,7 @@ class TuController {
                 return res.redirect('/tu/kelola-akun?error=' + encodeURIComponent(`Email "${email}" sudah terdaftar.`));
             }
 
-            await UserModel.createDosenByTu({ username, email, password, nip_nidn, nama_dosen, jabatan });
+            await UserModel.createDosenByTu({ username, email, password, nip_nidn, nama_dosen, jabatan, no_hp });
             return res.redirect('/tu/kelola-akun?success=' + encodeURIComponent(`Akun Dosen (${nama_dosen}) berhasil dibuat dan langsung aktif.`));
         } catch (err) {
             console.error('TU processBuatAkunDosen error:', err);
@@ -756,7 +826,7 @@ class TuController {
     static async processEditUser(req, res) {
         try {
             const { id } = req.params;
-            const { username, email, role, status, nama, nomor_identitas, password } = req.body;
+            const { username, email, role, status, nama, nomor_identitas, no_hp, password } = req.body;
 
             await UserModel.updateUserByAdmin({
                 userId: id,
@@ -766,6 +836,7 @@ class TuController {
                 status,
                 nama,
                 nomorIdentitas: nomor_identitas,
+                no_hp,
                 password
             });
 
@@ -845,6 +916,160 @@ class TuController {
         } catch (err) {
             console.error('Upload TTD Dekan error:', err);
             return res.redirect('/tu/daftar-surat?error=' + encodeURIComponent('Gagal mengunggah TTD Dekan: ' + err.message));
+        }
+    }
+
+    static async processKirimWaManual(req, res) {
+        try {
+            const { id } = req.params;
+            const bodyOrQuery = { ...(req.query || {}), ...(req.body || {}) };
+            const { target_mode, custom_phone, redirect_url } = bodyOrQuery;
+            const db = require('../../config/database');
+            const WhatsAppService = require('../services/WhatsAppService');
+
+            const pengajuan = await SuratModel.getDetailById(id);
+            if (!pengajuan) {
+                const backUrl = redirect_url || '/tu/daftar-surat';
+                return res.redirect(`${backUrl}?error=${encodeURIComponent('Pengajuan surat tidak ditemukan.')}`);
+            }
+
+            const mhsInfo = await MahasiswaModel.findById(pengajuan.mahasiswa_id);
+            let dinamisObj = {};
+            try {
+                dinamisObj = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
+            } catch(e) {}
+
+            const nomorSurat = pengajuan.nomor_surat || dinamisObj.nomor_surat || 'B/---/UN.1/TI/TA/2026';
+            const tglUjian = dinamisObj.tanggal_ujian || dinamisObj.hari_tanggal || new Date().toISOString().split('T')[0];
+            const waktuUjian = dinamisObj.jam_mulai ? `${dinamisObj.jam_mulai} - ${dinamisObj.jam_selesai || ''}` : (dinamisObj.pukul || dinamisObj.waktu_ujian || '09:00 - 11:00 WITA');
+            const ruangan = dinamisObj.ruangan || dinamisObj.bertempat_di || 'Ruang Ujian & Seminar TI';
+
+            const isUndangan = pengajuan.kode_surat && (pengajuan.kode_surat.startsWith('UND-') || pengajuan.kode_surat.includes('UNDANGAN') || pengajuan.kode_surat === 'LMBR-PERSETUJUAN-WKT');
+
+            if (target_mode === 'custom' && custom_phone) {
+                let sendResult;
+                if (isUndangan) {
+                    sendResult = await WhatsAppService.sendUndanganNotification({
+                        dosenPhone: custom_phone,
+                        dosenNama: 'Admin / Penguji (Nomor Tes)',
+                        mhsNama: mhsInfo ? mhsInfo.nama_lengkap : pengajuan.mhs_nama,
+                        mhsNim: mhsInfo ? mhsInfo.nim : pengajuan.mhs_nim,
+                        jenisSurat: pengajuan.nama_surat,
+                        perihal: pengajuan.perihal,
+                        nomorSurat: nomorSurat,
+                        tanggal: tglUjian,
+                        waktu: waktuUjian,
+                        ruangan: ruangan
+                    });
+                } else {
+                    sendResult = await WhatsAppService.sendSkNotification({
+                        dosenPhone: custom_phone,
+                        dosenNama: 'Admin / Penguji (Nomor Tes)',
+                        mhsNama: mhsInfo ? mhsInfo.nama_lengkap : pengajuan.mhs_nama,
+                        mhsNim: mhsInfo ? mhsInfo.nim : pengajuan.mhs_nim,
+                        nomorSk: nomorSurat,
+                        judulTa: pengajuan.mhs_judul_ta || pengajuan.perihal,
+                        peranDosen: 'Nomor Tes Custom Admin'
+                    });
+                }
+
+                const backUrl = redirect_url || `/tu/penomoran/${id}`;
+                if (sendResult && sendResult.success) {
+                    return res.redirect(`${backUrl}?success=${encodeURIComponent('Pesan WA berhasil dikirim ke nomor tes: ' + custom_phone)}`);
+                } else {
+                    return res.redirect(`${backUrl}?error=${encodeURIComponent('Gagal mengirim WA ke nomor tes: ' + (sendResult.error || sendResult.reason || 'Error Fonnte'))}`);
+                }
+            }
+
+            // Target Mode = 'dosen' (Send to all assigned Pembimbing & Penguji)
+            const plot = await db.get('SELECT dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id FROM plotting_tugas_akhir WHERE mahasiswa_id = ?', [pengajuan.mahasiswa_id]);
+
+            if (!plot) {
+                const backUrl = redirect_url || `/tu/penomoran/${id}`;
+                return res.redirect(`${backUrl}?error=${encodeURIComponent('Data Plotting Dosen untuk mahasiswa ini belum diatur.')}`);
+            }
+
+            let p1 = plot ? plot.dosen_pembimbing_1_id : null;
+            let p2 = plot ? plot.dosen_pembimbing_2_id : null;
+            let u1 = plot ? plot.dosen_penguji_1_id : null;
+            let u2 = plot ? plot.dosen_penguji_2_id : null;
+            let u3 = plot ? plot.dosen_penguji_3_id : null;
+
+            // Fallback for missing Penguji IDs from official Dosen list
+            const fallbackDosenList = await db.query('SELECT id FROM dosen WHERE id NOT IN (?, ?)', [p1 || 0, p2 || 0]);
+            if (!u1 && fallbackDosenList.length > 0) u1 = fallbackDosenList[0].id;
+            if (!u2 && fallbackDosenList.length > 1) u2 = fallbackDosenList[1].id;
+            if (!u3 && fallbackDosenList.length > 2) u3 = fallbackDosenList[2].id;
+
+            const targetDosen = [
+                { id: p1, peran: 'Dosen Pembimbing Utama' },
+                { id: p2, peran: 'Dosen Pembimbing Pendamping' },
+                { id: u1, peran: 'Dosen Penguji 1' },
+                { id: u2, peran: 'Dosen Penguji 2' },
+                { id: u3, peran: 'Dosen Penguji 3' }
+            ];
+
+            let sentCount = 0;
+            let failedCount = 0;
+            let lastError = null;
+            let dosenWithoutPhone = 0;
+
+            for (const item of targetDosen) {
+                if (item.id) {
+                    const d = await DosenModel.findById(item.id);
+                    if (d && d.no_hp) {
+                        let resObj;
+                        if (isUndangan) {
+                            resObj = await WhatsAppService.sendUndanganNotification({
+                                dosenPhone: d.no_hp,
+                                dosenNama: d.nama_dosen,
+                                mhsNama: mhsInfo ? mhsInfo.nama_lengkap : pengajuan.mhs_nama,
+                                mhsNim: mhsInfo ? mhsInfo.nim : pengajuan.mhs_nim,
+                                jenisSurat: pengajuan.nama_surat,
+                                perihal: pengajuan.perihal,
+                                nomorSurat: nomorSurat,
+                                tanggal: tglUjian,
+                                waktu: waktuUjian,
+                                ruangan: ruangan
+                            }).catch(e => ({ success: false, error: e.message }));
+                        } else {
+                            resObj = await WhatsAppService.sendSkNotification({
+                                dosenPhone: d.no_hp,
+                                dosenNama: d.nama_dosen,
+                                mhsNama: mhsInfo ? mhsInfo.nama_lengkap : pengajuan.mhs_nama,
+                                mhsNim: mhsInfo ? mhsInfo.nim : pengajuan.mhs_nim,
+                                nomorSk: nomorSurat,
+                                judulTa: pengajuan.mhs_judul_ta || pengajuan.perihal,
+                                peranDosen: item.peran
+                            }).catch(e => ({ success: false, error: e.message }));
+                        }
+
+                        if (resObj && resObj.success) {
+                            sentCount++;
+                        } else {
+                            failedCount++;
+                            if (resObj && resObj.error) lastError = resObj.error;
+                        }
+                    } else {
+                        dosenWithoutPhone++;
+                    }
+                }
+            }
+
+            const backUrl = redirect_url || `/tu/penomoran/${id}`;
+            if (sentCount > 0) {
+                return res.redirect(`${backUrl}?success=${encodeURIComponent('Pesan WA berhasil terkirim via Gateway ke ' + sentCount + ' Dosen!')}`);
+            } else if (failedCount > 0) {
+                return res.redirect(`${backUrl}?error=${encodeURIComponent('Gagal mengirim WA via Fonnte Gateway: ' + (lastError || 'Token Fonnte tidak valid / perangkat terputus') + '. Gunakan opsi Kirim WA Web Direct.')}`);
+            } else if (dosenWithoutPhone > 0) {
+                return res.redirect(`${backUrl}?error=${encodeURIComponent('Dosen Pembimbing & Penguji belum diisi nomor HP-nya di database. Silakan isi nomor HP dosen terlebih dahulu.')}`);
+            } else {
+                return res.redirect(`${backUrl}?error=${encodeURIComponent('Tidak ada target dosen pengirim yang ditemukan.')}`);
+            }
+        } catch (err) {
+            console.error('TU processKirimWaManual error:', err);
+            const backUrl = req.body.redirect_url || `/tu/penomoran/${req.params.id}`;
+            return res.redirect(`${backUrl}?error=${encodeURIComponent('Gagal kirim WA: ' + err.message)}`);
         }
     }
 }

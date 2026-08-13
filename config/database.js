@@ -78,9 +78,12 @@ function initTables(database) {
             nip_nidn TEXT UNIQUE NOT NULL,
             nama_dosen TEXT NOT NULL,
             jabatan TEXT,
+            no_hp TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `);
+
+    try { database.run("ALTER TABLE dosen ADD COLUMN no_hp TEXT;"); } catch(e){}
 
     // 4. Table plotting_tugas_akhir
     database.run(`
@@ -199,6 +202,25 @@ function initTables(database) {
             pembimbing_2_id INTEGER REFERENCES dosen(id),
             status_ujian TEXT DEFAULT 'terjadwal',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    // 11. Table persetujuan_jadwal_dosen (Persetujuan & Usulan Waktu Ujian 5 Dosen)
+    database.run(`
+        CREATE TABLE IF NOT EXISTS persetujuan_jadwal_dosen (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pengajuan_surat_id INTEGER NOT NULL REFERENCES pengajuan_surat(id) ON DELETE CASCADE,
+            dosen_id INTEGER NOT NULL REFERENCES dosen(id) ON DELETE CASCADE,
+            peran_dosen TEXT NOT NULL,
+            status_persetujuan TEXT DEFAULT 'setuju',
+            tanggal_usulan DATE,
+            jam_mulai_usulan TEXT,
+            jam_selesai_usulan TEXT,
+            ruangan_usulan TEXT,
+            catatan TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(pengajuan_surat_id, dosen_id)
         );
     `);
 

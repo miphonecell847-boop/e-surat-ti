@@ -1,11 +1,68 @@
 <div class="space-y-6">
-    <div class="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 border border-emerald-500/20 rounded-3xl p-6 shadow-xl flex items-center justify-between">
+    <!-- Success & Error Alerts -->
+    <% if (typeof req !== 'undefined' && req.query && req.query.success) { %>
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-5 py-3.5 rounded-2xl text-xs flex items-center justify-between">
+            <span><i class="fa-solid fa-circle-check mr-2"></i> <%= req.query.success %></span>
+            <button onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    <% } %>
+
+    <div class="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 border border-emerald-500/20 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl font-bold text-white mb-1">Inbox Verification Dosen Pembimbing</h2>
-            <p class="text-xs text-slate-400">Nama: <span class="text-emerald-400 font-semibold"><%= dosen ? dosen.nama_dosen : user.username %></span> | NIP/NIDN: <%= dosen ? dosen.nip_nidn : '-' %></p>
+            <p class="text-xs text-slate-400">
+                Nama: <span class="text-emerald-400 font-semibold"><%= dosen ? dosen.nama_dosen : user.username %></span> | 
+                NIP/NIDN: <span class="text-slate-300 font-semibold"><%= dosen ? dosen.nip_nidn : '-' %></span>
+            </p>
+            <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                <i class="fa-brands fa-whatsapp text-emerald-400"></i> No. WhatsApp Notifikasi: 
+                <% if (dosen && dosen.no_hp) { %>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <i class="fa-solid fa-circle-check text-[9px] mr-1"></i><%= dosen.no_hp %>
+                    </span>
+                <% } else { %>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <i class="fa-solid fa-triangle-exclamation text-[9px] mr-1"></i>Belum diisi (Klik Ubah)
+                    </span>
+                <% } %>
+                <button onclick="document.getElementById('modalEditWa').classList.remove('hidden')" class="text-xs text-indigo-400 hover:text-indigo-300 underline font-semibold ml-1">
+                    <i class="fa-solid fa-pen-to-square"></i> Ubah Nomor WA
+                </button>
+            </p>
         </div>
-        <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold">
-            <i class="fa-solid fa-chalkboard-user mr-1"></i> Mode Reviewer Bimbingan
+        <div class="flex items-center gap-3">
+            <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-semibold">
+                <i class="fa-solid fa-chalkboard-user mr-1"></i> Mode Reviewer Bimbingan
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Nomor WhatsApp Dosen -->
+    <div id="modalEditWa" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-emerald-400 text-lg"></i> Pengaturan Nomor WhatsApp Notifikasi
+                </h3>
+                <button onclick="document.getElementById('modalEditWa').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form action="/dosen/update-profile" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nomor WhatsApp Aktif</label>
+                    <input type="text" name="no_hp" value="<%= dosen ? (dosen.no_hp || '') : '' %>" placeholder="Contoh: 081234567890" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    <p class="text-[11px] text-slate-400 mt-1">Notifikasi Surat Undangan & SK TA akan dikirim langsung ke nomor WhatsApp ini.</p>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalEditWa').classList.add('hidden')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-emerald-600/30">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Nomor WA
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -215,6 +215,53 @@ class JudulTaModel {
                     VALUES (?, ?, ?, ?, ?, ?, ?, 'bimbingan')
                 `, [proposal.mahasiswa_id, p1Id, p2Id, penguji1Id || null, penguji2Id || null, penguji3Id || null, `SK-DEKAN/${new Date().getFullYear()}/${Math.floor(100+Math.random()*900)}`]);
             }
+
+            // 3. Dispatch WhatsApp Notification to Dosen Pembimbing & Penguji
+            try {
+                const WhatsAppService = require('../services/WhatsAppService');
+                const DosenModel = require('./DosenModel');
+                const MahasiswaModel = require('./MahasiswaModel');
+                
+                const mhs = await MahasiswaModel.findById(proposal.mahasiswa_id);
+                const plot = await db.get('SELECT sk_dekan_nomor FROM plotting_tugas_akhir WHERE mahasiswa_id = ?', [proposal.mahasiswa_id]);
+                const skNo = plot ? plot.sk_dekan_nomor : 'SK-DEKAN/2026';
+
+                let u1 = penguji1Id;
+                let u2 = penguji2Id;
+                let u3 = penguji3Id;
+
+                const fallbackDosenList = await db.query('SELECT id FROM dosen WHERE id NOT IN (?, ?)', [p1Id || 0, p2Id || 0]);
+                if (!u1 && fallbackDosenList.length > 0) u1 = fallbackDosenList[0].id;
+                if (!u2 && fallbackDosenList.length > 1) u2 = fallbackDosenList[1].id;
+                if (!u3 && fallbackDosenList.length > 2) u3 = fallbackDosenList[2].id;
+
+                const targetDosen = [
+                    { id: p1Id, peran: 'Dosen Pembimbing Utama (Pembimbing 1)' },
+                    { id: p2Id, peran: 'Dosen Pembimbing Pendamping (Pembimbing 2)' },
+                    { id: u1, peran: 'Dosen Penguji 1' },
+                    { id: u2, peran: 'Dosen Penguji 2' },
+                    { id: u3, peran: 'Dosen Penguji 3' }
+                ];
+
+                for (const item of targetDosen) {
+                    if (item.id) {
+                        const d = await DosenModel.findById(item.id);
+                        if (d && d.no_hp) {
+                            WhatsAppService.sendSkNotification({
+                                dosenPhone: d.no_hp,
+                                dosenNama: d.nama_dosen,
+                                mhsNama: mhs ? mhs.nama_lengkap : proposal.nama_lengkap,
+                                mhsNim: mhs ? mhs.nim : proposal.nim,
+                                nomorSk: skNo,
+                                judulTa: chosenTitle,
+                                peranDosen: item.peran
+                            }).catch(e => console.warn(`WA error ${item.peran}:`, e.message));
+                        }
+                    }
+                }
+            } catch (waErr) {
+                console.warn('WhatsApp Dispatch Error in JudulTaModel:', waErr.message);
+            }
         }
     }
 

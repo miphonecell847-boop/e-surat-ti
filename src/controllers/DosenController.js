@@ -207,6 +207,38 @@ class DosenController {
 
                     nextStatus = 'selesai';
                     approvalP1 = true;
+
+                    // Record Dosen schedule vote into persetujuan_jadwal_dosen
+                    try {
+                        const db = require('../../config/database');
+                        const dosen = await DosenModel.findByUserId(user.id);
+                        if (dosen) {
+                            const plot = await db.get('SELECT dosen_pembimbing_1_id, dosen_pembimbing_2_id, dosen_penguji_1_id, dosen_penguji_2_id, dosen_penguji_3_id FROM plotting_tugas_akhir WHERE mahasiswa_id = ?', [pengajuan.mahasiswa_id]);
+                            let peranDosen = 'dosen';
+                            if (plot) {
+                                if (dosen.id === plot.dosen_pembimbing_1_id) peranDosen = 'pembimbing_1';
+                                else if (dosen.id === plot.dosen_pembimbing_2_id) peranDosen = 'pembimbing_2';
+                                else if (dosen.id === plot.dosen_penguji_1_id) peranDosen = 'penguji_1';
+                                else if (dosen.id === plot.dosen_penguji_2_id) peranDosen = 'penguji_2';
+                                else if (dosen.id === plot.dosen_penguji_3_id) peranDosen = 'penguji_3';
+                            }
+                            await db.run(`
+                                INSERT INTO persetujuan_jadwal_dosen 
+                                (pengajuan_surat_id, dosen_id, peran_dosen, status_persetujuan, tanggal_usulan, jam_mulai_usulan, jam_selesai_usulan, ruangan_usulan, catatan, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                                ON CONFLICT(pengajuan_surat_id, dosen_id) DO UPDATE SET
+                                status_persetujuan = excluded.status_persetujuan,
+                                tanggal_usulan = excluded.tanggal_usulan,
+                                jam_mulai_usulan = excluded.jam_mulai_usulan,
+                                jam_selesai_usulan = excluded.jam_selesai_usulan,
+                                ruangan_usulan = excluded.ruangan_usulan,
+                                catatan = excluded.catatan,
+                                updated_at = CURRENT_TIMESTAMP
+                            `, [id, dosen.id, peranDosen, 'setuju', finalTgl, finalJMulai, finalJSelesai, finalRuangan, catatan_revisi || '']);
+                        }
+                    } catch (voteErr) {
+                        console.warn('Error recording Dosen schedule vote:', voteErr.message);
+                    }
                 } else {
                     if (prevStatus === 'pending_pembimbing_1') {
                         nextStatus = 'pending_pembimbing_2';
@@ -237,6 +269,18 @@ class DosenController {
         } catch (err) {
             console.error('Process action error:', err);
             return res.status(500).send('Internal Server Error: ' + err.message);
+        }
+    }
+
+    static async updateProfile(req, res) {
+        try {
+            const user = req.session.user;
+            const { no_hp, nama_dosen, nip_nidn, jabatan } = req.body;
+            await DosenModel.updateProfile(user.id, { no_hp, nama_dosen, nip_nidn, jabatan });
+            return res.redirect('/dosen/dashboard?success=' + encodeURIComponent('Nomor WhatsApp & Profil Dosen berhasil diperbarui!'));
+        } catch (err) {
+            console.error('Update dosen profile error:', err);
+            return res.redirect('/dosen/dashboard?error=' + encodeURIComponent('Gagal memperbarui profil: ' + err.message));
         }
     }
 }

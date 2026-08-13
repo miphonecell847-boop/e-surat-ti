@@ -228,11 +228,9 @@ class MahasiswaController {
                 judul_ta: approvedTitle
             };
 
-            let initialStatus = 'pending_pembimbing_1';
+            let initialStatus = 'pending_tu';
             if (isAutoApproved) {
                 initialStatus = 'selesai';
-            } else if (jenisSuratObj && (jenisSuratObj.kode_surat.startsWith('UND-') || jenisSuratObj.kode_surat.includes('UNDANGAN') || jenisSuratObj.kode_surat === 'LMBR-PERSETUJUAN-WKT')) {
-                initialStatus = 'pending_tu';
             }
 
             // 1. Simpan Transaksi Pengajuan Surat di DB
@@ -300,7 +298,7 @@ class MahasiswaController {
             if (isAutoApproved) {
                 return res.redirect('/mahasiswa/daftar-surat?success=' + encodeURIComponent(`Dokumen "${jenisSuratObj ? jenisSuratObj.nama_surat : 'Surat'}" berhasil langsung diterbitkan secara otomatis! Anda dapat melihat / cetak dokumen pada daftar surat.`));
             } else {
-                return res.redirect('/mahasiswa/buat-surat?success=' + encodeURIComponent('Pengajuan Surat / SK berhasil dikirim! Menunggu verifikasi dan pemeriksaan.'));
+                return res.redirect('/mahasiswa/buat-surat?success=' + encodeURIComponent('Pengajuan Surat / SK berhasil dikirim! Menunggu pemeriksaan dan persetujuan (ACC) dari Admin / Staff TU.'));
             }
         } catch (err) {
             console.error('Submit surat error:', err);

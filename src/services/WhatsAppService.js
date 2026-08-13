@@ -34,7 +34,7 @@ class WhatsAppService {
             return { success: false, reason: 'Invalid phone number' };
         }
 
-        const apiToken = process.env.FONNTE_TOKEN || process.env.WA_API_TOKEN || appConfig.fonnteToken || 'QCZUyrpRPXAR6c6QP1F8';
+        const apiToken = process.env.FONNTE_TOKEN || process.env.WA_API_TOKEN || appConfig.fonnteToken || 'phKdYALrqXFnHL73UJ8b';
         const apiUrl = process.env.WA_API_URL || appConfig.waApiUrl || 'https://api.fonnte.com/send';
 
         if (!apiToken) {

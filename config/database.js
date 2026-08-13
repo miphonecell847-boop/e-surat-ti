@@ -24,7 +24,9 @@ function saveDb() {
 async function getDbInstance() {
     if (db) return db;
 
-    const SQL = await initSqlJs();
+    const SQL = await initSqlJs({
+        locateFile: file => path.join(__dirname, '../node_modules/sql.js/dist', file)
+    });
     let filebuffer = null;
 
     if (isVercel && !fs.existsSync(dbPath) && fs.existsSync(originalDbPath)) {

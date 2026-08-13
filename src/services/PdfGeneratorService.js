@@ -451,7 +451,7 @@ class PdfGeneratorService {
                 doc.text(`Pada tanggal : ${dateStr}`, rightX, ttdY2 + 11);
                 doc.font('Helvetica-Bold').text('Dekan,', rightX, ttdY2 + 22);
 
-                const dekanTtdPath2 = (customDekanTtd && fs.existsSync(customDekanTtd)) ? customDekanTtd : (fs.existsSync(defaultDekanTtd) ? defaultDekanTtd : null);
+                const dekanTtdPath2 = resolveUploadPath(pengajuan && pengajuan.ttd_dekan_path) || resolveUploadPath('uploads/signatures/ttd_dekan_default.png');
                 if (dekanTtdPath2) doc.image(dekanTtdPath2, rightX, ttdY2 + 34, { width: 95, height: 45 });
                 doc.image(qrBuffer, rightX + 105, ttdY2 + 29, { width: 65, height: 65 });
 
@@ -1091,11 +1091,9 @@ class PdfGeneratorService {
                 doc.text('Plt. Ketua Program Studi,', kaprodiRightX, curY + 12);
 
                 let sigOffset = 24;
-                if (pengajuan && pengajuan.ttd_kaprodi_path) {
-                    const kaprodiTtdPath = path.join(__dirname, '../../public', pengajuan.ttd_kaprodi_path);
-                    if (fs.existsSync(kaprodiTtdPath)) {
-                        doc.image(kaprodiTtdPath, kaprodiRightX, curY + sigOffset, { width: 90, height: 42 });
-                    }
+                const kaprodiTtdPath = resolveUploadPath(pengajuan && pengajuan.ttd_kaprodi_path) || resolveUploadPath('uploads/signatures/ttd_kaprodi_default.png');
+                if (kaprodiTtdPath) {
+                    doc.image(kaprodiTtdPath, kaprodiRightX, curY + sigOffset, { width: 90, height: 42 });
                 }
                 doc.image(qrBuffer, kaprodiRightX + 98, curY + sigOffset - 4, { width: 60, height: 60 });
 

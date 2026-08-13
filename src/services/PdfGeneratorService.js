@@ -72,7 +72,7 @@ class PdfGeneratorService {
                 });
 
                 // 1. KOP SURAT UNIDAYAN
-                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                const logoPath = resolveUploadPath('images/logo-unidayan.png') || path.join(__dirname, '../../public/images/logo-unidayan.png');
                 if (fs.existsSync(logoPath)) {
                     doc.image(logoPath, 45, 32, { width: 60 });
                 }
@@ -220,7 +220,7 @@ class PdfGeneratorService {
                     width: 85
                 });
 
-                const logoPath = path.join(__dirname, '../../public/images/logo-unidayan.png');
+                const logoPath = resolveUploadPath('images/logo-unidayan.png') || path.join(__dirname, '../../public/images/logo-unidayan.png');
                 const db = require('../../config/database');
 
                 // Dynamic values lookup from DB

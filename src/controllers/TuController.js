@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const SuratModel = require('../models/SuratModel');
 const MahasiswaModel = require('../models/MahasiswaModel');
 const DosenModel = require('../models/DosenModel');

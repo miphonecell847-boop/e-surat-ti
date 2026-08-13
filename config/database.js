@@ -3,15 +3,21 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, '../e_surat.db');
+const isVercel = process.env.VERCEL || process.env.NOW_BUILDER;
+const originalDbPath = path.join(__dirname, '../e_surat.db');
+const dbPath = isVercel ? path.join('/tmp', 'e_surat.db') : originalDbPath;
 
 let db = null;
 
 function saveDb() {
     if (db) {
-        const data = db.export();
-        const buffer = Buffer.from(data);
-        fs.writeFileSync(dbPath, buffer);
+        try {
+            const data = db.export();
+            const buffer = Buffer.from(data);
+            fs.writeFileSync(dbPath, buffer);
+        } catch (e) {
+            console.error("saveDb error:", e.message);
+        }
     }
 }
 
@@ -20,8 +26,19 @@ async function getDbInstance() {
 
     const SQL = await initSqlJs();
     let filebuffer = null;
+
+    if (isVercel && !fs.existsSync(dbPath) && fs.existsSync(originalDbPath)) {
+        try {
+            fs.copyFileSync(originalDbPath, dbPath);
+        } catch (e) {
+            console.error("Failed to copy database to /tmp:", e);
+        }
+    }
+
     if (fs.existsSync(dbPath)) {
         filebuffer = fs.readFileSync(dbPath);
+    } else if (fs.existsSync(originalDbPath)) {
+        filebuffer = fs.readFileSync(originalDbPath);
     }
 
     db = filebuffer ? new SQL.Database(filebuffer) : new SQL.Database();

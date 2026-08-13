@@ -65,9 +65,13 @@ app.use((req, res) => {
     });
 });
 
-// Start Server
-app.listen(appConfig.port, () => {
-    console.log(`=======================================================`);
-    console.log(`🚀 E-Surat Administrasi TA berjalan di ${appConfig.baseUrl}`);
-    console.log(`=======================================================`);
-});
+// Start Server (Standalone / Local execution)
+if (require.main === module) {
+    app.listen(appConfig.port, () => {
+        console.log(`=======================================================`);
+        console.log(`🚀 E-Surat Administrasi TA berjalan di ${appConfig.baseUrl}`);
+        console.log(`=======================================================`);
+    });
+}
+
+module.exports = app;

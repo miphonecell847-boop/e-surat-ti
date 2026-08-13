@@ -11,9 +11,9 @@ const privateKey = process.env.GDRIVE_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_
 const hasServiceAccountEnv = Boolean(serviceAccountJson || (clientEmail && privateKey));
 const hasServiceAccount = hasServiceAccountFile || hasServiceAccountEnv;
 
-const clientId = process.env.GDRIVE_CLIENT_ID || '';
-const clientSecret = process.env.GDRIVE_CLIENT_SECRET || '';
-const refreshToken = process.env.GDRIVE_REFRESH_TOKEN || '';
+const clientId = process.env.GDRIVE_CLIENT_ID || '926267491104-d157mcusn5f29cghlauvndle868mr27c.apps.googleusercontent.com';
+const clientSecret = process.env.GDRIVE_CLIENT_SECRET || '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';
+const refreshToken = process.env.GDRIVE_REFRESH_TOKEN || '1//04qO27SVFIKX-CgYIARAAGAQSNwF-L9Irc4_a11yLHShKoP96XnOF-oFpo4TPNYAtmcXvQHUinH3Xbz1CBQ_9IuHBNtUlHku_adc';
 
 const hasOAuth2 = Boolean(clientId && clientSecret && refreshToken);
 const isConfigured = hasServiceAccount || hasOAuth2;

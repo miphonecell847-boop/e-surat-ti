@@ -181,7 +181,8 @@ class DosenController {
                     });
 
                     // 5. Otomatis buatkan Berita Acara Ujian (BA-UJIAN) jika belum ada
-                    const { v4: uuidv4 } = require('uuid');
+                    const crypto = require('crypto');
+                    const uuidv4 = () => crypto.randomUUID();
                     const jenisList = await SuratModel.getJenisSuratList();
                     const baJenis = (jenisList || []).find(j => j.kode_surat === 'BA-UJIAN');
                     if (baJenis) {

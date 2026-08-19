@@ -105,23 +105,27 @@ class PdfGeneratorService {
                 doc.text(':', 100, curY);
                 doc.text('1 (Satu) Berkas Proposal', 110, curY);
 
-                curY += 14;
-                doc.font('Helvetica').text('Perihal', 40, curY);
-                doc.text(':', 100, curY);
-                doc.font('Helvetica-Bold').text('Izin Penelitian Tugas Akhir / Skripsi', 110, curY);
-
-                // 3. TUJUAN SURAT
-                curY += 28;
                 let dataDinamis = {};
                 try {
                     dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
                 } catch (e) {}
 
-                const targetMeta = this.extractTargetInstansiDanTempat(dataDinamis, (mahasiswa && mahasiswa.judul_ta) || pengajuan.judul_ta || pengajuan.perihal || '');
+                const targetMeta = PdfGeneratorService.extractTargetInstansiDanTempat(dataDinamis, (mahasiswa && mahasiswa.judul_ta) || pengajuan.judul_ta || pengajuan.perihal || '');
                 const instansiTujuan = dataDinamis.instansi_tujuan || dataDinamis.tujuan_instansi || targetMeta.instansi;
                 const tempatTujuan = dataDinamis.tempat_tujuan || targetMeta.tempat;
                 const durasi = dataDinamis.durasi || '3 (Tiga) Bulan';
 
+                const perihalText = (pengajuan && pengajuan.perihal && !pengajuan.perihal.includes('Dinas Kominfo & Sandi Baubau')) 
+                    ? pengajuan.perihal 
+                    : `Izin Penelitian Tugas Akhir pada ${instansiTujuan.replace(/^Pimpinan\s*\/\s*Kepala\s+/i, '')}`;
+
+                curY += 14;
+                doc.font('Helvetica').text('Perihal', 40, curY);
+                doc.text(':', 100, curY);
+                doc.font('Helvetica-Bold').text(perihalText, 110, curY, { width: 440, lineGap: 2 });
+
+                // 3. TUJUAN SURAT
+                curY = doc.y + 14;
                 doc.font('Helvetica').text('Kepada Yth.', 40, curY);
                 curY += 14;
                 doc.font('Helvetica-Bold').text(instansiTujuan, 40, curY);

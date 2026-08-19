@@ -27,31 +27,31 @@ class PdfGeneratorService {
         const tPath = pengajuan ? (pengajuan.template_path || '') : '';
 
         if (kode.includes('SRT-IZIN-PENELITIAN') || nama.includes('izin penelitian')) {
-            return this.generateSuratIzinPenelitianResmiPdf(opts);
+            return PdfGeneratorService.generateSuratIzinPenelitianResmiPdf(opts);
         }
         if (kode.includes('SK-PEMBIMBING-PENGUJI') || tPath === 'sk_pembimbing_penguji' || nama.includes('pembimbing & penguji') || nama.includes('pembimbing dan penguji')) {
-            return this.generateSkPembimbingDanPengujiPdf(opts);
+            return PdfGeneratorService.generateSkPembimbingDanPengujiPdf(opts);
         }
         if (kode.includes('SK-PEMBIMBING') || nama.includes('pembimbing') || nama.includes('sk pembimbing')) {
-            return this.generateSkPembimbingPdf(opts);
+            return PdfGeneratorService.generateSkPembimbingPdf(opts);
         }
         if (kode.includes('SK-PENGUJI') || nama.includes('penguji') || nama.includes('sk penguji')) {
-            return this.generateSkPengujiPdf(opts);
+            return PdfGeneratorService.generateSkPengujiPdf(opts);
         }
         if (kode.includes('LMBR-PERSETUJUAN-WKT') || nama.includes('persetujuan waktu') || nama.includes('lembar persetujuan waktu')) {
-            return this.generateLembarPersetujuanWaktuPdf(opts);
+            return PdfGeneratorService.generateLembarPersetujuanWaktuPdf(opts);
         }
         if (kode.includes('KARTU-BIMBINGAN') || nama.includes('kartu bimbingan')) {
-            return this.generateKartuBimbinganPdf(opts);
+            return PdfGeneratorService.generateKartuBimbinganPdf(opts);
         }
         if (kode.includes('UND-') || nama.includes('undangan')) {
-            return this.generateSuratUndanganSeminarPdf(opts);
+            return PdfGeneratorService.generateSuratUndanganSeminarPdf(opts);
         }
         if (kode.includes('BA-UJIAN') || nama.includes('berita acara')) {
-            return this.generateBeritaAcaraUjianPdf(opts);
+            return PdfGeneratorService.generateBeritaAcaraUjianPdf(opts);
         }
 
-        return this.generateSuratIzinPenelitianResmiPdf(opts);
+        return PdfGeneratorService.generateSuratIzinPenelitianResmiPdf(opts);
     }
 
     /**
@@ -117,7 +117,9 @@ class PdfGeneratorService {
                     dataDinamis = typeof pengajuan.data_dinamis === 'string' ? JSON.parse(pengajuan.data_dinamis) : (pengajuan.data_dinamis || {});
                 } catch (e) {}
 
-                const instansiTujuan = dataDinamis.instansi_tujuan || dataDinamis.tujuan_instansi || 'Pimpinan / Kepala Instansi Terkait';
+                const targetMeta = this.extractTargetInstansiDanTempat(dataDinamis, (mahasiswa && mahasiswa.judul_ta) || pengajuan.judul_ta || pengajuan.perihal || '');
+                const instansiTujuan = dataDinamis.instansi_tujuan || dataDinamis.tujuan_instansi || targetMeta.instansi;
+                const tempatTujuan = dataDinamis.tempat_tujuan || targetMeta.tempat;
                 const durasi = dataDinamis.durasi || '3 (Tiga) Bulan';
 
                 doc.font('Helvetica').text('Kepada Yth.', 40, curY);
@@ -126,7 +128,7 @@ class PdfGeneratorService {
                 curY += 14;
                 doc.font('Helvetica').text('di -', 40, curY);
                 curY += 14;
-                doc.font('Helvetica-Bold').text('    Tempat', 40, curY);
+                doc.font('Helvetica-Bold').text(`    ${tempatTujuan}`, 40, curY);
 
                 // 4. PARAGRAF PEMBUKA
                 curY += 24;
@@ -1989,6 +1991,92 @@ class PdfGeneratorService {
                 reject(err);
             }
         });
+    }
+
+    static extractTargetInstansiDanTempat(dataDinamis = {}, judulTa = '') {
+        let instansi = dataDinamis.instansi_tujuan || dataDinamis.tujuan_instansi || '';
+        let tempat = dataDinamis.tempat_tujuan || dataDinamis.tempat || '';
+
+        if (!instansi || instansi.toLowerCase().includes('instansi terkait')) {
+            const text = (judulTa || '').toLowerCase();
+            if (text.includes('rsud palagimata')) {
+                instansi = 'Pimpinan / Kepala RSUD Palagimata Kota Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('smpn 2 wangi-wangi')) {
+                instansi = 'Kepala Sekolah SMPN 2 Wangi-Wangi';
+                tempat = 'Wangi-Wangi';
+            } else if (text.includes('dukcapil')) {
+                instansi = 'Kepala Dinas Kependudukan dan Pencatatan Sipil Kota Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('toko mustika 2')) {
+                instansi = 'Pimpinan Toko Mustika 2 Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('hafiz motor')) {
+                instansi = 'Pimpinan Hafiz Motor Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('kel. saragi') || text.includes('kelurahan saragi')) {
+                instansi = 'Lurah Kelurahan Saragi';
+                tempat = 'Saragi';
+            } else if (text.includes('kecamatan lakudo')) {
+                instansi = 'Camat Kecamatan Lakudo';
+                tempat = 'Lakudo';
+            } else if (text.includes('kecamatan pasarwajo')) {
+                instansi = 'Camat Kecamatan Pasarwajo';
+                tempat = 'Pasarwajo';
+            } else if (text.includes('desa wakambangura')) {
+                instansi = 'Kepala Desa Wakambangura';
+                tempat = 'Wakambangura';
+            } else if (text.includes('desa liya one')) {
+                instansi = 'Kepala Desa Liya One';
+                tempat = 'Liya One';
+            } else if (text.includes('desa teemoane')) {
+                instansi = 'Kepala Desa Teemoane';
+                tempat = 'Teemoane';
+            } else if (text.includes('desa wajogu')) {
+                instansi = 'Kepala Desa Wajogu';
+                tempat = 'Wajogu';
+            } else if (text.includes('desa matawia')) {
+                instansi = 'Kepala Desa Matawia';
+                tempat = 'Matawia';
+            } else if (text.includes('smpn 29 buton')) {
+                instansi = 'Kepala Sekolah SMPN 29 Buton';
+                tempat = 'Buton';
+            } else if (text.includes('dinas kesehatan kota baubau')) {
+                instansi = 'Kepala Dinas Kesehatan Kota Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('dinas kesehatan')) {
+                instansi = 'Kepala Dinas Kesehatan';
+                tempat = 'Baubau';
+            } else if (text.includes('pmi kota baubau')) {
+                instansi = 'Ketua PMI Kota Baubau';
+                tempat = 'Baubau';
+            } else if (text.includes('pasar wameo')) {
+                instansi = 'Kepala Pengelola Pasar Wameo';
+                tempat = 'Baubau';
+            } else if (text.includes('sman 1 kapontori')) {
+                instansi = 'Kepala Sekolah SMAN 1 Kapontori';
+                tempat = 'Kapontori';
+            } else if (text.includes('kedai bukit tinggi')) {
+                instansi = 'Pimpinan Kedai Bukit Tinggi Pasarwajo';
+                tempat = 'Pasarwajo';
+            } else if (text.includes('pangkalan firman syafiq')) {
+                instansi = 'Pimpinan Pangkalan Firman Syafiq';
+                tempat = 'Pasarwajo';
+            } else {
+                const match = (judulTa || '').match(/(?:di|pada|ke)\s+([A-Za-z0-9\.\s\-]+)$/i);
+                if (match && match[1]) {
+                    const targetName = match[1].trim();
+                    instansi = `Pimpinan / Kepala ${targetName}`;
+                    tempat = targetName;
+                } else {
+                    instansi = 'Pimpinan / Kepala Instansi / Perusahaan';
+                    tempat = 'Tempat';
+                }
+            }
+        }
+
+        if (!tempat) tempat = 'Tempat';
+        return { instansi, tempat };
     }
 }
 

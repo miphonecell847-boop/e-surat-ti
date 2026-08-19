@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const appConfig = require('./config/app');
@@ -13,13 +13,13 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Session Middleware
-app.use(session({
-    secret: appConfig.sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+// Session Middleware (Stateless Cookie-based Session for Vercel Serverless)
+app.use(cookieSession({
+    name: 'esurat_session',
+    keys: [appConfig.sessionSecret],
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
+
 
 // Express EJS Layouts & View Engine Setup
 app.use(expressLayouts);

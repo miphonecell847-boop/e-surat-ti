@@ -2,12 +2,27 @@ const initSqlJs = require('sql.js');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const { createClient } = require('@libsql/client');
 
 const isVercel = process.env.VERCEL || process.env.NOW_BUILDER;
 const originalDbPath = path.join(__dirname, '../e_surat.db');
 const dbPath = isVercel ? path.join('/tmp', 'e_surat.db') : originalDbPath;
 
 let db = null;
+let tursoClient = null;
+
+if (process.env.TURSO_DATABASE_URL) {
+    try {
+        tursoClient = createClient({
+            url: process.env.TURSO_DATABASE_URL,
+            authToken: process.env.TURSO_AUTH_TOKEN || undefined
+        });
+        console.log("🚀 Turso LibSQL Cloud Client initialized successfully");
+    } catch (e) {
+        console.error("Failed to initialize Turso Client:", e.message);
+    }
+}
+
 
 function saveDb() {
     if (db) {
@@ -468,6 +483,15 @@ function seedData(database) {
 
 class DatabaseWrapper {
     static async query(sql, params = []) {
+        if (tursoClient) {
+            try {
+                const rs = await tursoClient.execute({ sql, args: params });
+                return rs.rows.map(row => ({ ...row }));
+            } catch (err) {
+                console.error("Turso query error:", err.message, "SQL:", sql);
+                throw err;
+            }
+        }
         const instance = await getDbInstance();
         const res = instance.exec(sql, params);
         saveDb();
@@ -488,6 +512,15 @@ class DatabaseWrapper {
     }
 
     static async run(sql, params = []) {
+        if (tursoClient) {
+            try {
+                await tursoClient.execute({ sql, args: params });
+                return true;
+            } catch (err) {
+                console.error("Turso run error:", err.message, "SQL:", sql);
+                throw err;
+            }
+        }
         const instance = await getDbInstance();
         instance.run(sql, params);
         saveDb();

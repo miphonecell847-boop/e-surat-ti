@@ -388,9 +388,14 @@ class AuthController {
     }
 
     static logout(req, res) {
-        req.session.destroy(() => {
+        if (req.session && typeof req.session.destroy === 'function') {
+            req.session.destroy(() => {
+                return res.redirect('/login');
+            });
+        } else {
+            req.session = null;
             return res.redirect('/login');
-        });
+        }
     }
 }
 
